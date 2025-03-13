@@ -20,15 +20,14 @@ bytemuck.workspace = true
 colored.workspace = true
 chrono.workspace = true
 encoding_rs.workspace = true
+futures-channel.workspace = true
+futures-executor.workspace = true
+futures-util.workspace = true
 indent.workspace = true
 itoa.workspace = true
 mozjs.workspace = true
 typed-arena.workspace = true
 utf16string.workspace = true
-
-[dependencies.futures]
-workspace = true
-features = ["executor"]
 
 [dependencies.ion-proc]
 workspace = true

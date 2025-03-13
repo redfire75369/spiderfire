@@ -17,7 +17,7 @@ use client::Client;
 pub use client::{GLOBAL_CLIENT, default_client};
 use const_format::concatcp;
 use data_url::DataUrl;
-use futures::future::{Either, select};
+use futures_util::future::{Either, select};
 pub use header::Headers;
 use header::{FORBIDDEN_RESPONSE_HEADERS, HeadersKind, remove_all_header_entries};
 use headers::{HeaderMapExt, Range};

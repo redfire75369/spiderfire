@@ -7,8 +7,8 @@
 use std::task;
 use std::task::Poll;
 
-use futures::StreamExt;
-use futures::stream::FuturesUnordered;
+use futures_util::StreamExt;
+use futures_util::stream::FuturesUnordered;
 use ion::conversions::BoxedIntoValue;
 use ion::{Context, Error, ErrorKind, ErrorReport, Promise, ThrowException, Value};
 use mozjs::jsapi::JSObject;

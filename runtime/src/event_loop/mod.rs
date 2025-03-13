@@ -6,10 +6,10 @@
 
 use std::collections::VecDeque;
 use std::ffi::c_void;
+use std::future::poll_fn;
 use std::task;
 use std::task::Poll;
 
-use futures::future::poll_fn;
 use ion::format::{Config, format_value};
 use ion::{Context, ErrorReport, Local, Promise};
 use mozjs::jsapi::{Handle, Heap, JSContext, JSObject, PromiseRejectionHandlingState};

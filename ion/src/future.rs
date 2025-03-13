@@ -9,9 +9,9 @@ use std::pin::Pin;
 use std::task;
 use std::task::Poll;
 
-use futures::Stream;
-use futures::channel::mpsc;
-use futures::channel::mpsc::Receiver;
+use futures_channel::mpsc;
+use futures_channel::mpsc::Receiver;
+use futures_util::Stream;
 use mozjs::jsval::JSVal;
 
 use crate::{Context, Promise, Value};

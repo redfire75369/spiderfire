@@ -7,7 +7,7 @@
 use std::future::Future;
 use std::ops::{Deref, DerefMut};
 
-use futures::executor::block_on;
+use futures_executor::block_on;
 use mozjs::gc::HandleObject;
 use mozjs::glue::JS_GetPromiseResult;
 use mozjs::jsapi::{
