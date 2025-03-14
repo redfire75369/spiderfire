@@ -273,25 +273,126 @@ impl FusedIterator for ArrayIter<'_, '_> {}
 mod tests {
 	use crate::flags::PropertyFlags;
 	use crate::utils::test::TestRuntime;
-	use crate::{Array, Value};
+	use crate::{Array, Result, Value};
 
 	#[test]
-	fn array() {
+	fn new() {
 		let rt = TestRuntime::new();
 		let cx = &rt.cx;
 
 		let array = Array::new(cx);
-		array.set(cx, 0, &Value::null(cx));
-		array.define(cx, 2, &Value::undefined_handle(), PropertyFlags::all());
+		assert!(!array.handle().get().is_null());
+		assert!(array.is_empty(cx));
 
-		let value1 = array.get(cx, 0).unwrap().unwrap();
-		let value2 = array.get(cx, 2).unwrap().unwrap();
-		assert!(value1.handle().is_null());
-		assert!(value2.handle().is_undefined());
+		let array = Array::new_with_length(cx, 8);
+		assert!(!array.handle().get().is_null());
+		assert_eq!(array.len(cx), 8);
+	}
+
+	#[test]
+	fn get_set() {
+		let rt = TestRuntime::new();
+		let cx = &rt.cx;
+
+		const VALUE: i32 = 6;
+		let array = Array::new(cx);
+		assert!(array.set(cx, 0, &Value::i32(cx, VALUE)));
+		assert_eq!(array.len(cx), 1);
+
+		assert!(array.has(cx, 0));
+		let result = array.get(cx, 0).unwrap().unwrap();
+		assert!(result.handle().is_int32());
+		assert_eq!(result.handle().to_int32(), VALUE);
+
+		assert!(!array.has(cx, 1));
+		let result = array.get(cx, 1).unwrap();
+		assert!(result.is_none());
+	}
+
+	#[test]
+	fn get_set_as() {
+		let rt = TestRuntime::new();
+		let cx = &rt.cx;
+
+		let array = Array::new(cx);
+
+		const STRING_VALUE: &'static str = "spiderfire";
+		assert!(array.set_as(cx, 0, &STRING_VALUE));
+		assert_eq!(array.len(cx), 1);
+
+		assert!(array.has(cx, 0));
+		let result: String = array.get_as(cx, 0, true, ()).unwrap().unwrap();
+		assert_eq!(result, STRING_VALUE);
+
+		const BOOL_VALUE: bool = true;
+		assert!(array.set_as(cx, 1, &BOOL_VALUE));
+		assert_eq!(array.len(cx), 2);
+
+		assert!(array.has(cx, 1));
+		let result: bool = array.get_as(cx, 1, true, ()).unwrap().unwrap();
+		assert_eq!(result, BOOL_VALUE);
+	}
+
+	#[test]
+	fn define_descriptor() {
+		let rt = TestRuntime::new();
+		let cx = &rt.cx;
+
+		let array = Array::new(cx);
+
+		const VALUE: i32 = 6;
+		let flags = PropertyFlags::READ_ONLY | PropertyFlags::PERMANENT;
+		assert!(array.define(cx, 0, &Value::i32(cx, VALUE), flags));
+
+		let result = array.get(&cx, 0).unwrap().unwrap();
+		assert!(result.handle().is_int32());
+		assert_eq!(result.handle().to_int32(), VALUE);
+
+		let desc = array.get_descriptor(&cx, 0).unwrap().unwrap();
+		assert!(!desc.is_writable());
+		assert!(!desc.is_configurable());
+
+		assert!(array.set(cx, 0, &Value::i32(cx, VALUE + 1)));
+		let result = array.get(&cx, 0).unwrap().unwrap();
+		assert!(result.handle().is_int32());
+		assert_eq!(result.handle().to_int32(), VALUE);
+	}
+
+	#[test]
+	fn delete_sparse() {
+		let rt = TestRuntime::new();
+		let cx = &rt.cx;
+
+		let array = Array::new(cx);
+		array.set_as(cx, 0, &0);
+		array.set_as(cx, 1, &1);
+		assert_eq!(array.len(cx), 2);
 
 		assert!(array.delete(cx, 0));
-		assert!(array.delete(cx, 2));
-		assert!(array.get(cx, 0).unwrap().is_none());
-		assert!(array.get(cx, 2).unwrap().is_some());
+
+		assert!(!array.has(cx, 0));
+		assert!(array.has(cx, 1));
+		assert_eq!(array.len(cx), 2);
+	}
+
+	#[test]
+	fn iter() {
+		let rt = TestRuntime::new();
+		let cx = &rt.cx;
+
+		let array = Array::new(cx);
+		assert!(array.set_as(cx, 0, &0));
+		assert!(array.set_as(cx, 1, &1));
+		assert!(array.set_as(cx, 3, &3));
+
+		let indices: Vec<_> = array.indices(cx, None).collect();
+		assert_eq!(indices, [0, 1, 3]);
+
+		let pairs: Vec<_> = array
+			.iter(cx, None)
+			.map(|(k, v)| Ok((k, v?.handle().to_int32())))
+			.collect::<Result<_>>()
+			.unwrap();
+		assert_eq!(pairs, [(0, 0), (1, 1), (3, 3)]);
 	}
 }

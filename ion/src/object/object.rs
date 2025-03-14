@@ -555,7 +555,7 @@ mod tests {
 	}
 
 	#[test]
-	fn iterator() {
+	fn iter() {
 		let rt = TestRuntime::new();
 		let cx = &rt.cx;
 
@@ -585,7 +585,7 @@ mod tests {
 	}
 
 	#[test]
-	fn mixed_iterator() {
+	fn mixed_iter() {
 		let rt = TestRuntime::new();
 		let cx = &rt.cx;
 

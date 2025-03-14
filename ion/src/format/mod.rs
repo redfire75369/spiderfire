@@ -22,6 +22,7 @@ pub mod descriptor;
 pub mod function;
 pub mod key;
 pub mod object;
+mod prefix;
 pub mod primitive;
 pub mod promise;
 pub mod regexp;

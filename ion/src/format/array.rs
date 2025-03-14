@@ -11,7 +11,8 @@ use colored::Colorize;
 use mozjs::jsapi::JSProtoKey;
 
 use crate::format::descriptor::format_descriptor;
-use crate::format::object::{write_prefix, write_remaining};
+use crate::format::object::write_remaining;
+use crate::format::prefix::write_prefix;
 use crate::format::{Config, NEWLINE, indent_str};
 use crate::{Array, Context};
 
@@ -40,56 +41,54 @@ impl Display for ArrayDisplay<'_> {
 			JSProtoKey::JSProto_Array,
 		)?;
 
-		if self.cfg.depth < 5 {
-			let length = self.array.len(self.cx);
-
-			if length == 0 {
-				"[]".color(colour).fmt(f)
-			} else {
-				"[".color(colour).fmt(f)?;
-
-				let (remaining, inner) = if self.cfg.multiline {
-					f.write_str(NEWLINE)?;
-					let len = length.clamp(0, 100);
-
-					let inner = indent_str((self.cfg.indentation + self.cfg.depth + 1) as usize);
-
-					for index in 0..len {
-						inner.fmt(f)?;
-						let desc = self.array.get_descriptor(self.cx, index)?.unwrap();
-						format_descriptor(self.cx, self.cfg, &desc, Some(self.array.as_object())).fmt(f)?;
-						",".color(colour).fmt(f)?;
-						f.write_str(NEWLINE)?;
-					}
-
-					(length - len, Some(inner))
-				} else {
-					f.write_char(' ')?;
-					let len = length.clamp(0, 3);
-
-					for index in 0..len {
-						let desc = self.array.get_descriptor(self.cx, index)?.unwrap();
-						format_descriptor(self.cx, self.cfg, &desc, Some(self.array.as_object())).fmt(f)?;
-
-						if index != len - 1 {
-							",".color(colour).fmt(f)?;
-							f.write_char(' ')?;
-						}
-					}
-
-					(length - len, None)
-				};
-
-				write_remaining(f, remaining as usize, inner.as_deref(), colour)?;
-
-				if self.cfg.multiline {
-					indent_str((self.cfg.indentation + self.cfg.depth) as usize).fmt(f)?;
-				}
-
-				"]".color(colour).fmt(f)
-			}
-		} else {
-			"[Array]".color(colour).fmt(f)
+		if self.cfg.depth > 4 {
+			return "[Array]".color(colour).fmt(f);
 		}
+
+		let length = self.array.len(self.cx);
+		if length == 0 {
+			return "[]".color(colour).fmt(f);
+		}
+
+		"[".color(colour).fmt(f)?;
+		let (remaining, inner) = if self.cfg.multiline {
+			f.write_str(NEWLINE)?;
+			let shown = length.clamp(0, 100);
+
+			let inner = indent_str((self.cfg.indentation + self.cfg.depth + 1) as usize);
+
+			for index in 0..shown {
+				inner.fmt(f)?;
+				let desc = self.array.get_descriptor(self.cx, index)?.unwrap();
+				format_descriptor(self.cx, self.cfg, &desc, Some(self.array.as_object())).fmt(f)?;
+				",".color(colour).fmt(f)?;
+				f.write_str(NEWLINE)?;
+			}
+
+			(length - shown, Some(inner))
+		} else {
+			f.write_char(' ')?;
+			let shown = length.clamp(0, 3);
+
+			for index in 0..shown {
+				let desc = self.array.get_descriptor(self.cx, index)?.unwrap();
+				format_descriptor(self.cx, self.cfg, &desc, Some(self.array.as_object())).fmt(f)?;
+
+				if index != shown - 1 {
+					",".color(colour).fmt(f)?;
+					f.write_char(' ')?;
+				}
+			}
+
+			(length - shown, None)
+		};
+
+		write_remaining(f, remaining as usize, inner.as_deref(), colour)?;
+
+		if self.cfg.multiline {
+			indent_str((self.cfg.indentation + self.cfg.depth) as usize).fmt(f)?;
+		}
+
+		"]".color(colour).fmt(f)
 	}
 }
