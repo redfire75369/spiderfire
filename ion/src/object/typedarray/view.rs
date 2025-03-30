@@ -113,7 +113,7 @@ impl<'bv, T: TypedArrayElementCreator> TypedArray<'bv, T> {
 			let _ = unsafe { Box::from_raw_parts(contents.cast::<T::Element>(), data as usize) };
 		}
 
-		let (ptr, len) = unsafe { Box::into_raw_parts(bytes) };
+		let (ptr, len) = Box::into_raw_parts(bytes);
 		let buffer = unsafe {
 			NewExternalArrayBuffer(
 				cx.as_ptr(),

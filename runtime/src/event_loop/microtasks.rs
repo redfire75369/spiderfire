@@ -19,7 +19,6 @@ use crate::ContextExt;
 pub enum Microtask {
 	Promise(*mut JSObject),
 	User(*mut JSFunction),
-	None,
 }
 
 #[derive(Clone, Debug, Default)]
@@ -41,7 +40,6 @@ impl Microtask {
 				let callback = Function::from(cx.root(*callback));
 				callback.call(cx, &Object::global(cx), &[]).map(|_| ())
 			}
-			Microtask::None => Ok(()),
 		}
 	}
 }
@@ -86,10 +84,8 @@ unsafe extern "C" fn enqueue_promise_job(
 	let event_loop = unsafe { &mut cx.get_private().event_loop };
 	let microtasks = event_loop.microtasks.as_mut().unwrap();
 	if !job.is_null() {
-		microtasks.enqueue(cx, Microtask::Promise(job.get()))
-	} else {
-		microtasks.enqueue(cx, Microtask::None)
-	};
+		microtasks.enqueue(cx, Microtask::Promise(job.get()));
+	}
 	true
 }
 

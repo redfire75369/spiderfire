@@ -33,13 +33,13 @@ pub fn normalise_path<P: AsRef<Path>>(path: P) -> PathBuf {
 }
 
 pub trait BoxExt<T> {
-	unsafe fn into_raw_parts(self) -> (*mut T, usize);
+	fn into_raw_parts(self) -> (*mut T, usize);
 
 	unsafe fn from_raw_parts(ptr: *mut T, len: usize) -> Self;
 }
 
 impl<T> BoxExt<T> for Box<[T]> {
-	unsafe fn into_raw_parts(self) -> (*mut T, usize) {
+	fn into_raw_parts(self) -> (*mut T, usize) {
 		let len = self.len();
 		(Box::into_raw(self).cast::<T>(), len)
 	}

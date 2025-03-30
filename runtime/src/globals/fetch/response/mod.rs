@@ -15,10 +15,10 @@ use mozjs::jsapi::{Heap, JSObject};
 pub use options::*;
 use url::Url;
 
+use crate::globals::fetch::Headers;
 use crate::globals::fetch::body::{Body, FetchBody};
 use crate::globals::fetch::header::HeadersKind;
 use crate::globals::fetch::response::body::ResponseBody;
-use crate::globals::fetch::Headers;
 use crate::promise::future_to_promise;
 
 mod body;
@@ -185,10 +185,9 @@ impl Response {
 	#[ion(name = "arrayBuffer")]
 	pub fn array_buffer<'cx>(&mut self, cx: &'cx Context) -> Option<Promise<'cx>> {
 		let this = TracedHeap::new(self.reflector().get());
-		let cx2 = unsafe { Context::new_unchecked(cx.as_ptr()) };
-		future_to_promise::<_, _, Error>(cx, async move {
+		future_to_promise::<_, _, _, Error>(cx, |cx| async move {
 			let response = Object::from(this.to_local());
-			let response = Response::get_mut_private(&cx2, &response)?;
+			let response = Response::get_mut_private(&cx, &response)?;
 			let bytes = response.read_to_bytes().await?;
 			Ok(ArrayBufferWrapper::from(bytes))
 		})
@@ -196,10 +195,9 @@ impl Response {
 
 	pub fn bytes<'cx>(&mut self, cx: &'cx Context) -> Option<Promise<'cx>> {
 		let this = TracedHeap::new(self.reflector().get());
-		let cx2 = unsafe { Context::new_unchecked(cx.as_ptr()) };
-		future_to_promise::<_, _, Error>(cx, async move {
+		future_to_promise::<_, _, _, Error>(cx, |cx| async move {
 			let response = Object::from(this.to_local());
-			let response = Response::get_mut_private(&cx2, &response)?;
+			let response = Response::get_mut_private(&cx, &response)?;
 			let bytes = response.read_to_bytes().await?;
 			Ok(Uint8ArrayWrapper::from(bytes))
 		})
@@ -207,10 +205,9 @@ impl Response {
 
 	pub fn text<'cx>(&mut self, cx: &'cx Context) -> Option<Promise<'cx>> {
 		let this = TracedHeap::new(self.reflector().get());
-		let cx2 = unsafe { Context::new_unchecked(cx.as_ptr()) };
-		future_to_promise::<_, _, Error>(cx, async move {
+		future_to_promise::<_, _, _, Error>(cx, |cx| async move {
 			let response = Object::from(this.to_local());
-			let response = Response::get_mut_private(&cx2, &response)?;
+			let response = Response::get_mut_private(&cx, &response)?;
 			let bytes = response.read_to_bytes().await?;
 			String::from_utf8(bytes).map_err(|e| Error::new(format!("Invalid UTF-8 sequence: {e}"), None))
 		})

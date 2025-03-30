@@ -316,7 +316,7 @@ mod tests {
 
 		let array = Array::new(cx);
 
-		const STRING_VALUE: &'static str = "spiderfire";
+		const STRING_VALUE: &str = "spiderfire";
 		assert!(array.set_as(cx, 0, &STRING_VALUE));
 		assert_eq!(array.len(cx), 1);
 
@@ -344,16 +344,16 @@ mod tests {
 		let flags = PropertyFlags::READ_ONLY | PropertyFlags::PERMANENT;
 		assert!(array.define(cx, 0, &Value::i32(cx, VALUE), flags));
 
-		let result = array.get(&cx, 0).unwrap().unwrap();
+		let result = array.get(cx, 0).unwrap().unwrap();
 		assert!(result.handle().is_int32());
 		assert_eq!(result.handle().to_int32(), VALUE);
 
-		let desc = array.get_descriptor(&cx, 0).unwrap().unwrap();
+		let desc = array.get_descriptor(cx, 0).unwrap().unwrap();
 		assert!(!desc.is_writable());
 		assert!(!desc.is_configurable());
 
 		assert!(array.set(cx, 0, &Value::i32(cx, VALUE + 1)));
-		let result = array.get(&cx, 0).unwrap().unwrap();
+		let result = array.get(cx, 0).unwrap().unwrap();
 		assert!(result.handle().is_int32());
 		assert_eq!(result.handle().to_int32(), VALUE);
 	}

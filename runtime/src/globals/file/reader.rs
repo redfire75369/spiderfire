@@ -96,13 +96,12 @@ impl FileReader {
 		let bytes = blob.bytes.clone();
 
 		let this = TracedHeap::new(self.reflector().get());
-		let cx2 = unsafe { Context::new_unchecked(cx.as_ptr()) };
 
-		future_to_promise::<_, _, Error>(cx, async move {
+		future_to_promise::<_, _, _, Error>(cx, |cx| async move {
 			let reader = Object::from(this.to_local());
-			let reader = FileReader::get_private(&cx2, &reader)?;
+			let reader = FileReader::get_private(&cx, &reader)?;
 			let array_buffer = ArrayBufferWrapper::from(bytes.to_vec());
-			reader.result.set(array_buffer.as_value(&cx2).get());
+			reader.result.set(array_buffer.as_value(&cx).get());
 			Ok(())
 		});
 		Ok(())
@@ -114,13 +113,12 @@ impl FileReader {
 		let bytes = blob.bytes.clone();
 
 		let this = TracedHeap::new(self.reflector().get());
-		let cx2 = unsafe { Context::new_unchecked(cx.as_ptr()) };
 
-		future_to_promise::<_, _, Error>(cx, async move {
+		future_to_promise::<_, _, _, Error>(cx, |cx| async move {
 			let reader = Object::from(this.to_local());
-			let reader = FileReader::get_private(&cx2, &reader)?;
+			let reader = FileReader::get_private(&cx, &reader)?;
 			let byte_string = unsafe { ByteString::<Latin1>::from_unchecked(bytes.to_vec()) };
-			reader.result.set(byte_string.as_value(&cx2).get());
+			reader.result.set(byte_string.as_value(&cx).get());
 			Ok(())
 		});
 		Ok(())
@@ -133,15 +131,14 @@ impl FileReader {
 		let mime = blob.kind.clone();
 
 		let this = TracedHeap::new(self.reflector().get());
-		let cx2 = unsafe { Context::new_unchecked(cx.as_ptr()) };
 
-		future_to_promise::<_, _, Error>(cx, async move {
+		future_to_promise::<_, _, _, Error>(cx, |cx| async move {
 			let encoding = encoding_from_string_mime(encoding.as_deref(), mime.as_deref());
 
 			let reader = Object::from(this.to_local());
-			let reader = FileReader::get_private(&cx2, &reader)?;
+			let reader = FileReader::get_private(&cx, &reader)?;
 			let str = encoding.decode_without_bom_handling(&bytes).0;
-			reader.result.set(str.as_value(&cx2).get());
+			reader.result.set(str.as_value(&cx).get());
 			Ok(())
 		});
 		Ok(())
@@ -154,18 +151,17 @@ impl FileReader {
 		let mime = blob.kind.clone();
 
 		let this = TracedHeap::new(self.reflector().get());
-		let cx2 = unsafe { Context::new_unchecked(cx.as_ptr()) };
 
-		future_to_promise::<_, _, Error>(cx, async move {
+		future_to_promise::<_, _, _, Error>(cx, |cx| async move {
 			let reader = Object::from(this.to_local());
-			let reader = FileReader::get_private(&cx2, &reader)?;
+			let reader = FileReader::get_private(&cx, &reader)?;
 			let base64 = BASE64_STANDARD.encode(&bytes);
 			let data_url = match mime {
 				Some(mime) => format!("data:{mime};base64,{base64}"),
 				None => format!("data:base64,{base64}"),
 			};
 
-			reader.result.set(data_url.as_value(&cx2).get());
+			reader.result.set(data_url.as_value(&cx).get());
 			Ok(())
 		});
 		Ok(())

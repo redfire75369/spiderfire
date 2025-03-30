@@ -13,16 +13,20 @@ use tokio::task::spawn_local;
 use crate::ContextExt;
 
 /// Returns None if no future queue has been initialised.
-pub fn future_to_promise<'cx, F, O, E>(cx: &'cx Context, future: F) -> Option<Promise<'cx>>
+pub fn future_to_promise<'cx, F, Fut, O, E>(cx: &'cx Context, func: F) -> Option<Promise<'cx>>
 where
-	F: Future<Output = Result<O, E>> + 'static,
+	F: FnOnce(Context) -> Fut + 'static,
+	Fut: Future<Output = Result<O, E>> + 'static,
 	O: for<'cx2> IntoValue<'cx2> + 'static,
 	E: for<'cx2> IntoValue<'cx2> + 'static,
 {
 	let promise = Promise::new(cx);
 	let object = promise.handle().get();
 
+	let cx2 = unsafe { Context::new_unchecked(cx.as_ptr()) };
+
 	let handle = spawn_local(async move {
+		let future = func(cx2);
 		let result: Result<BoxedIntoValue, BoxedIntoValue> = match future.await {
 			Ok(o) => Ok(Box::new(o)),
 			Err(e) => Err(Box::new(e)),

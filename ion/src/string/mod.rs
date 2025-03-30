@@ -84,7 +84,7 @@ impl<'s> String<'s> {
 	/// Returns the bytes if the creation of the string in the runtime fails.
 	pub fn from_latin1(cx: &Context, string: ByteString<Latin1>) -> Result<String, ByteString<Latin1>> {
 		let bytes = string.into_vec().into_boxed_slice();
-		let (chars, len) = unsafe { Box::into_raw_parts(bytes) };
+		let (chars, len) = Box::into_raw_parts(bytes);
 
 		unsafe {
 			let callbacks = create_callbacks(len);
@@ -103,7 +103,7 @@ impl<'s> String<'s> {
 	/// Returns the string if the creation of the string in the runtime fails.
 	pub fn from_wstring(cx: &Context, string: WString<NativeEndian>) -> Result<String, WString<NativeEndian>> {
 		let bytes = string.into_bytes().into_boxed_slice();
-		let (chars, len) = unsafe { Box::into_raw_parts(bytes) };
+		let (chars, len) = Box::into_raw_parts(bytes);
 
 		unsafe {
 			let callbacks = create_callbacks(len);

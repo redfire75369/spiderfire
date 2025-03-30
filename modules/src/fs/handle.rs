@@ -164,7 +164,7 @@ impl FileHandle {
 		D: 'static,
 	{
 		let task = self.with_blocking_task(callback);
-		future_to_promise(cx, async move {
+		future_to_promise(cx, move |_| async move {
 			let result = task.await.map_err(|err| error_callback(action, &path, err, error_data));
 			callback_after();
 			result

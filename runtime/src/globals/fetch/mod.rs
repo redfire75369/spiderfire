@@ -94,10 +94,9 @@ fn fetch<'cx>(cx: &'cx Context, resource: RequestInfo, init: Opt<RequestInit>) -
 	}
 
 	let request = TracedHeap::new(Request::new_object(cx, Box::new(request)));
-	let cx2 = unsafe { Context::new_unchecked(cx.as_ptr()) };
-	future_to_promise(cx, async move {
+	future_to_promise(cx, |cx| async move {
 		let request = Object::from(request.to_local());
-		fetch_internal(&cx2, &request, GLOBAL_CLIENT.get().unwrap().clone()).await
+		fetch_internal(&cx, &request, GLOBAL_CLIENT.get().unwrap().clone()).await
 	})
 }
 

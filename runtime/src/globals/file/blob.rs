@@ -227,17 +227,23 @@ impl Blob {
 
 	pub fn text<'cx>(&self, cx: &'cx Context) -> Option<Promise<'cx>> {
 		let bytes = self.bytes.clone();
-		future_to_promise(cx, async move { Ok::<_, ()>(UTF_8.decode(&bytes).0.into_owned()) })
+		future_to_promise(cx, |_| async move { Ok::<_, ()>(UTF_8.decode(&bytes).0.into_owned()) })
 	}
 
 	#[ion(name = "arrayBuffer")]
 	pub fn array_buffer<'cx>(&self, cx: &'cx Context) -> Option<Promise<'cx>> {
 		let bytes = self.bytes.clone();
-		future_to_promise(cx, async move { Ok::<_, ()>(ArrayBufferWrapper::from(bytes.to_vec())) })
+		future_to_promise(
+			cx,
+			|_| async move { Ok::<_, ()>(ArrayBufferWrapper::from(bytes.to_vec())) },
+		)
 	}
 
 	pub fn bytes<'cx>(&self, cx: &'cx Context) -> Option<Promise<'cx>> {
 		let bytes = self.bytes.clone();
-		future_to_promise(cx, async move { Ok::<_, ()>(Uint8ArrayWrapper::from(bytes.to_vec())) })
+		future_to_promise(
+			cx,
+			|_| async move { Ok::<_, ()>(Uint8ArrayWrapper::from(bytes.to_vec())) },
+		)
 	}
 }
