@@ -154,6 +154,8 @@ declare class Response {
 
 	arrayBuffer(): Promise<ArrayBuffer>;
 
+	bytes(): Promise<Uint8Array>;
+
 	text(): Promise<string>;
 }
 
