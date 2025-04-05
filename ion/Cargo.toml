@@ -6,12 +6,6 @@ edition.workspace = true
 license.workspace = true
 authors = ["Redfire <redfire75369@hotmail.com>"]
 
-[package.metadata.cargo-udeps.ignore]
-build = ["cc"]
-
-[build-dependencies]
-cc = "=1.1.31" # ring Build Failure rust-lang/cc-rs#1278
-
 [dependencies]
 arrayvec.workspace = true
 bitflags.workspace = true

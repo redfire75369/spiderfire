@@ -184,7 +184,12 @@ impl Error {
 
 	pub fn format(&self) -> String {
 		let Error { kind, message, location, .. } = self;
-		let message = (!message.is_empty()).then(|| format!(" - {message}")).unwrap_or(String::new());
+		let message = if message.is_empty() {
+			String::new()
+		} else {
+			format!(" - {message}")
+		};
+
 		if let Some(location) = location {
 			let Location { file, lineno, column } = location;
 			if !file.is_empty() {

@@ -3,6 +3,7 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/.
  */
+use std::ptr;
 
 pub use mozjs::conversions::ConversionBehavior;
 use mozjs::conversions::{ConversionResult, FromJSValConvertible};
@@ -10,7 +11,7 @@ use mozjs::jsapi::{
 	AssertSameCompartment, AssertSameCompartment1, ForOfIterator, ForOfIterator_NonIterableBehavior, JSFunction,
 	JSObject, JSString, RootedObject, RootedValue, Symbol as JSSymbol,
 };
-use mozjs::jsval::JSVal;
+use mozjs::jsval::{JSVal, UndefinedValue};
 use mozjs::rust::{ToBoolean, ToNumber, ToString};
 use mozjs::typedarray as jsta;
 use mozjs::typedarray::JSObjectStorage;
@@ -432,7 +433,7 @@ struct ForOfIteratorGuard<'a> {
 
 impl<'a> ForOfIteratorGuard<'a> {
 	fn new(cx: &Context, root: &'a mut ForOfIterator) -> Self {
-		cx.root(unsafe { root.iterator.ptr.assume_init() });
+		cx.root(root.iterator.data);
 		ForOfIteratorGuard { root }
 	}
 }
@@ -455,8 +456,8 @@ where
 
 		let mut iterator = ForOfIterator {
 			cx_: cx.as_ptr(),
-			iterator: RootedObject::new_unrooted(),
-			nextMethod: RootedValue::new_unrooted(),
+			iterator: RootedObject::new_unrooted(ptr::null_mut()),
+			nextMethod: RootedValue::new_unrooted(UndefinedValue()),
 			index: u32::MAX, // NOT_ARRAY
 		};
 		let iterator = ForOfIteratorGuard::new(cx, &mut iterator);
@@ -472,7 +473,7 @@ where
 			return Err(Error::new("Failed to Initialise Iterator", ErrorKind::Type));
 		}
 
-		if unsafe { iterator.iterator.ptr.assume_init() }.is_null() {
+		if iterator.iterator.data.is_null() {
 			return Err(Error::new("Expected Iterable", ErrorKind::Type));
 		}
 
