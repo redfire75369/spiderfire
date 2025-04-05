@@ -27,7 +27,7 @@ impl<'local, T: Copy + RootKind> Local<'local, T> {
 	/// Forms a [Handle] to the [Local] which can be passed to SpiderMonkey APIs.
 	pub fn handle(&self) -> Handle<'local, T> {
 		match self {
-			Self::Rooted(root) => unsafe { Handle::from_marked_location(root.ptr.as_ptr()) },
+			Self::Rooted(root) => unsafe { Handle::from_marked_location(&root.data) },
 			Self::Mutable(handle) => unsafe { Handle::from_marked_location(&handle.get()) },
 			Self::Handle(handle) => *handle,
 		}
@@ -39,15 +39,15 @@ impl<'local, T: Copy + RootKind> Local<'local, T> {
 	/// Panics when a [`Local::Handle`] is passed.
 	pub fn handle_mut(&mut self) -> MutableHandle<'local, T> {
 		match self {
-			Local::Rooted(root) => unsafe { MutableHandle::from_marked_location(root.ptr.as_mut_ptr()) },
-			Local::Mutable(handle) => *handle,
+			Local::Rooted(root) => unsafe { MutableHandle::from_marked_location(&mut root.data) },
+			Local::Mutable(handle) => unsafe { MutableHandle::from_marked_location(handle.as_mut()) },
 			Local::Handle(_) => panic!("&mut Local::Handle should never be constructed"),
 		}
 	}
 
 	pub fn get(&self) -> T {
 		match self {
-			Self::Rooted(root) => unsafe { root.ptr.assume_init() },
+			Self::Rooted(root) => root.data,
 			Self::Mutable(handle) => handle.get(),
 			Self::Handle(handle) => handle.get(),
 		}
@@ -57,10 +57,9 @@ impl<'local, T: Copy + RootKind> Local<'local, T> {
 impl<'local, T: RootKind> Local<'local, T> {
 	/// Creates a new [Local].
 	/// `Context::root` should be used instead.
-	pub(crate) fn new(cx: &Context, root: &'local mut Rooted<T>, initial: T) -> Local<'local, T> {
-		root.ptr.write(initial);
+	pub(crate) fn new(cx: &Context, root: &'local mut Rooted<T>) -> Local<'local, T> {
 		unsafe {
-			root.add_to_root_stack(cx.as_ptr());
+			Rooted::add_to_root_stack(root, cx.as_ptr());
 		}
 		Local::Rooted(root)
 	}

@@ -3,6 +3,7 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/.
  */
+use std::ptr;
 
 use mozjs::conversions::ConversionBehavior;
 use mozjs::jsapi::{
@@ -10,7 +11,7 @@ use mozjs::jsapi::{
 	IdentifyStandardInstance, JS_ClearPendingException, JS_GetPendingException, JS_IsExceptionPending,
 	JS_SetPendingException, Rooted,
 };
-use mozjs::jsval::{JSVal, ObjectValue};
+use mozjs::jsval::{JSVal, ObjectValue, UndefinedValue};
 #[cfg(feature = "sourcemap")]
 use sourcemap::SourceMap;
 
@@ -197,14 +198,14 @@ impl ErrorReport {
 		unsafe {
 			if JS_IsExceptionPending(cx.as_ptr()) {
 				let mut exception_stack = ExceptionStack {
-					exception_: Rooted::new_unrooted(),
-					stack_: Rooted::new_unrooted(),
+					exception_: Rooted::new_unrooted(UndefinedValue()),
+					stack_: Rooted::new_unrooted(ptr::null_mut()),
 				};
 
 				if GetPendingExceptionStack(cx.as_ptr(), &mut exception_stack) {
-					let exception = Value::from(cx.root(exception_stack.exception_.ptr.assume_init()));
+					let exception = Value::from(cx.root(exception_stack.exception_.data));
 					let exception = Exception::from_value(cx, &exception)?;
-					let stack = Stack::from_object(cx, exception_stack.stack_.ptr.assume_init());
+					let stack = Stack::from_object(cx, exception_stack.stack_.data);
 					Exception::clear(cx);
 					Ok(Some(ErrorReport { exception, stack }))
 				} else {

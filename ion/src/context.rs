@@ -148,9 +148,9 @@ impl Context {
 	/// Roots a value and returns a `[Local]` to it.
 	/// The Local is only unrooted when the `[Context]` is dropped
 	pub fn root<T: Rootable>(&self, value: T) -> Local<T> {
-		let root = T::alloc(&self.rooted, Rooted::new_unrooted());
+		let root = T::alloc(&self.rooted, Rooted::new_unrooted(value));
 		self.order.borrow_mut().push(T::GC_TYPE);
-		Local::new(self, root, value)
+		Local::new(self, root)
 	}
 }
 
@@ -218,8 +218,6 @@ mod private {
 
 macro_rules! impl_drop {
 	([$self:expr], $(($key:ident, $gc_type:ident)$(,)?)*) => {
-		use std::mem::MaybeUninit;
-
 		$(let $key: Vec<_> = $self.rooted.$key.iter_mut().collect();)*
 		$(let mut $key = $key.into_iter().rev();)*
 
@@ -228,10 +226,6 @@ macro_rules! impl_drop {
 				$(
 					GCType::$gc_type => {
 						let root = $key.next().unwrap();
-						unsafe {
-							root.ptr.assume_init_drop();
-							root.ptr = MaybeUninit::zeroed();
-						}
 						unsafe {
 							root.remove_from_root_stack();
 						}

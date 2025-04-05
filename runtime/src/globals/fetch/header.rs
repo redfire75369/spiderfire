@@ -415,7 +415,7 @@ fn validate_no_cors_safelisted_request_header(headers: &mut HeaderMap, name: &He
 		let str = &str[digit..];
 		let digit = str.char_indices().find_map(|(i, c)| c.is_ascii_digit().then_some(i + 1));
 		let digit = digit.unwrap_or_default();
-		let end = str[0..digit].parse().ok();
+		let end = str[0..digit].parse::<usize>().ok();
 		if digit != str.len() {
 			return false;
 		}
