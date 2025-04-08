@@ -24,12 +24,12 @@ jobs:
         include:
           - os: windows
             arch: x86_64
-            runner: windows-latest
+            runner: windows-2022
             target: x86_64-pc-windows-msvc
             job: test
           - os: windows
             arch: aarch64
-            runner: windows-latest
+            runner: windows-2022
             target: aarch64-pc-windows-msvc
           - os: macos
             arch: x86_64
@@ -43,12 +43,13 @@ jobs:
             job: test
           - os: linux
             arch: x86_64
-            runner: ubuntu-latest
+            runner: ubuntu-24.04
             target: x86_64-unknown-linux-gnu
             job: test
-        exclude:
           - os: linux
             arch: aarch64
+            runner: ubuntu-24.04
+            target: aarch64-unknown-linux-gnu
     env:
       TARGET: ${{ matrix.target }}
 

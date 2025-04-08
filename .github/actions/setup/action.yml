@@ -50,6 +50,7 @@ runs:
       if: inputs.os == 'macos'
       shell: bash
       run: |
+        brew update
         brew list -1 | grep python | while read formula; do brew unlink $formula; brew link --overwrite $formula; done
         brew install llvm@$LLVM_MAJOR_VERSION yasm
         { echo "$(brew --prefix llvm@$LLVM_MAJOR_VERSION)/bin"; cat "$GITHUB_PATH"; } > "$GITHUB_PATH.new"
@@ -66,6 +67,7 @@ runs:
       if: inputs.os == 'linux'
       shell: bash
       run: |
+        sudo apt install g++-aarch64-linux-gnu
         curl -fsSL https://apt.llvm.org/llvm.sh -o llvm.sh && chmod +x llvm.sh
         sudo env DPKG_FORCE=overwrite ./llvm.sh "$LLVM_MAJOR_VERSION" all
         { echo "/usr/lib/llvm-$LLVM_MAJOR_VERSION/bin"; cat "$GITHUB_PATH"; } > "$GITHUB_PATH.new"
@@ -77,6 +79,10 @@ runs:
 
         echo "CCACHE=sccache" >> $GITHUB_ENV
         echo "RUSTC_WRAPPER=sccache" >> $GITHUB_ENV
+
+        echo "CFLAGS_aarch64_unknown_linux_gnu=-isysroot=/usr/aarch64-linux-gnu --sysroot=/ --gcc-toolchain=/usr -v" >> $GITHUB_ENV
+        echo "CXXFLAGS_aarch64_unknown_linux_gnu=-isysroot=/usr/aarch64-linux-gnu --sysroot=/ --gcc-toolchain=/usr -v" >> $GITHUB_ENV
+        echo "CARGO_TARGET_AARCH64_UNKNOWN_LINUX_GNU_LINKER=aarch64-linux-gnu-gcc" >> $GITHUB_ENV
 
     - name: Install Just
       uses: taiki-e/install-action@just
