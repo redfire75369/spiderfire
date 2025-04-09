@@ -55,6 +55,8 @@ jobs:
 
     steps:
       - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
 
       - name: Install Rust Toolchain
         uses: dtolnay/rust-toolchain@master
@@ -100,6 +102,8 @@ jobs:
 
     steps:
       - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
 
       - name: Install Nightly Rust Toolchain
         uses: dtolnay/rust-toolchain@nightly
@@ -125,6 +129,8 @@ jobs:
 
     steps:
       - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
 
       - name: Install Rust Toolchain
         uses: dtolnay/rust-toolchain@nightly
