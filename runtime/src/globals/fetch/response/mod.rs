@@ -176,10 +176,11 @@ impl Response {
 	}
 
 	async fn read_to_bytes(&mut self) -> Result<Vec<u8>> {
-		if self.body.is_none() {
-			return Err(Error::new("Response body has already been used.", None));
+		if let Some(body) = self.body.take() {
+			body.read_to_bytes().await
+		} else {
+			Err(Error::new("Response body has already been used.", None))
 		}
-		self.body.take().unwrap().read_to_bytes().await
 	}
 
 	#[ion(name = "arrayBuffer")]

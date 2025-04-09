@@ -4,29 +4,23 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/.
  */
 
-use std::collections::Bound;
-use std::iter::once;
 use std::str;
 use std::str::FromStr;
 
-use arrayvec::ArrayVec;
 use async_recursion::async_recursion;
 use body::FetchBody;
-use bytes::Bytes;
 use client::Client;
 pub use client::{GLOBAL_CLIENT, default_client};
 use const_format::concatcp;
-use data_url::DataUrl;
 use futures_util::future::{Either, select};
 pub use header::Headers;
 use header::{FORBIDDEN_RESPONSE_HEADERS, HeadersKind, remove_all_header_entries};
-use headers::{HeaderMapExt, Range};
 use http::header::{
 	ACCEPT, ACCEPT_ENCODING, ACCEPT_LANGUAGE, ACCESS_CONTROL_ALLOW_HEADERS, CACHE_CONTROL, CONTENT_ENCODING,
-	CONTENT_LANGUAGE, CONTENT_LENGTH, CONTENT_LOCATION, CONTENT_RANGE, CONTENT_TYPE, HOST, IF_MATCH, IF_MODIFIED_SINCE,
-	IF_NONE_MATCH, IF_RANGE, IF_UNMODIFIED_SINCE, LOCATION, PRAGMA, RANGE, REFERER, REFERRER_POLICY, USER_AGENT,
+	CONTENT_LANGUAGE, CONTENT_LENGTH, CONTENT_LOCATION, CONTENT_TYPE, HOST, IF_MATCH, IF_MODIFIED_SINCE, IF_NONE_MATCH,
+	IF_RANGE, IF_UNMODIFIED_SINCE, LOCATION, PRAGMA, RANGE, REFERER, REFERRER_POLICY, USER_AGENT,
 };
-use http::{HeaderMap, HeaderValue, Method, StatusCode};
+use http::{HeaderValue, Method, StatusCode};
 use ion::class::{ClassObjectWrapper, Reflector};
 use ion::conversions::ToValue;
 use ion::flags::PropertyFlags;
@@ -37,22 +31,20 @@ pub use request::{Request, RequestInfo, RequestInit};
 pub use response::Response;
 use response::{ResponseKind, ResponseTaint, network_error};
 use sys_locale::get_locales;
-use tokio::fs::read;
 use uri_url::url_to_uri;
 use url::Url;
 
+use crate::VERSION;
 use crate::globals::abort::AbortSignal;
 use crate::globals::fetch::body::Body;
-use crate::globals::file::Blob;
-use crate::globals::url::parse_uuid_from_url_path;
 use crate::promise::future_to_promise;
-use crate::{ContextExt, VERSION};
 
 mod body;
 mod client;
 mod header;
 mod request;
 mod response;
+mod scheme;
 
 const DEFAULT_USER_AGENT: &str = concatcp!("Spiderfire/", VERSION);
 
@@ -218,7 +210,7 @@ async fn main_fetch(cx: &Context, request: &mut Request, client: Client, redirec
 		if request.mode == RequestMode::SameOrigin {
 			network_error()
 		} else if SCHEMES.contains(&scheme) {
-			scheme_fetch(cx, scheme, request, request.url.clone()).await
+			scheme::scheme_fetch(cx, scheme, request, request.url.clone()).await
 		} else if scheme == "https" || scheme == "http" {
 			if let Some(port) = request.url.port() {
 				if BAD_PORTS.contains(&port) {
@@ -345,138 +337,6 @@ async fn main_fetch(cx: &Context, request: &mut Request, client: Client, redirec
 	response
 }
 
-async fn scheme_fetch(cx: &Context, scheme: &str, request: &Request, url: Url) -> Response {
-	let headers = Object::from(unsafe { Local::from_heap(&request.headers) });
-	let headers = &Headers::get_mut_private(cx, &headers).unwrap().headers;
-
-	match scheme {
-		"about" if url.path() == "blank" => {
-			let response = Response::new_from_bytes(Bytes::default(), url);
-			let headers = Headers {
-				reflector: Reflector::default(),
-				headers: HeaderMap::from_iter(once((
-					CONTENT_TYPE,
-					HeaderValue::from_static("text/html;charset=UTF-8"),
-				))),
-				kind: HeadersKind::Immutable,
-			};
-			response.headers.set(Headers::new_object(cx, Box::new(headers)));
-			response
-		}
-		"blob" => {
-			if request.method != Method::GET {
-				return network_error();
-			}
-
-			let uuid = match parse_uuid_from_url_path(&url) {
-				Some(uuid) => uuid,
-				_ => return network_error(),
-			};
-			let blob = unsafe {
-				match cx.get_private().blob_store.get(&uuid) {
-					Some(blob) => blob,
-					_ => return network_error(),
-				}
-			};
-
-			let blob = Object::from(unsafe { Local::from_heap(blob) });
-			let blob = Blob::get_private(cx, &blob).unwrap();
-
-			let kind = match HeaderValue::from_str(blob.kind.as_deref().unwrap_or("")) {
-				Ok(kind) => kind,
-				Err(_) => return network_error(),
-			};
-
-			let mut response_headers = ArrayVec::<_, 3>::new();
-			response_headers.push((CONTENT_TYPE, kind));
-
-			let mut bytes = blob.bytes.clone();
-			let (status, range_requested) = match headers.typed_try_get::<Range>() {
-				Ok(Some(range)) => {
-					let len = bytes.len();
-					if let Some((start, end)) = range.satisfiable_ranges(len as u64).next() {
-						let (start, end) = (start.map(|s| s as usize), end.map(|e| e as usize));
-						bytes = bytes.slice((start, end));
-
-						let (start, end) = match (start, end) {
-							(Bound::Included(s), Bound::Included(e)) => (s, e),
-							(Bound::Included(s), Bound::Unbounded) => (s, len - 1),
-							_ => unreachable!(),
-						};
-						let range = match HeaderValue::from_str(&format!("{start}-{end}/{len}")) {
-							Ok(range) => range,
-							Err(_) => return network_error(),
-						};
-
-						response_headers.push((CONTENT_RANGE, range));
-
-						(StatusCode::PARTIAL_CONTENT, true)
-					} else {
-						return network_error();
-					}
-				}
-				Ok(None) => (StatusCode::OK, false),
-				Err(_) => return network_error(),
-			};
-
-			response_headers.push((CONTENT_LENGTH, HeaderValue::from(bytes.len())));
-
-			let mut response = Response::new_from_bytes(bytes, url);
-			response.status = Some(status);
-			response.range_requested = range_requested;
-
-			let headers = Headers {
-				reflector: Reflector::default(),
-				headers: HeaderMap::from_iter(response_headers),
-				kind: HeadersKind::Immutable,
-			};
-			response.headers.set(Headers::new_object(cx, Box::new(headers)));
-			response
-		}
-		"data" => {
-			let data_url = match DataUrl::process(url.as_str()) {
-				Ok(data_url) => data_url,
-				Err(_) => return network_error(),
-			};
-
-			let (body, _) = match data_url.decode_to_vec() {
-				Ok(decoded) => decoded,
-				Err(_) => return network_error(),
-			};
-			let mime = data_url.mime_type();
-			let mime = format!("{}/{}", mime.type_, mime.subtype);
-
-			let response = Response::new_from_bytes(Bytes::from(body), url);
-			let headers = Headers {
-				reflector: Reflector::default(),
-				headers: HeaderMap::from_iter(once((CONTENT_TYPE, HeaderValue::from_str(&mime).unwrap()))),
-				kind: HeadersKind::Immutable,
-			};
-			response.headers.set(Headers::new_object(cx, Box::new(headers)));
-			response
-		}
-		"file" => {
-			if request.method != Method::GET {
-				return network_error();
-			}
-
-			match url.to_file_path() {
-				Ok(path) => match read(path).await {
-					Ok(bytes) => {
-						let response = Response::new_from_bytes(Bytes::from(bytes), url);
-						let headers = Headers::new(HeadersKind::Immutable);
-						response.headers.set(Headers::new_object(cx, Box::new(headers)));
-						response
-					}
-					Err(_) => network_error(),
-				},
-				Err(_) => network_error(),
-			}
-		}
-		_ => network_error(),
-	}
-}
-
 async fn http_fetch(
 	cx: &Context, request: &mut Request, client: Client, taint: ResponseTaint, redirections: u8,
 ) -> (Response, bool) {
@@ -501,7 +361,8 @@ async fn http_network_fetch(cx: &Context, request: &Request, client: Client, is_
 
 	let length = request
 		.body
-		.len()
+		.as_ref()
+		.and_then(|body| body.len())
 		.or_else(|| (request.body.is_none() && matches!(request.method, Method::POST | Method::PUT)).then_some(0));
 
 	if let Some(length) = length {
@@ -568,7 +429,8 @@ async fn http_network_fetch(cx: &Context, request: &Request, client: Client, is_
 	let uri = url_to_uri(&request.url).unwrap();
 	let mut builder = hyper::Request::builder().method(request.method.clone()).uri(uri);
 	*builder.headers_mut().unwrap() = headers;
-	let req = builder.body(request.body.to_http_body()).unwrap();
+	let body = request.body.as_ref().map(|req| req.to_http_body()).unwrap_or_else(|| Body::Empty);
+	let req = builder.body(body).unwrap();
 
 	let mut response = match client.request(req).await {
 		Ok(response) => {
@@ -592,7 +454,10 @@ async fn http_network_fetch(cx: &Context, request: &Request, client: Client, is_
 		return network_error();
 	}
 
-	if response.status == Some(StatusCode::MISDIRECTED_REQUEST) && !is_new && !request.body.is_stream() {
+	if response.status == Some(StatusCode::MISDIRECTED_REQUEST)
+		&& !is_new
+		&& !request.body.as_ref().map(FetchBody::is_stream).unwrap_or_default()
+	{
 		return http_network_fetch(cx, request, client, true).await;
 	}
 
@@ -637,7 +502,9 @@ async fn http_redirect_fetch(
 		return network_error();
 	}
 
-	if response.status != Some(StatusCode::SEE_OTHER) && !request.body.is_none() && request.body.is_stream() {
+	if response.status != Some(StatusCode::SEE_OTHER)
+		&& request.body.as_ref().map(FetchBody::is_stream).unwrap_or_default()
+	{
 		return network_error();
 	}
 
@@ -646,7 +513,7 @@ async fn http_redirect_fetch(
 		|| (response.status == Some(StatusCode::SEE_OTHER) && !matches!(request.method, Method::GET | Method::HEAD))
 	{
 		request.method = Method::GET;
-		request.body = FetchBody::default();
+		request.body = None;
 		let headers = Object::from(unsafe { Local::from_heap(&request.headers) });
 		let headers = Headers::get_mut_private(cx, &headers).unwrap();
 		remove_all_header_entries(&mut headers.headers, &CONTENT_ENCODING);

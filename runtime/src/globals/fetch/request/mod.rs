@@ -7,9 +7,10 @@
 use std::str::FromStr;
 
 use http::{HeaderMap, Method};
-use ion::class::Reflector;
+use ion::class::{NativeObject, Reflector};
 use ion::function::Opt;
-use ion::{ClassDefinition, Context, Error, ErrorKind, Result};
+use ion::typedarray::{ArrayBufferWrapper, Uint8ArrayWrapper};
+use ion::{ClassDefinition, Context, Error, ErrorKind, Object, Promise, Result, TracedHeap};
 use mozjs::jsapi::{Heap, JSObject};
 pub use options::*;
 use url::Url;
@@ -18,6 +19,7 @@ use crate::globals::abort::AbortSignal;
 use crate::globals::fetch::Headers;
 use crate::globals::fetch::body::FetchBody;
 use crate::globals::fetch::header::HeadersKind;
+use crate::promise::future_to_promise;
 
 mod options;
 
@@ -33,8 +35,7 @@ pub struct Request {
 	reflector: Reflector,
 
 	pub(crate) headers: Box<Heap<*mut JSObject>>,
-	pub(crate) body: FetchBody,
-	pub(crate) body_used: bool,
+	pub(crate) body: Option<FetchBody>,
 
 	#[trace(no_trace)]
 	pub(crate) method: Method,
@@ -80,8 +81,7 @@ impl Request {
 					reflector: Reflector::default(),
 
 					headers: Box::default(),
-					body: FetchBody::default(),
-					body_used: false,
+					body: None,
 
 					method: Method::GET,
 					url: url.clone(),
@@ -199,7 +199,7 @@ impl Request {
 
 		if let Some(body) = body {
 			body.add_content_type_header(&mut headers.headers);
-			request.body = body;
+			request.body = Some(body);
 		}
 		request.headers.set(Headers::new_object(cx, Box::new(headers)));
 
@@ -285,6 +285,50 @@ impl Request {
 	pub fn get_duplex(&self) -> String {
 		String::from("half")
 	}
+
+	#[ion(get)]
+	pub fn get_body_used(&self) -> bool {
+		self.body.is_none()
+	}
+
+	async fn read_to_bytes(&mut self) -> Result<Vec<u8>> {
+		if let Some(body) = self.body.take() {
+			body.read_to_bytes().await
+		} else {
+			Err(Error::new("Request body has already been used.", None))
+		}
+	}
+
+	#[ion(name = "arrayBuffer")]
+	pub fn array_buffer<'cx>(&mut self, cx: &'cx Context) -> Option<Promise<'cx>> {
+		let this = TracedHeap::new(self.reflector().get());
+		future_to_promise::<_, _, _, Error>(cx, |cx| async move {
+			let request = Object::from(this.to_local());
+			let request = Request::get_mut_private(&cx, &request)?;
+			let bytes = request.read_to_bytes().await?;
+			Ok(ArrayBufferWrapper::from(bytes))
+		})
+	}
+
+	pub fn bytes<'cx>(&mut self, cx: &'cx Context) -> Option<Promise<'cx>> {
+		let this = TracedHeap::new(self.reflector().get());
+		future_to_promise::<_, _, _, Error>(cx, |cx| async move {
+			let request = Object::from(this.to_local());
+			let request = Request::get_mut_private(&cx, &request)?;
+			let bytes = request.read_to_bytes().await?;
+			Ok(Uint8ArrayWrapper::from(bytes))
+		})
+	}
+
+	pub fn text<'cx>(&mut self, cx: &'cx Context) -> Option<Promise<'cx>> {
+		let this = TracedHeap::new(self.reflector().get());
+		future_to_promise::<_, _, _, Error>(cx, |cx| async move {
+			let request = Object::from(this.to_local());
+			let request = Request::get_mut_private(&cx, &request)?;
+			let bytes = request.read_to_bytes().await?;
+			String::from_utf8(bytes).map_err(|e| Error::new(format!("Invalid UTF-8 sequence: {e}"), None))
+		})
+	}
 }
 
 impl Clone for Request {
@@ -296,7 +340,6 @@ impl Clone for Request {
 
 			headers: Box::default(),
 			body: self.body.clone(),
-			body_used: self.body_used,
 
 			method: self.method.clone(),
 			url: url.clone(),

@@ -13,7 +13,7 @@ use bytes::Bytes;
 use form_urlencoded::Serializer;
 use http::header::CONTENT_TYPE;
 use http::{HeaderMap, HeaderValue};
-use http_body_util::Full;
+use http_body_util::{BodyExt, Full};
 use hyper::body::{Frame, Incoming, SizeHint};
 use ion::conversions::FromValue;
 use ion::{Context, Error, ErrorKind, Value};
@@ -84,6 +84,10 @@ impl FetchBody {
 			FetchBodyInner::None => Body::Empty,
 			FetchBodyInner::Bytes(bytes) => Body::from(bytes.clone()),
 		}
+	}
+
+	pub async fn read_to_bytes(&self) -> ion::Result<Vec<u8>> {
+		Ok(self.to_http_body().collect().await?.to_bytes().to_vec())
 	}
 
 	pub(crate) fn add_content_type_header(&self, headers: &mut HeaderMap) {
