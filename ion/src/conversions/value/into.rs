@@ -10,9 +10,9 @@ use crate::{Context, Value};
 pub type BoxedIntoValue = Box<dyn for<'cx> IntoValue<'cx>>;
 
 /// Represents types that can be converted to JavaScript [Values](Value) with ownership.
-/// Primarily used with dynamic dispatch and [`BoxedIntoValue`](BoxedIntoValue).
+/// Primarily used with dynamic dispatch and [`BoxedIntoValue`].
 pub trait IntoValue<'cx> {
-	/// Converts `self` into a [`Value`](Value) and stores it in `value`.
+	/// Converts `self` into a [`Value`] and stores it in `value`.
 	fn into_value(self: Box<Self>, cx: &'cx Context, value: &mut Value);
 }
 

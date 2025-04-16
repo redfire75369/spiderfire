@@ -3,36 +3,45 @@ set windows-shell := ["powershell.exe", "-NoLogo", "-Command"]
 default:
     @just --list
 
-build *args:
-  cargo build --features debugmozjs {{args}}
-
-build-release *args:
-  cargo build --release {{args}}
-
 check *args:
-  cargo check --features debugmozjs {{args}}
+  cargo check -F debugmozjs {{args}}
 
 check-release *args:
-  cargo check --release {{args}}
+  cargo check -r {{args}}
 
 clippy *args:
-  cargo clippy --features debugmozjs {{args}}
+  cargo clippy -F debugmozjs {{args}}
 
 clippy-release *args:
-  cargo clippy --release {{args}}
+  cargo clippy -r {{args}}
+
+build *args:
+  cargo build -F debugmozjs {{args}}
+
+build-release *args:
+  cargo build -r {{args}}
 
 run *args:
-  cargo run --features debugmozjs {{args}}
+  cargo run -F debugmozjs {{args}}
 
 run-release *args:
-  cargo run --release {{args}}
+  cargo run -r {{args}}
 
 test *args:
-  cargo nextest run --features debugmozjs --locked {{args}}
+  cargo nextest run -F debugmozjs --locked {{args}}
 
 test-release *args:
-  cargo nextest run  --release --locked {{args}}
+  cargo nextest run  -r --locked {{args}}
+
+docs:
+  cargo doc --workspace --all-features --no-deps --document-private-items --keep-going
+
+fmt *args:
+  cargo +nightly fmt --all
 
 lint:
   cargo +nightly fmt --check --all
-  cargo clippy --all-targets --locked -F debugmozjs -- -D warnings
+  cargo clippy --workspace --all-targets -F debugmozjs --locked -- -D warnings
+
+udeps:
+  cargo +nightly udeps --workspace --all-targets --locked

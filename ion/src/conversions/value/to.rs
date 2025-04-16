@@ -9,7 +9,7 @@ use std::ptr::NonNull;
 use std::rc::Rc;
 
 use mozjs::jsapi::{
-	JS_GetFunctionObject, JS_IdToValue, JS_NewStringCopyN, JS_WrapValue, JSFunction, JSObject, JSString,
+	JSFunction, JSObject, JSString, JS_GetFunctionObject, JS_IdToValue, JS_NewStringCopyN, JS_WrapValue,
 	PropertyKey as JSPropertyKey, Symbol as JSSymbol,
 };
 use mozjs::jsval::{
@@ -26,10 +26,10 @@ use crate::{Array, Context, Date, Function, Object, Promise, PropertyKey, Symbol
 
 /// Represents types that can be converted to JavaScript [Values](Value).
 pub trait ToValue<'cx> {
-	/// Converts `self` to a [`Value`](Value) and stores it in `value`.
+	/// Converts `self` to a [`Value`] and stores it in `value`.
 	fn to_value(&self, cx: &'cx Context, value: &mut Value);
 
-	/// Converts `self` to a new [`Value`](Value).
+	/// Converts `self` to a new [`Value`].
 	fn as_value(&self, cx: &'cx Context) -> Value<'cx> {
 		let mut value = Value::undefined(cx);
 		self.to_value(cx, &mut value);

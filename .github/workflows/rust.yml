@@ -123,7 +123,6 @@ jobs:
       - name: Lint
         run: just lint
 
-
   unused-dependencies:
     runs-on: ubuntu-latest
 
@@ -144,4 +143,4 @@ jobs:
         uses: taiki-e/install-action@cargo-udeps
 
       - name: Check for Unused Dependencies
-        run: cargo udeps --all-targets --locked
+        run: just udeps
