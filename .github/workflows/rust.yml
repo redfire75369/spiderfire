@@ -144,3 +144,52 @@ jobs:
 
       - name: Check for Unused Dependencies
         run: just udeps
+
+  docs:
+    runs-on: ubuntu-latest
+    if: github.event_name == 'push' && github.ref == 'refs/heads/master'
+
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+
+      - name: Install Nightly Rust Toolchain
+        uses: dtolnay/rust-toolchain@nightly
+
+      - name: Setup Dependencies
+        uses: ./.github/actions/setup
+        with:
+          cache-id: docs
+
+      - name: Generate Docs
+        run: just docsrs
+
+      - name: Remove Extra Files
+        run: |
+          rm target/doc/.lock
+
+      - name: Upload Pages
+        uses: actions/upload-pages-artifact@v3
+        with:
+          path: target/doc
+
+  deploy-docs:
+    runs-on: ubuntu-latest
+    needs: docs
+
+    permissions:
+      pages: write
+      id-token: write
+
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+
+    steps:
+      - name: Configure GitHub Pages
+        uses: actions/configure-pages@v5
+
+      - name: Deploy to GitHub Pages
+        id: deployment
+        uses: actions/deploy-pages@v4

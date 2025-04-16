@@ -91,7 +91,7 @@ runs:
       uses: taiki-e/install-action@nextest
 
     - name: Setup sccache
-      uses: mozilla-actions/sccache-action@v0.0.7
+      uses: mozilla-actions/sccache-action@v0.0.8
 
     - name: Cache Cargo Cache and Git Database
       uses: actions/cache@v4

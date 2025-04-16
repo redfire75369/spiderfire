@@ -9,7 +9,7 @@ use std::ptr::NonNull;
 use std::rc::Rc;
 
 use mozjs::jsapi::{
-	JSFunction, JSObject, JSString, JS_GetFunctionObject, JS_IdToValue, JS_NewStringCopyN, JS_WrapValue,
+	JS_GetFunctionObject, JS_IdToValue, JS_NewStringCopyN, JS_WrapValue, JSFunction, JSObject, JSString,
 	PropertyKey as JSPropertyKey, Symbol as JSSymbol,
 };
 use mozjs::jsval::{

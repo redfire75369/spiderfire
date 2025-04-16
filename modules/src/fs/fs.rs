@@ -341,11 +341,11 @@ fn symlink(cx: &Context, original_str: String, link_str: String) -> Option<Promi
 		let link = Path::new(&link_str);
 
 		let result;
-		#[cfg(target_family = "unix")]
+		#[cfg(unix)]
 		{
 			result = tokio::fs::symlink(original, link).await;
 		}
-		#[cfg(target_family = "windows")]
+		#[cfg(windows)]
 		{
 			result = if original.is_dir() {
 				tokio::fs::symlink_dir(original, link).await

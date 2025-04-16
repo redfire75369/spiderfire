@@ -36,6 +36,10 @@ test-release *args:
 docs:
   cargo doc --workspace --all-features --no-deps --document-private-items --keep-going
 
+docsrs:
+  cargo +nightly doc --workspace --all-features --document-private-items \
+    --config "build.rustdocflags = ['--cfg', 'docsrs', '-D', 'warnings', '-Z', 'unstable-options', '--enable-index-page', '--show-type-layout']"
+
 fmt *args:
   cargo +nightly fmt --all
 
