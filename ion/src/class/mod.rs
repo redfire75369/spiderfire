@@ -23,8 +23,11 @@ use mozjs::rust::get_object_class;
 pub use crate::class::native::{MAX_PROTO_CHAIN_LENGTH, NativeClass, PrototypeChain, TypeIdWrapper};
 pub use crate::class::reflect::{Castable, DerivedFrom, NativeObject, Reflector};
 use crate::conversions::{IntoValue, ToValue};
-use crate::function::NativeFunction;
-use crate::{Context, Error, ErrorKind, Function, Local, Object, Result, Value, class_num_reserved_slots};
+use crate::function::{__handle_native_constructor_result, NativeFunction};
+use crate::{
+	Arguments, Context, Error, ErrorKind, Exception, Function, Local, Object, Result, ResultExc, Value,
+	class_num_reserved_slots,
+};
 
 mod native;
 mod reflect;
@@ -35,7 +38,7 @@ mod reflect;
 pub struct ClassInfo {
 	#[trace(no_trace)]
 	class: &'static NativeClass,
-	constructor: Box<Heap<*mut JSFunction>>,
+	pub constructor: Box<Heap<*mut JSFunction>>,
 	pub prototype: Box<Heap<*mut JSObject>>,
 }
 
@@ -250,6 +253,39 @@ fn check_private<T: ClassDefinition>(cx: &Context, object: &Object) -> Result<()
 	}
 }
 
+unsafe extern "C" fn illegal_constructor(cx: *mut JSContext, _: u32, _: *mut JSVal) -> bool {
+	unsafe {
+		throw_type_error(cx, "Illegal constructor.");
+	}
+	false
+}
+
+#[doc(hidden)]
+pub fn construct_native_object<'cx, T, C>(cx: &'cx Context, args: &mut Arguments<'cx>, constructor: C) -> bool
+where
+	T: ClassDefinition,
+	C: for<'cx2> FnOnce(&'cx2 Context, &mut Arguments<'cx2>, &mut Object<'cx2>) -> ResultExc<()>,
+{
+	if !args.is_constructing() {
+		debug_assert!(!Exception::is_pending(cx));
+		unsafe {
+			let name = CStr::from_ptr(T::class().base.name).to_str().unwrap();
+			throw_type_error(cx.as_ptr(), &format!("{name} constructor: 'new' is required"));
+		}
+		return false;
+	}
+
+	let class_info = T::init_class(cx, &Object::global(cx)).1;
+
+	let mut this = Object::from(
+		cx.root(unsafe { JS_NewObjectWithGivenProto(cx.as_ptr(), &T::class().base, class_info.prototype.handle()) }),
+	);
+
+	let result = ::std::panic::catch_unwind(::std::panic::AssertUnwindSafe(|| constructor(cx, args, &mut this)));
+
+	__handle_native_constructor_result(cx, result, &this, &mut args.rval())
+}
+
 #[doc(hidden)]
 pub unsafe extern "C" fn finalise_native_object_operation<T>(_: *mut GCContext, this: *mut JSObject) {
 	let mut value = NullValue();
@@ -274,11 +310,4 @@ pub unsafe extern "C" fn trace_native_object_operation<T: Traceable>(trc: *mut J
 			private.trace(trc);
 		}
 	}
-}
-
-unsafe extern "C" fn illegal_constructor(cx: *mut JSContext, _: u32, _: *mut JSVal) -> bool {
-	unsafe {
-		throw_type_error(cx, "Illegal constructor.");
-	}
-	false
 }

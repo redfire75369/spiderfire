@@ -19,29 +19,16 @@ pub(super) fn impl_constructor(ion: &TokenStream, mut constructor: ItemFn, ty: &
 	constructor.attrs.clear();
 
 	let body = parse_quote!({
-		let cx = &#ion::Context::new_unchecked(cx);
-		let args = &mut #ion::Arguments::new(cx, argc, vp);
-		let mut this = #ion::Object::from(
-			cx.root(
-				::mozjs::jsapi::JS_NewObjectForConstructor(cx.as_ptr(), &<#ty as #ion::ClassDefinition>::class().base, args.call_args())
-			)
-		);
-
 		#wrapper
 
-		if !args.is_constructing() {
-			let name = unsafe {
-				::std::ffi::CStr::from_ptr(<#ty as #ion::ClassDefinition>::class().base.name).to_str().unwrap()
-			};
-			::mozjs::error::throw_type_error(cx.as_ptr(), &format!("{name} constructor: 'new' is required"));
-			return false;
+		let cx = &#ion::Context::new_unchecked(cx);
+		let args = &mut #ion::Arguments::new(cx, argc, vp);
+
+		unsafe {
+			#ion::class::construct_native_object::<#ty, _>(
+				cx, args, |cx, args, this| unsafe { wrapper(cx, args, this) }
+			)
 		}
-
-		let result = ::std::panic::catch_unwind(::std::panic::AssertUnwindSafe(|| {
-			wrapper(cx, args, &mut this)
-		}));
-
-		#ion::function::__handle_native_constructor_result(cx, result, &this, &mut args.rval())
 	});
 	constructor.block = body;
 	constructor.sig.ident = format_ident!("__ion_bindings_constructor", span = constructor.sig.ident.span());

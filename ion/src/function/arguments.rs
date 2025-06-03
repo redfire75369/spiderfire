@@ -84,6 +84,12 @@ impl<'cx> Arguments<'cx> {
 		Value::from(unsafe { Local::from_raw_handle_mut(self.call_args.rval()) })
 	}
 
+	/// Returns the new target of the function if it is constructing.
+	pub fn new_target(&self) -> Option<Value<'cx>> {
+		self.is_constructing()
+			.then(|| Value::from(unsafe { Local::from_raw_handle_mut(self.call_args.new_target()) }))
+	}
+
 	/// Returns the argument at a given index.
 	pub fn value(&self, index: u16) -> Option<Value<'cx>> {
 		if index < self.len() {

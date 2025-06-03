@@ -119,7 +119,7 @@ pub(crate) fn format_type(ty: &Type) -> String {
 		.unwrap(),
 	);
 	let mut ty = String::from(ty.trim());
-	ty.drain((ty.len() - 2)..(ty.len()));
+	ty.drain((ty.len() - 2)..ty.len());
 	ty.drain(0..4);
 	String::from(ty.trim())
 }
