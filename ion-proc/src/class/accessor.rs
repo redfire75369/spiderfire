@@ -4,8 +4,8 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/.
  */
 
-use std::collections::HashMap;
 use std::collections::hash_map::Entry;
+use std::collections::HashMap;
 
 use convert_case::{Case, Casing};
 use proc_macro2::{Ident, TokenStream};
@@ -13,7 +13,7 @@ use quote::{format_ident, quote};
 use syn::spanned::Spanned;
 use syn::{Error, ItemFn, Result, Type};
 
-use crate::class::method::{Method, impl_method};
+use crate::class::method::{impl_method, Method};
 use crate::function::parameter::Parameters;
 
 pub(super) struct Accessor(pub(super) Option<Method>, Option<Method>);
@@ -82,7 +82,7 @@ pub(super) fn get_accessor_name(mut name: String, is_setter: bool) -> String {
 }
 
 pub(super) fn impl_accessor(
-	ion: &TokenStream, method: ItemFn, ty: &Type, is_setter: bool,
+	ion: &TokenStream, method: ItemFn, ty: &Type, is_setter: bool, class: &str,
 ) -> Result<(Method, Parameters)> {
 	let expected_args = i32::from(is_setter);
 	let error_message = if is_setter {
@@ -97,7 +97,7 @@ pub(super) fn impl_accessor(
 	} else {
 		format_ident!("__ion_bindings_getter_{}", method.sig.ident)
 	};
-	let (mut accessor, parameters) = impl_method(ion, method, ty, |sig| {
+	let (mut accessor, parameters) = impl_method(ion, method, ty, class, |sig| {
 		let parameters = Parameters::parse(&sig.inputs, Some(ty))?;
 		let nargs: i32 = parameters
 			.parameters

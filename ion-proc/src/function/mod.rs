@@ -20,7 +20,9 @@ pub(crate) mod wrapper;
 // TODO: Partially Remove Error Handling in Infallible Functions
 pub(crate) fn impl_js_fn(mut function: ItemFn) -> Result<ItemFn> {
 	let ion = &crate_from_attributes(&mut function.attrs);
-	let (wrapper, _) = impl_wrapper_fn(ion, function.clone(), None, false)?;
+
+	let ident = &function.sig.ident;
+	let (wrapper, _) = impl_wrapper_fn(ion, function.clone(), None, false, &ident.to_string())?;
 
 	check_abi(&mut function)?;
 	set_signature(&mut function)?;
@@ -43,23 +45,22 @@ pub(crate) fn check_abi(function: &mut ItemFn) -> Result<()> {
 
 pub(crate) fn set_signature(function: &mut ItemFn) -> Result<()> {
 	function.sig.unsafety = Some(new_token![unsafe]);
-	let params: [FnArg; 3] = [
+	function.sig.generics = Generics::default();
+	function.sig.inputs = Punctuated::from_iter::<[FnArg; 3]>([
 		parse_quote!(cx: *mut ::mozjs::jsapi::JSContext),
 		parse_quote!(argc: ::core::primitive::u32),
 		parse_quote!(vp: *mut ::mozjs::jsval::JSVal),
-	];
-	function.sig.generics = Generics::default();
-	function.sig.inputs = Punctuated::from_iter(params);
+	]);
 	function.sig.output = parse_quote!(-> ::core::primitive::bool);
 	Ok(())
 }
 
 pub(crate) fn impl_fn_body(ion: &TokenStream, wrapper: &ItemFn) -> Result<Box<Block>> {
 	parse2(quote!({
+		#wrapper
+
 		let cx = &#ion::Context::new_unchecked(cx);
 		let args = &mut #ion::Arguments::new(cx, argc, vp);
-
-		#wrapper
 
 		let result = ::std::panic::catch_unwind(::std::panic::AssertUnwindSafe(|| wrapper(cx, args)));
 		#ion::function::__handle_native_function_result(cx, result)

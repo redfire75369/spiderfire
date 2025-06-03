@@ -15,7 +15,7 @@ use crate::function::parameter::Parameters;
 use crate::utils::{new_token, path_ends_with};
 
 pub(crate) fn impl_wrapper_fn(
-	ion: &TokenStream, mut function: ItemFn, class_ty: Option<&Type>, is_constructor: bool,
+	ion: &TokenStream, mut function: ItemFn, class_ty: Option<&Type>, is_constructor: bool, error_key: &str,
 ) -> Result<(ItemFn, Parameters)> {
 	if function.sig.asyncness.is_some() {
 		return Err(Error::new(
@@ -87,7 +87,7 @@ pub(crate) fn impl_wrapper_fn(
 	};
 
 	let body = parse2(quote_spanned!(function.span() => {
-		__args.check_args(__cx, #nargs)?;
+		__args.check_args(__cx, #nargs, ::std::option::Option::Some(#error_key))?;
 
 		let mut __accessor = __args.access();
 		#this_statements

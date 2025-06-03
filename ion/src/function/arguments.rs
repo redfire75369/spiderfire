@@ -4,6 +4,8 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/.
  */
 
+use std::borrow::Cow;
+
 use mozjs::jsapi::CallArgs;
 use mozjs::jsval::JSVal;
 
@@ -36,17 +38,24 @@ impl<'cx> Arguments<'cx> {
 	}
 
 	/// Checks if the expected minimum number of arguments were passed.
-	pub fn check_args(&self, cx: &Context, min: u16) -> Result<()> {
+	pub fn check_args(&self, cx: &Context, min: u16, key: Option<&str>) -> Result<()> {
 		if self.args < min {
-			let callee = Function::from_object(cx, &self.callee).unwrap();
-			let name = callee.name(cx)?;
+			let key = key.map_or_else(
+				|| {
+					let callee = Function::from_object(cx, &self.callee).unwrap();
+					callee.name(cx).map(Cow::Owned)
+				},
+				|k| Ok(Cow::Borrowed(k)),
+			)?;
+			let suffix = if min == 1 { "" } else { "s" };
+			let verb = if min == 1 { "was" } else { "were" };
 
 			return Err(Error::new(
 				format!(
-					"Error while calling `{name}()` with {} argument(s) while {min} were expected.",
-					self.args
+					"{key}: At least {min} argument{suffix} expected, but only {} {verb} passed.",
+					self.args,
 				),
-				ErrorKind::Normal,
+				ErrorKind::Type,
 			));
 		}
 		Ok(())

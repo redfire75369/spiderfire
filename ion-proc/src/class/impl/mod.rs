@@ -124,13 +124,19 @@ fn parse_class_method(
 		attrs.clear();
 	}
 
+	let class = if let Type::Path(ty) = r#type {
+		ty.path.segments.last().unwrap().ident.to_string()
+	} else {
+		return Err(Error::new(r#type.span(), "Invalid Type for Impl"));
+	};
+
 	match kind {
 		Some(MethodKind::Constructor) => {
-			let constructor = impl_constructor(ion, method, r#type)?;
+			let constructor = impl_constructor(ion, method, r#type, &class)?;
 			return Ok(Some(Method { names, ..constructor }));
 		}
 		Some(MethodKind::Getter) => {
-			let (getter, parameters) = impl_accessor(ion, method, r#type, false)?;
+			let (getter, parameters) = impl_accessor(ion, method, r#type, false, &class)?;
 			let getter = Method { names, ..getter };
 
 			if parameters.this.is_some() {
@@ -140,7 +146,7 @@ fn parse_class_method(
 			}
 		}
 		Some(MethodKind::Setter) => {
-			let (setter, parameters) = impl_accessor(ion, method, r#type, true)?;
+			let (setter, parameters) = impl_accessor(ion, method, r#type, true, &class)?;
 			let setter = Method { names, ..setter };
 
 			if parameters.this.is_some() {
@@ -150,7 +156,7 @@ fn parse_class_method(
 			}
 		}
 		None => {
-			let (method, _) = impl_method(ion, method, r#type, |_| Ok(()))?;
+			let (method, _) = impl_method(ion, method, r#type, &class, |_| Ok(()))?;
 			let method = Method { names, ..method };
 
 			if method.receiver == MethodReceiver::Dynamic {

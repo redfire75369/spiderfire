@@ -6,14 +6,20 @@
 
 use proc_macro2::TokenStream;
 use quote::format_ident;
-use syn::{ItemFn, Result, Type, parse_quote};
+use syn::{parse_quote, ItemFn, Result, Type};
 
 use crate::class::method::{Method, MethodReceiver};
 use crate::function::wrapper::impl_wrapper_fn;
 use crate::function::{check_abi, set_signature};
 
-pub(super) fn impl_constructor(ion: &TokenStream, mut constructor: ItemFn, ty: &Type) -> Result<Method> {
-	let (wrapper, parameters) = impl_wrapper_fn(ion, constructor.clone(), Some(ty), true)?;
+pub(super) fn impl_constructor(ion: &TokenStream, mut constructor: ItemFn, ty: &Type, class: &str) -> Result<Method> {
+	let (wrapper, parameters) = impl_wrapper_fn(
+		ion,
+		constructor.clone(),
+		Some(ty),
+		true,
+		&format!("{class} constructor"),
+	)?;
 
 	check_abi(&mut constructor)?;
 	set_signature(&mut constructor)?;

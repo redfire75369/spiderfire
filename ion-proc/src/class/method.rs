@@ -62,12 +62,13 @@ impl Method {
 }
 
 pub(super) fn impl_method<F>(
-	ion: &TokenStream, mut method: ItemFn, ty: &Type, predicate: F,
+	ion: &TokenStream, mut method: ItemFn, ty: &Type, class: &str, predicate: F,
 ) -> Result<(Method, Parameters)>
 where
 	F: FnOnce(&Signature) -> Result<()>,
 {
-	let (wrapper, parameters) = impl_wrapper_fn(ion, method.clone(), Some(ty), false)?;
+	let fn_ident = &method.sig.ident;
+	let (wrapper, parameters) = impl_wrapper_fn(ion, method.clone(), Some(ty), false, &format!("{class}.{fn_ident}"))?;
 
 	predicate(&method.sig).and_then(|_| {
 		check_abi(&mut method)?;
