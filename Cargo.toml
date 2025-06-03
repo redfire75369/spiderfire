@@ -106,7 +106,3 @@ ptr_cast_constness = "forbid"
 ref_as_ptr = "forbid"
 transmute_ptr_to_ptr = "deny"
 uninlined_format_args = "forbid"
-
-[profile.release]
-lto = "fat"
-strip = "symbols"

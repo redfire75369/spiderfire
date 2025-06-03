@@ -6,7 +6,7 @@
 
 use proc_macro2::TokenStream;
 use quote::format_ident;
-use syn::{parse_quote, ItemFn, Result, Type};
+use syn::{ItemFn, Result, Type, parse_quote};
 
 use crate::class::method::{Method, MethodReceiver};
 use crate::function::wrapper::impl_wrapper_fn;

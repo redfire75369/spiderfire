@@ -4,8 +4,8 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/.
  */
 
-use std::collections::hash_map::Entry;
 use std::collections::HashMap;
+use std::collections::hash_map::Entry;
 
 use convert_case::{Case, Casing};
 use proc_macro2::{Ident, TokenStream};
@@ -13,7 +13,7 @@ use quote::{format_ident, quote};
 use syn::spanned::Spanned;
 use syn::{Error, ItemFn, Result, Type};
 
-use crate::class::method::{impl_method, Method};
+use crate::class::method::{Method, impl_method};
 use crate::function::parameter::Parameters;
 
 pub(super) struct Accessor(pub(super) Option<Method>, Option<Method>);

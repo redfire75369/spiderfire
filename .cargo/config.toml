@@ -1,2 +1,13 @@
 [target.x86_64-pc-windows-msvc]
 linker = "lld-link"
+
+[profile.ci]
+inherits = "release"
+debuginfo = "full"
+debug-assertions = true
+overflow-checks = true
+
+[profile.ci-release]
+inherits = "release"
+strip = "symbols"
+lto = "fat"

@@ -21,6 +21,12 @@ build *args:
 build-release *args:
   cargo build -r {{args}}
 
+build-ci *args:
+  cargo build --profile ci --locked {{args}}
+
+build-ci-release *args:
+  cargo build --profile ci-release --locked {{args}}
+
 run *args:
   cargo run -F debugmozjs {{args}}
 
@@ -31,7 +37,10 @@ test *args:
   cargo nextest run -F debugmozjs --locked {{args}}
 
 test-release *args:
-  cargo nextest run  -r --locked {{args}}
+  cargo nextest run -r --locked {{args}}
+
+test-ci *args:
+  cargo nextest run --profile ci --locked {{args}}
 
 docs:
   cargo doc --workspace --all-features --no-deps --document-private-items --keep-going

@@ -73,28 +73,28 @@ jobs:
       - name: Build Windows
         if: matrix.os == 'windows'
         run: |
-          just build-release -v --locked --target $env:TARGET
-          Rename-Item -Path .\target\$env:TARGET\release\cli.exe -NewName spiderfire.exe
+          just build-ci -v --target $env:TARGET
+          Rename-Item -Path .\target\$env:TARGET\ci\cli.exe -NewName spiderfire.exe
 
       - name: Build POSIX
         if: matrix.os == 'macos' || matrix.os == 'linux'
         run: |
-          just build-release -v --locked --target $TARGET
-          mv ./target/$TARGET/release/cli ./target/$TARGET/release/spiderfire
+          just build-ci -v --target $TARGET
+          mv ./target/$TARGET/ci/cli ./target/$TARGET/ci/spiderfire
 
       - name: Run Tests
         if: matrix.job == 'test'
         env:
           NEXTEST_PROFILE: ci
         shell: bash
-        run: just test-release -v --target $TARGET
+        run: just test-ci -v --target $TARGET
 
       - name: Upload Executables as Artifacts
         uses: actions/upload-artifact@v4
         if: matrix.rust == 'stable'
         with:
           name: spiderfire-${{ github.sha }}-${{ matrix.os }}-${{ matrix.arch }}
-          path: target/${{ matrix.target }}/release/spiderfire${{ matrix.os == 'windows' && '.exe' || '' }}
+          path: target/${{ matrix.target }}/ci/spiderfire${{ matrix.os == 'windows' && '.exe' || '' }}
           if-no-files-found: error
 
   lint:
