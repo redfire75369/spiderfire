@@ -8,9 +8,9 @@ authors = ["Redfire <redfire75369@hotmail.com>"]
 
 [dependencies]
 chrono.workspace = true
+idna_adapter.workspace = true # Prevents Duplicate icu 2.x.x
 idna.workspace = true
 mozjs.workspace = true
-url.workspace = true
 runtime.workspace = true
 
 [dependencies.ion]
