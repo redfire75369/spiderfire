@@ -9,6 +9,7 @@ use std::ops::{Deref, DerefMut};
 use chrono::offset::Utc;
 use chrono::{DateTime, TimeZone};
 use mozjs::jsapi::{ClippedTime, DateGetMsecSinceEpoch, DateIsValid, JSObject, NewDateObject, ObjectIsDate};
+use mozjs::rooted;
 
 use crate::{Context, Local};
 

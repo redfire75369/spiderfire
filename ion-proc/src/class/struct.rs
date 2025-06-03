@@ -5,9 +5,10 @@
  */
 
 use proc_macro2::{Ident, Span, TokenStream};
+use quote::{quote, quote_spanned};
 use syn::punctuated::Punctuated;
 use syn::spanned::Spanned;
-use syn::{Error, ItemImpl, ItemStruct, Member, Path, Result, Type, parse2};
+use syn::{Error, ItemImpl, ItemStruct, Member, Path, Result, Token, Type, parse_quote, parse2};
 
 use crate::attribute::ParseAttribute;
 use crate::attribute::class::ClassAttribute;

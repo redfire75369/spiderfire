@@ -10,7 +10,7 @@ use http::{HeaderMap, Method};
 use ion::class::{NativeObject, Reflector};
 use ion::function::Opt;
 use ion::typedarray::{ArrayBufferWrapper, Uint8ArrayWrapper};
-use ion::{ClassDefinition, Context, Error, ErrorKind, Object, Promise, Result, TracedHeap};
+use ion::{ClassDefinition, Context, Error, ErrorKind, FromValue, Object, Promise, Result, TracedHeap, js_class};
 use mozjs::jsapi::{Heap, JSObject};
 pub use options::*;
 use url::Url;

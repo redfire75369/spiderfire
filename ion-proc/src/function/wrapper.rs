@@ -5,10 +5,10 @@
  */
 
 use proc_macro2::TokenStream;
-use quote::ToTokens;
+use quote::{ToTokens, format_ident, quote, quote_spanned};
 use syn::punctuated::Punctuated;
 use syn::spanned::Spanned;
-use syn::{Error, FnArg, GenericParam, ItemFn, Result, ReturnType, Type, parse2};
+use syn::{Error, FnArg, GenericParam, ItemFn, Result, ReturnType, Type, parse_quote, parse2};
 
 use crate::function::inner::impl_inner_fn;
 use crate::function::parameter::Parameters;

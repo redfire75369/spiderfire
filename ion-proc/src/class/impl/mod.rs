@@ -5,9 +5,9 @@
  */
 
 use proc_macro2::{Ident, Span, TokenStream};
-use quote::ToTokens;
+use quote::{ToTokens, quote, quote_spanned};
 use syn::spanned::Spanned;
-use syn::{Error, FnArg, ImplItem, ImplItemFn, ItemFn, ItemImpl, Result, Type, Visibility, parse2};
+use syn::{Error, FnArg, ImplItem, ImplItemFn, ItemFn, ItemImpl, Result, Type, Visibility, parse_quote, parse2};
 
 use crate::attribute::ParseAttribute;
 use crate::attribute::class::MethodAttribute;

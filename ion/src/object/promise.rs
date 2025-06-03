@@ -14,6 +14,7 @@ use mozjs::jsapi::{
 	AddPromiseReactions, CallOriginalPromiseReject, CallOriginalPromiseResolve, GetPromiseID, GetPromiseState,
 	IsPromiseObject, JSObject, NewPromiseObject, PromiseState, RejectPromise, ResolvePromise,
 };
+use mozjs::rooted;
 
 use crate::conversions::ToValue;
 use crate::flags::PropertyFlags;

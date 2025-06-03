@@ -6,11 +6,12 @@
 
 use prettyplease::unparse;
 use proc_macro2::{Ident, TokenStream};
+use quote::quote;
 use syn::punctuated::Punctuated;
 use syn::spanned::Spanned;
 use syn::{
-	Attribute, Error, Fields, GenericParam, Generics, Lifetime, LifetimeParam, Meta, Pat, Path, Result, Type,
-	TypeParamBound, parse2,
+	Attribute, Error, Fields, GenericParam, Generics, Lifetime, LifetimeParam, Meta, Pat, Path, Result, Token, Type,
+	TypeParamBound, parse_quote, parse2,
 };
 
 pub(crate) fn path_ends_with<I: ?Sized>(path: &Path, ident: &I) -> bool
@@ -126,7 +127,7 @@ pub(crate) fn format_type(ty: &Type) -> String {
 
 macro_rules! new_token {
     [$i:tt] => {
-		<Token![$i]>::default()
+		<::syn::Token![$i]>::default()
     };
 }
 

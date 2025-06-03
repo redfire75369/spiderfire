@@ -6,8 +6,9 @@
 
 use convert_case::{Case, Casing};
 use proc_macro2::{Ident, Span, TokenStream};
+use quote::format_ident;
 use syn::parse::{Parse, ParseStream};
-use syn::{Error, Expr, ExprLit, ExprPath, Lit, LitStr};
+use syn::{Error, Expr, ExprLit, ExprPath, Lit, LitStr, parse_quote};
 
 #[derive(Clone)]
 pub(crate) enum Name {

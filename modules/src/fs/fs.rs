@@ -12,7 +12,7 @@ use std::{fs, os};
 use ion::class::ClassObjectWrapper;
 use ion::flags::PropertyFlags;
 use ion::function::Opt;
-use ion::{ClassDefinition, Context, Iterator, Object, Promise, Result};
+use ion::{ClassDefinition, Context, FromValue, Iterator, Object, Promise, Result, function_spec, js_fn};
 use mozjs::jsapi::{JSFunction, JSFunctionSpec, JSObject};
 use runtime::module::NativeModule;
 use runtime::promise::future_to_promise;

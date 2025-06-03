@@ -5,8 +5,12 @@
  */
 
 use proc_macro2::{Ident, Span, TokenStream};
+use quote::{quote, quote_spanned};
 use syn::spanned::Spanned;
-use syn::{Block, Data, DeriveInput, Error, Expr, Field, Fields, Generics, ItemImpl, Result, Type, parse2};
+use syn::{
+	Block, Data, DeriveInput, Error, Expr, Field, Fields, Generics, ItemImpl, Result, Type, parse_quote,
+	parse_quote_spanned, parse2,
+};
 
 use crate::attribute::krate::crate_from_attributes;
 use crate::attribute::value::{DataAttribute, DefaultValue, FieldFromAttribute, Tag, VariantAttribute};

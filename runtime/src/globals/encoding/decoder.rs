@@ -7,7 +7,7 @@
 use encoding_rs::{Decoder, DecoderResult, Encoding, UTF_8};
 use ion::class::Reflector;
 use ion::function::Opt;
-use ion::{Error, ErrorKind, Result};
+use ion::{Error, ErrorKind, FromValue, Result, js_class};
 
 use crate::globals::file::BufferSource;
 

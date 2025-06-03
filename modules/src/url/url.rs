@@ -6,7 +6,7 @@
 
 use idna::domain_to_ascii_strict;
 use ion::function::Opt;
-use ion::{ClassDefinition, Context, Object, Result};
+use ion::{ClassDefinition, Context, Object, Result, function_spec, js_fn};
 use mozjs::jsapi::JSFunctionSpec;
 use runtime::globals::url::{URL, URLSearchParams};
 use runtime::module::NativeModule;

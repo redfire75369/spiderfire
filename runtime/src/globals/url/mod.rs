@@ -8,7 +8,7 @@ use std::cmp::Ordering;
 
 use ion::class::{NativeObject, Reflector};
 use ion::function::Opt;
-use ion::{ClassDefinition, Context, Error, Local, Object, Result};
+use ion::{ClassDefinition, Context, Error, FromValue, Local, Object, Result, js_class};
 use mozjs::jsapi::{Heap, JSObject};
 pub use search_params::URLSearchParams;
 use url::Url;

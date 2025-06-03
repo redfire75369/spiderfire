@@ -20,7 +20,7 @@ use ion::format::key::format_key;
 use ion::format::primitive::format_primitive;
 use ion::format::{Config as FormatConfig, format_value, indent_str};
 use ion::function::{Opt, Rest};
-use ion::{Context, Object, OwnedKey, Result, Stack, Value};
+use ion::{Context, Object, OwnedKey, Result, Stack, Value, function_spec, js_fn};
 use mozjs::jsapi::JSFunctionSpec;
 
 use crate::cache::map::find_sourcemap;

@@ -25,7 +25,9 @@ use ion::class::{ClassObjectWrapper, Reflector};
 use ion::conversions::ToValue;
 use ion::flags::PropertyFlags;
 use ion::function::Opt;
-use ion::{ClassDefinition, Context, Error, ErrorKind, Exception, Local, Object, Promise, ResultExc, TracedHeap};
+use ion::{
+	ClassDefinition, Context, Error, ErrorKind, Exception, Local, Object, Promise, ResultExc, TracedHeap, js_fn,
+};
 use request::{Referrer, ReferrerPolicy, RequestCache, RequestCredentials, RequestMode, RequestRedirect};
 pub use request::{Request, RequestInfo, RequestInit};
 pub use response::Response;

@@ -5,8 +5,9 @@
  */
 
 use proc_macro2::{Ident, Span};
+use quote::{format_ident, quote, quote_spanned};
 use syn::spanned::Spanned;
-use syn::{Block, Data, DeriveInput, Error, Fields, Generics, ItemImpl, Result, parse2};
+use syn::{Block, Data, DeriveInput, Error, Fields, Generics, ItemImpl, Result, parse_quote, parse2};
 
 use crate::attribute::ParseAttribute;
 use crate::attribute::trace::TraceAttribute;

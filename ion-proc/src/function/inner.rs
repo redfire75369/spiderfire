@@ -4,6 +4,7 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/.
  */
 
+use quote::format_ident;
 use syn::ItemFn;
 use syn::punctuated::Punctuated;
 

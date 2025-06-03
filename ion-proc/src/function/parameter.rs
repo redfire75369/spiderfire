@@ -5,10 +5,11 @@
  */
 
 use proc_macro2::{Span, TokenStream};
+use quote::{format_ident, quote, quote_spanned};
 use syn::punctuated::Punctuated;
 use syn::spanned::Spanned;
 use syn::visit_mut::visit_type_mut;
-use syn::{Error, Expr, FnArg, Ident, Pat, PatType, Receiver, Result, Stmt, Type, parse2};
+use syn::{Error, Expr, FnArg, Ident, Pat, PatType, Receiver, Result, Stmt, Token, Type, parse_quote, parse2};
 
 use crate::attribute::ParseAttribute;
 use crate::attribute::function::ParameterAttribute;

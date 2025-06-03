@@ -9,7 +9,7 @@ use std::fmt::{Display, Formatter};
 use std::str::FromStr;
 
 use ion::conversions::FromValue;
-use ion::{Context, Error, ErrorKind, Result, Value};
+use ion::{Context, Error, ErrorKind, FromValue, Result, Traceable, Value};
 use mozjs::jsapi::JSObject;
 use mozjs::jsval::JSVal;
 use url::Url;

@@ -10,7 +10,7 @@ use std::iter::Iterator as Iter;
 
 use ion::class::Reflector;
 use ion::conversions::ToValue;
-use ion::{ClassDefinition, Context, Iterator, JSIterator, Result, Value};
+use ion::{ClassDefinition, Context, Iterator, JSIterator, Result, Value, js_class};
 
 use crate::fs::{Metadata, metadata_error};
 

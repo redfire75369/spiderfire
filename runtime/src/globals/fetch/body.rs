@@ -16,7 +16,7 @@ use http::{HeaderMap, HeaderValue};
 use http_body_util::{BodyExt, Full};
 use hyper::body::{Frame, Incoming, SizeHint};
 use ion::conversions::FromValue;
-use ion::{Context, Error, ErrorKind, Value};
+use ion::{Context, Error, ErrorKind, Traceable, Value};
 use mozjs::jsapi::Heap;
 use mozjs::jsval::JSVal;
 use pin_project::pin_project;

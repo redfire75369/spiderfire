@@ -12,7 +12,7 @@ use ion::conversions::{FromValue, ToValue};
 use ion::typedarray::{ArrayBuffer, ArrayBufferView, Uint8Array, type_to_constructor};
 use ion::{
 	ClassDefinition, Context, Error, ErrorKind, Exception, Function, Local, Object, Promise, Result, ResultExc,
-	TracedHeap, Value,
+	Traceable, TracedHeap, Value, js_class,
 };
 use mozjs::conversions::ConversionBehavior;
 use mozjs::jsapi::{Handle, Heap, JSContext, JSFunction, JSObject, Type};

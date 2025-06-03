@@ -6,7 +6,7 @@
 
 use proc_macro2::{Ident, TokenStream};
 use syn::meta::ParseNestedMeta;
-use syn::{Attribute, Result};
+use syn::{Attribute, Result, parse_quote};
 
 use crate::attribute::{ParseArgument, ParseAttribute};
 

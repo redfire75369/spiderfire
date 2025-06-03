@@ -19,7 +19,7 @@ use ion::class::Reflector;
 use ion::conversions::{ConversionBehavior, FromValue, IntoValue, ToValue};
 use ion::function::Opt;
 use ion::typedarray::{Uint8Array, Uint8ArrayWrapper};
-use ion::{Context, Error, ErrorKind, Promise, Result, TracedHeap, Value};
+use ion::{Context, Error, ErrorKind, Promise, Result, TracedHeap, Value, js_class};
 use mozjs::jsval::DoubleValue;
 use runtime::globals::file::BufferSource;
 use runtime::promise::future_to_promise;

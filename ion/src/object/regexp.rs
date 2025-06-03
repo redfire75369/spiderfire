@@ -12,6 +12,7 @@ use mozjs::jsapi::{
 	CheckRegExpSyntax, ExecuteRegExp, ExecuteRegExpNoStatics, GetRegExpSource, JSObject, NewUCRegExpObject,
 	ObjectIsRegExp, RegExpFlags as REFlags,
 };
+use mozjs::rooted;
 
 use crate::flags::RegExpFlags;
 use crate::{Context, Local, Object, Value};

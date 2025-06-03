@@ -14,8 +14,8 @@ use ion::conversions::{FromValue, ToValue};
 use ion::function::Opt;
 use ion::typedarray::{ArrayBuffer, ArrayBufferView, Uint8Array};
 use ion::{
-	ClassDefinition, Context, Exception, Function, JSIterator, Local, Object, Promise, Result, ResultExc, TracedHeap,
-	Value,
+	ClassDefinition, Context, Exception, Function, JSIterator, Local, Object, Promise, Result, ResultExc, Traceable,
+	TracedHeap, Value,
 };
 use mozjs::gc::HandleObject;
 use mozjs::jsapi::{CloneDataPolicy, Heap, JSFunction, JSObject, StructuredCloneScope};

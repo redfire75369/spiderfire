@@ -13,6 +13,7 @@ use mozjs::jsapi::{
 	JS_SetPendingException, Rooted,
 };
 use mozjs::jsval::{JSVal, ObjectValue, UndefinedValue};
+use mozjs::rooted;
 #[cfg(feature = "sourcemap")]
 use sourcemap::SourceMap;
 

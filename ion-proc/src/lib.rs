@@ -6,13 +6,9 @@
 
 #![cfg_attr(docsrs, feature(doc_cfg, doc_auto_cfg))]
 
-#[macro_use]
-extern crate quote;
-#[macro_use]
-extern crate syn;
-
 use proc_macro::TokenStream;
 use quote::ToTokens;
+use syn::parse_macro_input;
 
 use crate::class::impl_js_class;
 use crate::function::impl_js_fn;

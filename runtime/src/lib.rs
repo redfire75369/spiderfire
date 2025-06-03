@@ -7,9 +7,6 @@
 #![allow(clippy::missing_safety_doc, clippy::module_inception)]
 #![cfg_attr(docsrs, feature(doc_cfg, doc_auto_cfg))]
 
-#[macro_use]
-extern crate ion;
-
 pub use crate::runtime::*;
 
 pub mod cache;

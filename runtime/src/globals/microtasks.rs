@@ -5,7 +5,7 @@
  */
 
 use ion::flags::PropertyFlags;
-use ion::{Context, Error, Function, Object, Result};
+use ion::{Context, Error, Function, Object, Result, function_spec, js_fn};
 use mozjs::jsapi::JSFunctionSpec;
 
 use crate::ContextExt;

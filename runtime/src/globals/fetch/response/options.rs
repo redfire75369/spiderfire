@@ -9,7 +9,7 @@ use std::fmt::{Display, Formatter};
 
 use http::StatusCode;
 use ion::conversions::FromValue;
-use ion::{Context, Error, ErrorKind, Result, Value};
+use ion::{Context, Error, ErrorKind, FromValue, Result, Traceable, Value};
 use mozjs::conversions::ConversionBehavior;
 
 use crate::globals::fetch::header::HeadersInit;

@@ -10,7 +10,10 @@ use ion::class::Reflector;
 use ion::conversions::ToValue;
 use ion::function::Opt;
 use ion::typedarray::{ArrayBufferView, type_to_constructor, type_to_element_size};
-use ion::{ClassDefinition, Context, Error, ErrorKind, Local, Object, Promise, Result, ResultExc, Value};
+use ion::{
+	ClassDefinition, Context, Error, ErrorKind, FromValue, Local, Object, Promise, Result, ResultExc, Traceable, Value,
+	js_class,
+};
 use mozjs::conversions::ConversionBehavior;
 use mozjs::jsapi::{Heap, JSObject};
 

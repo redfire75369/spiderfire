@@ -5,7 +5,7 @@
  */
 
 use ion::function::Opt;
-use ion::{Context, Error, Function, Object, Result, Value};
+use ion::{Context, Error, Function, Object, Result, Value, function_spec, js_fn};
 use mozjs::jsapi::JSFunctionSpec;
 use runtime::module::NativeModule;
 

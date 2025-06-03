@@ -166,6 +166,7 @@ async fn file_fetch(cx: &Context, request: &Request, url: Url) -> Response {
 	}
 }
 
+#[expect(clippy::result_large_err)]
 fn get_ranged_bytes<const N: usize>(
 	headers: &HeaderMap, bytes: &mut Bytes, response_headers: &mut ArrayVec<(HeaderName, HeaderValue), N>,
 ) -> Result<(StatusCode, bool), Response> {

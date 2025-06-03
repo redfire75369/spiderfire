@@ -13,7 +13,7 @@ use ion::conversions::FromValue;
 use ion::format::NEWLINE;
 use ion::function::{Clamp, Opt};
 use ion::typedarray::{ArrayBuffer, ArrayBufferView, ArrayBufferWrapper, Uint8ArrayWrapper};
-use ion::{ClassDefinition, Context, Error, ErrorKind, Object, Promise, Result, Value};
+use ion::{ClassDefinition, Context, Error, ErrorKind, FromValue, Object, Promise, Result, Value, js_class};
 use mozjs::jsapi::JSObject;
 
 use crate::promise::future_to_promise;

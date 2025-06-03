@@ -10,6 +10,7 @@ use std::ops::{Deref, DerefMut};
 use mozjs::gc::RootedVec;
 use mozjs::jsapi::{GetArrayLength, HandleValueArray, IsArray, JSObject, NewArrayObject, NewArrayObject1};
 use mozjs::jsval::{JSVal, ObjectValue};
+use mozjs::rooted;
 
 use crate::conversions::{FromValue, ToValue};
 use crate::flags::{IteratorFlags, PropertyFlags};

@@ -7,7 +7,8 @@
 use std::collections::HashMap;
 
 use proc_macro2::{Ident, Span, TokenStream};
-use syn::{ImplItemFn, Result, Type, parse2};
+use quote::{format_ident, quote_spanned};
+use syn::{ImplItemFn, Result, Type, parse_quote, parse2};
 
 use crate::class::accessor::{Accessor, flatten_accessors};
 use crate::class::method::Method;

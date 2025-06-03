@@ -15,7 +15,7 @@ use std::{ptr, task};
 use ion::class::Reflector;
 use ion::conversions::{FromValue, ToValue};
 use ion::function::{Enforce, Opt};
-use ion::{ClassDefinition, Context, Error, ErrorKind, Exception, Object, Result, ResultExc, Value};
+use ion::{ClassDefinition, Context, Error, ErrorKind, Exception, Object, Result, ResultExc, Value, js_class};
 use mozjs::jsapi::{Heap, JSObject};
 use mozjs::jsval::JSVal;
 use tokio::sync::watch::{Receiver, Sender, channel};

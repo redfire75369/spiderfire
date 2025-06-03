@@ -22,7 +22,9 @@ use ion::conversions::{FromValue, ToValue};
 use ion::function::Opt;
 use ion::string::byte::{ByteString, VisibleAscii};
 use ion::symbol::WellKnownSymbolCode;
-use ion::{Array, ClassDefinition, Context, Error, ErrorKind, JSIterator, Object, OwnedKey, Result, Value};
+use ion::{
+	Array, ClassDefinition, Context, Error, ErrorKind, FromValue, JSIterator, Object, OwnedKey, Result, Value, js_class,
+};
 use mime::{APPLICATION, FORM_DATA, MULTIPART, Mime, PLAIN, TEXT, WWW_FORM_URLENCODED};
 
 #[derive(FromValue)]

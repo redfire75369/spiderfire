@@ -15,7 +15,7 @@ use ion::conversions::ToValue;
 use ion::function::Opt;
 use ion::string::byte::{ByteString, Latin1};
 use ion::typedarray::ArrayBufferWrapper;
-use ion::{ClassDefinition, Context, Error, ErrorKind, Object, Result, TracedHeap};
+use ion::{ClassDefinition, Context, Error, ErrorKind, Object, Result, Traceable, TracedHeap, js_class};
 use mime::Mime;
 use mozjs::jsapi::{Heap, JSObject};
 use mozjs::jsval::{JSVal, NullValue};

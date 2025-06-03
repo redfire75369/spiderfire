@@ -7,7 +7,7 @@
 pub use blob::{Blob, BufferSource};
 use chrono::{DateTime, TimeZone, Utc};
 use ion::function::{Opt, Wrap};
-use ion::{ClassDefinition, Context, Object};
+use ion::{ClassDefinition, Context, FromValue, Object, js_class};
 
 use crate::globals::file::blob::{BlobOptions, BlobPart};
 use crate::globals::file::reader::{FileReader, FileReaderSync};

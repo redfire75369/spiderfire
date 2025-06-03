@@ -9,6 +9,7 @@ use std::collections::hash_map::Entry;
 
 use convert_case::{Case, Casing};
 use proc_macro2::{Ident, TokenStream};
+use quote::{format_ident, quote};
 use syn::spanned::Spanned;
 use syn::{Error, ItemFn, Result, Type};
 

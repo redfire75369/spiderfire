@@ -7,6 +7,7 @@
 use convert_case::{Case, Casing};
 pub(crate) use from::*;
 use proc_macro2::Ident;
+use quote::format_ident;
 use syn::Field;
 pub(crate) use to::*;
 

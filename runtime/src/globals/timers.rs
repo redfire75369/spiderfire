@@ -7,7 +7,7 @@
 use std::time::Duration;
 
 use ion::function::{Clamp, Enforce, Opt, Rest};
-use ion::{Context, Error, Function, Object, Result};
+use ion::{Context, Error, Function, Object, Result, function_spec, js_fn};
 use mozjs::jsapi::JSFunctionSpec;
 use mozjs::jsval::JSVal;
 

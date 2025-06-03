@@ -8,6 +8,7 @@ use std::ffi::CString;
 
 use convert_case::{Case, Casing};
 use proc_macro2::{Ident, TokenStream};
+use quote::{format_ident, quote};
 use syn::{ItemFn, LitCStr, Result, Signature, Type};
 
 use crate::attribute::name::Name;

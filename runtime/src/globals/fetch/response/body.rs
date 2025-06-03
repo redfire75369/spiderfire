@@ -5,7 +5,7 @@
  */
 
 use http_body_util::BodyExt;
-use ion::Result;
+use ion::{Result, Traceable};
 
 use crate::globals::fetch::body::{Body, FetchBody};
 

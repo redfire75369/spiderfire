@@ -7,9 +7,6 @@
 #![allow(clippy::module_inception)]
 #![cfg_attr(docsrs, feature(doc_cfg, doc_auto_cfg))]
 
-#[macro_use]
-extern crate ion;
-
 use ion::{Context, Object};
 use runtime::module::{StandardModules, init_global_module, init_module};
 

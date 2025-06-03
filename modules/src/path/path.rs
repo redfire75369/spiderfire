@@ -9,7 +9,7 @@ use std::path::{Path, PathBuf};
 use ion::flags::PropertyFlags;
 use ion::function::Rest;
 use ion::spec::create_property_spec_string;
-use ion::{Context, Error, Object, Result};
+use ion::{Context, Error, Object, Result, function_spec, js_fn};
 use mozjs::jsapi::{JSFunctionSpec, JSPropertySpec};
 use runtime::module::NativeModule;
 

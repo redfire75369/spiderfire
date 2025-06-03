@@ -12,7 +12,10 @@ use controller::{Controller, ControllerInternals, ControllerKind};
 use ion::class::{NativeObject, Reflector};
 use ion::conversions::{ConversionBehavior, FromValue, ToValue};
 use ion::function::Opt;
-use ion::{ClassDefinition, Context, Error, ErrorKind, Function, Local, Object, Promise, Result, ResultExc, Value};
+use ion::{
+	ClassDefinition, Context, Error, ErrorKind, FromValue, Function, Local, Object, Promise, Result, ResultExc,
+	Traceable, Value, js_class,
+};
 use mozjs::jsapi::{Heap, JSObject};
 use mozjs::jsval::JSVal;
 pub use reader::{ByobReader, CommonReader, DefaultReader};

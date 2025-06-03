@@ -13,6 +13,7 @@ use mozjs::jsapi::{
 	BuildStackString, CaptureCurrentStack, JS_StackCapture_AllFrames, JS_StackCapture_MaxFrames, JSObject, JSString,
 	StackFormat,
 };
+use mozjs::rooted;
 #[cfg(feature = "sourcemap")]
 use sourcemap::SourceMap;
 
