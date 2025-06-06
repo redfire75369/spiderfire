@@ -13,13 +13,13 @@ use bytes::Bytes;
 use form_urlencoded::Serializer;
 use http::header::CONTENT_TYPE;
 use http::{HeaderMap, HeaderValue};
-use http_body_util::{BodyExt, Full};
+use http_body_util::{BodyExt as _, Full};
 use hyper::body::{Frame, Incoming, SizeHint};
 use ion::conversions::FromValue;
 use ion::{Context, Error, ErrorKind, Traceable, Value};
 use mozjs::jsapi::Heap;
 use mozjs::jsval::JSVal;
-use pin_project::pin_project;
+use pin_project_lite::pin_project;
 
 use crate::globals::file::{Blob, BufferSource};
 use crate::globals::url::URLSearchParams;
@@ -155,13 +155,21 @@ impl<'cx> FromValue<'cx> for FetchBody {
 	}
 }
 
-#[pin_project(project = BodyProject)]
-#[derive(Default)]
-pub enum Body {
-	#[default]
-	Empty,
-	Once(#[pin] Full<Bytes>),
-	Incoming(#[pin] Incoming),
+pin_project! {
+	#[project = BodyProject]
+	#[derive(Default)]
+	pub enum Body {
+		#[default]
+		Empty,
+		Once {
+			#[pin]
+			bytes: Full<Bytes>
+		},
+		Incoming {
+			#[pin]
+			incoming: Incoming
+		},
+	}
 }
 
 impl hyper::body::Body for Body {
@@ -173,30 +181,30 @@ impl hyper::body::Body for Body {
 	) -> Poll<Option<Result<Frame<Self::Data>, Self::Error>>> {
 		match self.project() {
 			BodyProject::Empty => Poll::Ready(None),
-			BodyProject::Once(full) => full.poll_frame(cx).map_err(|e| match e {}),
-			BodyProject::Incoming(incoming) => incoming.poll_frame(cx),
+			BodyProject::Once { bytes } => bytes.poll_frame(cx).map_err(|e| match e {}),
+			BodyProject::Incoming { incoming } => incoming.poll_frame(cx),
 		}
 	}
 
 	fn is_end_stream(&self) -> bool {
 		match self {
 			Body::Empty => true,
-			Body::Once(full) => full.is_end_stream(),
-			Body::Incoming(incoming) => incoming.is_end_stream(),
+			Body::Once { bytes } => bytes.is_end_stream(),
+			Body::Incoming { incoming } => incoming.is_end_stream(),
 		}
 	}
 
 	fn size_hint(&self) -> SizeHint {
 		match self {
 			Body::Empty => SizeHint::with_exact(0),
-			Body::Once(full) => full.size_hint(),
-			Body::Incoming(incoming) => incoming.size_hint(),
+			Body::Once { bytes } => bytes.size_hint(),
+			Body::Incoming { incoming } => incoming.size_hint(),
 		}
 	}
 }
 
 impl From<Bytes> for Body {
 	fn from(bytes: Bytes) -> Body {
-		Body::Once(Full::new(bytes))
+		Body::Once { bytes: Full::new(bytes) }
 	}
 }

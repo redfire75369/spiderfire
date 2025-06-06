@@ -11,7 +11,7 @@ use std::iter::{empty, once, repeat_with};
 
 use either::Either;
 use indexmap::IndexSet;
-use ion::conversions::FromValue;
+use ion::conversions::FromValue as _;
 use ion::format::key::{KeyDisplay, format_key};
 use ion::format::{Config, format_value};
 use ion::{Context, Object, OwnedKey, Result};
@@ -62,9 +62,8 @@ pub(crate) fn get_cells<'cx>(
 	has_values: bool,
 ) -> impl IntoIterator<Item = impl IntoIterator<Item = Cell<'cx>>> {
 	rows.iter().map(move |row| {
-		let value = match object.get(cx, row) {
-			Ok(Some(value)) => value,
-			_ => return Either::Left(empty()),
+		let Ok(Some(value)) = object.get(cx, row) else {
+			return Either::Left(empty());
 		};
 		let key = Cell::Key(format_key(cx, Config::default(), row));
 

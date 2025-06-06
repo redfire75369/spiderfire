@@ -6,10 +6,10 @@
 
 use proc_macro2::{Ident, Span};
 use quote::{format_ident, quote, quote_spanned};
-use syn::spanned::Spanned;
+use syn::spanned::Spanned as _;
 use syn::{Block, Data, DeriveInput, Error, Fields, Generics, ItemImpl, Result, parse_quote, parse2};
 
-use crate::attribute::ParseAttribute;
+use crate::attribute::ParseAttribute as _;
 use crate::attribute::trace::TraceAttribute;
 use crate::utils::{add_trait_bounds, wrap_in_fields_group};
 
@@ -62,7 +62,7 @@ fn impl_body(span: Span, data: &Data) -> Result<Box<Block>> {
 				"#[derive(Traceable)] is not implemented for union types.",
 			));
 		}
-	};
+	}
 
 	let wrapped = variant_idents.into_iter().enumerate().map(|(index, idents)| {
 		if matches!(&fields[index], Fields::Named(_) | Fields::Unnamed(_)) {

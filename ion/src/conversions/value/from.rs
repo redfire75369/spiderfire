@@ -7,7 +7,7 @@
 use std::ptr;
 
 pub use mozjs::conversions::ConversionBehavior;
-use mozjs::conversions::{ConversionResult, FromJSValConvertible};
+use mozjs::conversions::{ConversionResult, FromJSValConvertible as _};
 use mozjs::jsapi::{
 	AssertSameCompartment, AssertSameCompartment1, ForOfIterator, ForOfIterator_NonIterableBehavior, JSFunction,
 	JSObject, JSString, RootedObject, RootedValue, Symbol as JSSymbol,
@@ -170,7 +170,8 @@ impl<'cx> FromValue<'cx> for String {
 	type Config = ();
 
 	fn from_value(cx: &'cx Context, value: &Value, strict: bool, config: ()) -> Result<String> {
-		crate::String::from_value(cx, value, strict, config).and_then(|s| s.to_owned(cx))
+		let str = crate::String::from_value(cx, value, strict, config)?;
+		str.to_owned(cx)
 	}
 }
 
@@ -500,12 +501,12 @@ where
 mod tests {
 	use std::f64::consts::PI;
 
-	use chrono::{TimeZone, Utc};
+	use chrono::{TimeZone as _, Utc};
 	use mozjs::conversions::ConversionBehavior;
 	use mozjs::gc::{RootableVec, RootedVec};
 	use mozjs::jsval::Int32Value;
 
-	use crate::conversions::{FromValue, ToValue};
+	use crate::conversions::{FromValue as _, ToValue as _};
 	use crate::utils::test::TestRuntime;
 	use crate::{Array, Date, Object, Promise, Value};
 
@@ -520,51 +521,51 @@ mod tests {
 
 		let value = Value::i32(cx, 0);
 		let result = bool::from_value(cx, &value, true, ());
-		assert!(result.is_err());
+		result.unwrap_err();
 		let result = bool::from_value(cx, &value, false, ());
 		assert!(!result.unwrap());
 
 		let value = Value::f64(cx, PI);
 		let result = bool::from_value(cx, &value, true, ());
-		assert!(result.is_err());
+		result.unwrap_err();
 		let result = bool::from_value(cx, &value, false, ());
 		assert!(result.unwrap());
 
 		let value = Value::string(cx, "");
 		let result = bool::from_value(cx, &value, true, ());
-		assert!(result.is_err());
+		result.unwrap_err();
 		let result = bool::from_value(cx, &value, false, ());
 		assert!(!result.unwrap());
 
 		let value = Value::string(cx, "spider");
 		let result = bool::from_value(cx, &value, true, ());
-		assert!(result.is_err());
+		result.unwrap_err();
 		let result = bool::from_value(cx, &value, false, ());
 		assert!(result.unwrap());
 
 		let value = Value::undefined(cx);
 		let result = bool::from_value(cx, &value, true, ());
-		assert!(result.is_err());
+		result.unwrap_err();
 		let result = bool::from_value(cx, &value, false, ());
 		assert!(!result.unwrap());
 
 		let value = Value::null(cx);
 		let result = bool::from_value(cx, &value, true, ());
-		assert!(result.is_err());
+		result.unwrap_err();
 		let result = bool::from_value(cx, &value, false, ());
 		assert!(!result.unwrap());
 
 		let object = Object::new(cx);
 		let value = object.as_value(cx);
 		let result = bool::from_value(cx, &value, true, ());
-		assert!(result.is_err());
+		result.unwrap_err();
 		let result = bool::from_value(cx, &value, false, ());
 		assert!(result.unwrap());
 
 		let array = Array::new(cx);
 		let value = array.as_value(cx);
 		let result = bool::from_value(cx, &value, true, ());
-		assert!(result.is_err());
+		result.unwrap_err();
 		let result = bool::from_value(cx, &value, false, ());
 		assert!(result.unwrap());
 	}
@@ -576,7 +577,7 @@ mod tests {
 
 		let value = Value::bool(cx, true);
 		let result = i32::from_value(cx, &value, true, ConversionBehavior::EnforceRange);
-		assert!(result.is_err());
+		result.unwrap_err();
 		let result = i32::from_value(cx, &value, false, ConversionBehavior::EnforceRange);
 		assert_eq!(result.unwrap(), 1);
 
@@ -586,34 +587,34 @@ mod tests {
 
 		let value = Value::string(cx, "spider");
 		let result = u16::from_value(cx, &value, true, ConversionBehavior::EnforceRange);
-		assert!(result.is_err());
+		result.unwrap_err();
 		let result = u16::from_value(cx, &value, false, ConversionBehavior::EnforceRange);
-		assert!(result.is_err());
+		result.unwrap_err();
 
 		let value = Value::string(cx, "-64");
 		let result = i64::from_value(cx, &value, true, ConversionBehavior::EnforceRange);
-		assert!(result.is_err());
+		result.unwrap_err();
 		let result = i64::from_value(cx, &value, false, ConversionBehavior::EnforceRange);
 		assert_eq!(result.unwrap(), -64);
 
 		let value = Value::undefined(cx);
 		let result = i64::from_value(cx, &value, true, ConversionBehavior::EnforceRange);
-		assert!(result.is_err());
+		result.unwrap_err();
 		let result = i64::from_value(cx, &value, false, ConversionBehavior::EnforceRange);
-		assert!(result.is_err());
+		result.unwrap_err();
 
 		let value = Value::null(cx);
 		let result = i64::from_value(cx, &value, true, ConversionBehavior::EnforceRange);
-		assert!(result.is_err());
+		result.unwrap_err();
 		let result = i64::from_value(cx, &value, false, ConversionBehavior::EnforceRange);
 		assert_eq!(result.unwrap(), 0);
 
 		let object = Object::new(cx);
 		let value = object.as_value(cx);
 		let result = u32::from_value(cx, &value, true, ConversionBehavior::EnforceRange);
-		assert!(result.is_err());
+		result.unwrap_err();
 		let result = u32::from_value(cx, &value, false, ConversionBehavior::EnforceRange);
-		assert!(result.is_err());
+		result.unwrap_err();
 	}
 
 	#[test]
@@ -623,13 +624,13 @@ mod tests {
 
 		let value = Value::bool(cx, false);
 		let result = String::from_value(cx, &value, true, ());
-		assert!(result.is_err());
+		result.unwrap_err();
 		let result = String::from_value(cx, &value, false, ());
 		assert_eq!(&result.unwrap(), "false");
 
 		let value = Value::f64(cx, 1.5);
 		let result = String::from_value(cx, &value, true, ());
-		assert!(result.is_err());
+		result.unwrap_err();
 		let result = String::from_value(cx, &value, false, ());
 		assert_eq!(&result.unwrap(), "1.5");
 
@@ -639,20 +640,20 @@ mod tests {
 
 		let value = Value::undefined(cx);
 		let result = String::from_value(cx, &value, true, ());
-		assert!(result.is_err());
+		result.unwrap_err();
 		let result = String::from_value(cx, &value, false, ());
 		assert_eq!(&result.unwrap(), "undefined");
 
 		let value = Value::null(cx);
 		let result = String::from_value(cx, &value, true, ());
-		assert!(result.is_err());
+		result.unwrap_err();
 		let result = String::from_value(cx, &value, false, ());
 		assert_eq!(&result.unwrap(), "null");
 
 		let object = Object::new(cx);
 		let value = object.as_value(cx);
 		let result = String::from_value(cx, &value, true, ());
-		assert!(result.is_err());
+		result.unwrap_err();
 		let result = String::from_value(cx, &value, false, ());
 		assert_eq!(&result.unwrap(), "[object Object]");
 	}
@@ -664,43 +665,43 @@ mod tests {
 
 		let value = Value::bool(cx, false);
 		let result = Object::from_value(cx, &value, true, ());
-		assert!(result.is_err());
+		result.unwrap_err();
 		let result = Object::from_value(cx, &value, false, ());
-		assert!(result.is_err());
+		result.unwrap_err();
 
 		let value = Value::f64(cx, 144.0);
 		let result = Object::from_value(cx, &value, true, ());
-		assert!(result.is_err());
+		result.unwrap_err();
 		let result = Object::from_value(cx, &value, false, ());
-		assert!(result.is_err());
+		result.unwrap_err();
 
 		let value = Value::string(cx, "spider");
 		let result = Object::from_value(cx, &value, true, ());
-		assert!(result.is_err());
+		result.unwrap_err();
 		let result = Object::from_value(cx, &value, false, ());
-		assert!(result.is_err());
+		result.unwrap_err();
 
 		let value = Value::undefined(cx);
 		let result = Object::from_value(cx, &value, true, ());
-		assert!(result.is_err());
+		result.unwrap_err();
 		let result = Object::from_value(cx, &value, false, ());
-		assert!(result.is_err());
+		result.unwrap_err();
 
 		let value = Value::null(cx);
 		let result = Object::from_value(cx, &value, true, ());
-		assert!(result.is_err());
+		result.unwrap_err();
 		let result = Object::from_value(cx, &value, false, ());
-		assert!(result.is_err());
+		result.unwrap_err();
 
 		let object = Object::new(cx);
 		let value = object.as_value(cx);
 		let result = Object::from_value(cx, &value, true, ());
-		assert!(result.is_ok());
+		result.unwrap();
 
 		let array = Array::new(cx);
 		let value = array.as_value(cx);
 		let result = Array::from_value(cx, &value, true, ());
-		assert!(result.is_ok());
+		result.unwrap();
 
 		let timestamp = Utc.timestamp_millis_opt(Utc::now().timestamp_millis()).unwrap();
 		let date = Date::from_date(cx, timestamp);
@@ -711,7 +712,7 @@ mod tests {
 		let promise = Promise::new(cx);
 		let value = promise.as_value(cx);
 		let result = Promise::from_value(cx, &value, true, ());
-		assert!(result.is_ok());
+		result.unwrap();
 	}
 
 	#[test]
@@ -739,7 +740,7 @@ mod tests {
 		let rt = TestRuntime::new();
 		let cx = &rt.cx;
 
-		let int_vec = vec![1, 256, -65536, 2147483647];
+		let int_vec = vec![1, 256, -0x10000, 0x7FFF_FFFF];
 		let mut root = RootableVec::new_unrooted();
 		let vec = RootedVec::from_iter(&mut root, int_vec.iter().map(|i| Int32Value(*i)));
 		let array = Array::from_rooted_vec(cx, &vec);

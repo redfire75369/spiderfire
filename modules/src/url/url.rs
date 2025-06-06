@@ -6,7 +6,7 @@
 
 use idna::domain_to_ascii_strict;
 use ion::function::Opt;
-use ion::{ClassDefinition, Context, Object, Result, function_spec, js_fn};
+use ion::{ClassDefinition as _, Context, Object, Result, function_spec, js_fn};
 use mozjs::jsapi::JSFunctionSpec;
 use runtime::globals::url::{URL, URLSearchParams};
 use runtime::module::NativeModule;
@@ -19,7 +19,7 @@ fn domain_to_ascii(domain: String, Opt(strict): Opt<bool>) -> Result<String> {
 	} else {
 		domain_to_ascii_strict(&domain)
 	};
-	domain.map_err(|e| e.into())
+	domain.map_err(Into::into)
 }
 
 #[js_fn]

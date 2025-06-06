@@ -5,9 +5,9 @@
  */
 
 use std::fmt;
-use std::fmt::{Display, Formatter, Write};
+use std::fmt::{Display, Formatter, Write as _};
 
-use colored::Colorize;
+use colored::Colorize as _;
 use itoa::Buffer;
 
 use crate::format::{Config, NEWLINE, indent_str};

@@ -69,7 +69,7 @@ features = ["http1", "ring", "tls12", "webpki-tokio"]
 workspace = true
 features = ["macros", "sourcemap"]
 
-[dependencies.pin-project]
+[dependencies.pin-project-lite]
 workspace = true
 optional = true
 
@@ -82,8 +82,8 @@ features = [
 	"ecma_ast",
 	"ecma_codegen",
 	"ecma_parser",
-	"ecma_transforms",
 	"ecma_parser_typescript",
+	"ecma_transforms",
 	"ecma_transforms_typescript",
 	"ecma_visit",
 ]
@@ -116,7 +116,7 @@ fetch = [
 	"dep:hyper",
 	"dep:hyper-util",
 	"dep:hyper-rustls",
-	"dep:pin-project",
+	"dep:pin-project-lite",
 	"dep:sys-locale",
 ]
 tokio-promise = ["tokio/rt"]

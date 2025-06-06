@@ -18,6 +18,6 @@ pub trait IntoValue<'cx> {
 
 impl<'cx, T: ToValue<'cx>> IntoValue<'cx> for T {
 	fn into_value(self: Box<Self>, cx: &'cx Context, value: &mut Value) {
-		self.to_value(cx, value)
+		self.to_value(cx, value);
 	}
 }

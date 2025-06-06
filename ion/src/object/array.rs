@@ -53,11 +53,7 @@ impl<'a> Array<'a> {
 	///
 	/// Returns [None] if the object is not an array.
 	pub fn from(cx: &Context, object: Local<'a, *mut JSObject>) -> Option<Array<'a>> {
-		if Array::is_array(cx, &object) {
-			Some(Array { arr: object.into() })
-		} else {
-			None
-		}
+		Array::is_array(cx, &object).then(|| Array { arr: object.into() })
 	}
 
 	/// Creates an [Array] from an object.
@@ -207,7 +203,7 @@ impl Iterator for ArrayIndicesIter<'_> {
 		for key in self.0.by_ref() {
 			let key = key.get();
 			if key.is_int() {
-				return Some(key.to_int() as u32);
+				return Some(u32::try_from(key.to_int()).unwrap());
 			}
 		}
 		None
@@ -223,7 +219,7 @@ impl DoubleEndedIterator for ArrayIndicesIter<'_> {
 		while let Some(key) = self.0.next_back() {
 			let key = key.get();
 			if key.is_int() {
-				return Some(key.to_int() as u32);
+				return Some(u32::try_from(key.to_int()).unwrap());
 			}
 		}
 		None

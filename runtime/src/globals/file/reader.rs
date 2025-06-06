@@ -5,17 +5,17 @@
  */
 
 use std::cell::UnsafeCell;
-use std::str::FromStr;
+use std::str::FromStr as _;
 
-use base64::Engine;
+use base64::Engine as _;
 use base64::prelude::BASE64_STANDARD;
 use encoding_rs::{Encoding, UTF_8};
-use ion::class::{NativeObject, Reflector};
-use ion::conversions::ToValue;
+use ion::class::{NativeObject as _, Reflector};
+use ion::conversions::ToValue as _;
 use ion::function::Opt;
 use ion::string::byte::{ByteString, Latin1};
 use ion::typedarray::ArrayBufferWrapper;
-use ion::{ClassDefinition, Context, Error, ErrorKind, Object, Result, Traceable, TracedHeap, js_class};
+use ion::{ClassDefinition as _, Context, Error, ErrorKind, Object, Result, Traceable, TracedHeap, js_class};
 use mime::Mime;
 use mozjs::jsapi::{Heap, JSObject};
 use mozjs::jsval::{JSVal, NullValue};
@@ -27,9 +27,7 @@ fn encoding_from_string_mime(encoding: Option<&str>, mime: Option<&str>) -> &'st
 	encoding
 		.and_then(|e| match Encoding::for_label_no_replacement(e.as_bytes()) {
 			None if mime.is_some() => Mime::from_str(mime.unwrap()).ok().and_then(|mime| {
-				Encoding::for_label_no_replacement(
-					mime.get_param("charset").map(|p| p.as_str().as_bytes()).unwrap_or(b""),
-				)
+				Encoding::for_label_no_replacement(mime.get_param("charset").map_or(b"", |p| p.as_str().as_bytes()))
 			}),
 			e => e,
 		})
@@ -193,22 +191,26 @@ impl FileReaderSync {
 	}
 
 	#[ion(name = "readAsArrayBuffer")]
+	#[expect(clippy::unused_self)]
 	pub fn read_as_array_buffer(&mut self, blob: &Blob) -> ArrayBufferWrapper {
 		ArrayBufferWrapper::from(blob.bytes.to_vec())
 	}
 
 	#[ion(name = "readAsBinaryString")]
+	#[expect(clippy::unused_self)]
 	pub fn read_as_binary_string(&mut self, blob: &Blob) -> ByteString {
 		unsafe { ByteString::<Latin1>::from_unchecked(blob.bytes.to_vec()) }
 	}
 
 	#[ion(name = "readAsText")]
+	#[expect(clippy::unused_self)]
 	pub fn read_as_text(&mut self, blob: &Blob, Opt(encoding): Opt<String>) -> String {
 		let encoding = encoding_from_string_mime(encoding.as_deref(), blob.kind.as_deref());
 		encoding.decode_without_bom_handling(&blob.bytes).0.into_owned()
 	}
 
 	#[ion(name = "readAsDataURL")]
+	#[expect(clippy::unused_self)]
 	pub fn read_as_data_url(&mut self, blob: &Blob) -> String {
 		let mime = blob.kind.clone();
 

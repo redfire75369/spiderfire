@@ -22,7 +22,7 @@ use mozjs::rust::get_object_class;
 
 pub use crate::class::native::{MAX_PROTO_CHAIN_LENGTH, NativeClass, PrototypeChain, TypeIdWrapper};
 pub use crate::class::reflect::{Castable, DerivedFrom, NativeObject, Reflector};
-use crate::conversions::{IntoValue, ToValue};
+use crate::conversions::{IntoValue, ToValue as _};
 use crate::function::{__handle_native_constructor_result, NativeFunction};
 use crate::{
 	Arguments, Context, Error, ErrorKind, Exception, Function, Local, Object, Result, ResultExc, Value,
@@ -211,7 +211,7 @@ pub struct ClassObjectWrapper<T: ClassDefinition>(pub Box<T>);
 
 impl<T: ClassDefinition> IntoValue<'_> for ClassObjectWrapper<T> {
 	fn into_value(self: Box<Self>, cx: &Context, value: &mut Value) {
-		T::new_object(cx, self.0).to_value(cx, value)
+		T::new_object(cx, self.0).to_value(cx, value);
 	}
 }
 
@@ -232,11 +232,11 @@ impl SpecZero for JSPropertySpec {
 }
 
 fn has_zero_spec<T: SpecZero>(specs: Option<&[T]>) -> bool {
-	specs.and_then(|s| s.last()).is_none_or(|specs| specs.is_zeroed())
+	specs.and_then(|s| s.last()).is_none_or(T::is_zeroed)
 }
 
 fn unwrap_specs<T>(specs: Option<&[T]>) -> *const T {
-	specs.map_or_else(ptr::null, |specs| specs.as_ptr())
+	specs.map_or_else(ptr::null, <[T]>::as_ptr)
 }
 
 fn check_private<T: ClassDefinition>(cx: &Context, object: &Object) -> Result<()> {

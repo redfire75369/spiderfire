@@ -23,7 +23,7 @@ use crate::function::NativeFunction;
 use crate::object::class_reserved_slots;
 use crate::spec::{create_function_spec, create_function_spec_symbol};
 use crate::symbol::WellKnownSymbolCode;
-use crate::{Arguments, ClassDefinition, Context, Local, Object, ThrowException, Value};
+use crate::{Arguments, ClassDefinition, Context, Local, Object, ThrowException as _, Value};
 
 pub trait JSIterator {
 	fn next_value<'cx>(&mut self, cx: &'cx Context, private: &Value<'cx>) -> Option<Value<'cx>>;

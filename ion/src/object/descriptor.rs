@@ -42,8 +42,8 @@ impl<'pd> PropertyDescriptor<'pd> {
 				getter.handle().into(),
 				setter.handle().into(),
 				u32::from(attrs.bits()),
-			)
-		};
+			);
+		}
 		desc
 	}
 
@@ -79,23 +79,13 @@ impl<'pd> PropertyDescriptor<'pd> {
 	}
 
 	pub fn getter<'cx>(&self, cx: &'cx Context) -> Option<Function<'cx>> {
-		if self.handle().hasGetter_() && !self.handle().getter_.is_null() {
-			Some(Function::from(
-				cx.root(unsafe { JS_GetObjectFunction(self.handle().getter_) }),
-			))
-		} else {
-			None
-		}
+		(self.handle().hasGetter_() && !self.handle().getter_.is_null())
+			.then(|| Function::from(cx.root(unsafe { JS_GetObjectFunction(self.handle().getter_) })))
 	}
 
 	pub fn setter<'cx>(&self, cx: &'cx Context) -> Option<Function<'cx>> {
-		if self.handle().hasSetter_() && !self.handle().setter_.is_null() {
-			Some(Function::from(
-				cx.root(unsafe { JS_GetObjectFunction(self.handle().setter_) }),
-			))
-		} else {
-			None
-		}
+		(self.handle().hasSetter_() && !self.handle().setter_.is_null())
+			.then(|| Function::from(cx.root(unsafe { JS_GetObjectFunction(self.handle().setter_) })))
 	}
 
 	pub fn value<'cx>(&self, cx: &'cx Context) -> Option<Value<'cx>> {

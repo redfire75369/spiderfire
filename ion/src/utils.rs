@@ -79,9 +79,7 @@ impl<const CAP: usize, T: Copy> ArrayVec<CAP, T> {
 	}
 
 	pub const fn push(mut self, element: T) -> ArrayVec<CAP, T> {
-		if self.len == CAP {
-			panic!("Exceeded capacity of ArrayVec.");
-		}
+		assert!(self.len < CAP, "Exceeded capacity of ArrayVec.");
 		self.elements[self.len] = MaybeUninit::new(element);
 		self.len += 1;
 		self

@@ -15,8 +15,8 @@ use mozjs::jsapi::{
 use mozjs::jsval::JSVal;
 use mozjs::rust::{CompileOptionsWrapper, transform_u16_to_source_text};
 
-use crate::conversions::{FromValue, ToValue};
-use crate::{Context, Error, ErrorReport, Local, Object, Promise, ThrowException, Value};
+use crate::conversions::{FromValue as _, ToValue as _};
+use crate::{Context, Error, ErrorReport, Local, Object, Promise, ThrowException as _, Value};
 
 /// Represents private module data
 #[derive(Clone, Debug)]
@@ -256,20 +256,17 @@ pub fn init_module_loader<ML: ModuleLoader + 'static>(cx: &Context, loader: ML) 
 		let cx = &unsafe { Context::new_unchecked(cx) };
 
 		let loader = unsafe { &mut (*cx.get_inner_data().as_ptr()).module_loader };
-		loader
-			.as_mut()
-			.map(|loader| {
-				let private = Value::from(unsafe { Local::from_raw_handle(private_data) });
-				let metadata = Object::from(unsafe { Local::from_raw_handle(metadata) });
-				match loader.metadata(cx, &private, &metadata) {
-					Ok(_) => true,
-					Err(e) => {
-						e.throw(cx);
-						false
-					}
+		loader.as_mut().is_none_or(|loader| {
+			let private = Value::from(unsafe { Local::from_raw_handle(private_data) });
+			let metadata = Object::from(unsafe { Local::from_raw_handle(metadata) });
+			match loader.metadata(cx, &private, &metadata) {
+				Ok(_) => true,
+				Err(e) => {
+					e.throw(cx);
+					false
 				}
-			})
-			.unwrap_or_else(|| true)
+			}
+		})
 	}
 
 	unsafe {

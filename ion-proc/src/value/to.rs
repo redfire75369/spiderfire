@@ -6,12 +6,12 @@
 
 use proc_macro2::{Ident, Span, TokenStream};
 use quote::{quote, quote_spanned};
-use syn::spanned::Spanned;
+use syn::spanned::Spanned as _;
 use syn::{Block, Data, DeriveInput, Error, Fields, Generics, ItemImpl, Result, parse_quote, parse2};
 
 use crate::attribute::krate::crate_from_attributes;
 use crate::attribute::value::{DataAttribute, FieldAttribute, Tag, VariantAttribute};
-use crate::attribute::{Optional, ParseAttribute};
+use crate::attribute::{Optional, ParseAttribute as _};
 use crate::utils::{add_lifetime_generic, add_trait_bounds, wrap_in_fields_group};
 use crate::value::field_to_ident_key;
 
@@ -26,7 +26,7 @@ pub(crate) fn impl_to_value(mut input: DeriveInput) -> Result<ItemImpl> {
 	let attribute = DataAttribute::from_attributes("ion", &input.attrs)?;
 
 	let name = &input.ident;
-	let (body, requires_object) = impl_body(ion, input.span(), &input.data, attribute.tag, attribute.inherit)?;
+	let (body, requires_object) = impl_body(ion, input.span(), &input.data, &attribute.tag, attribute.inherit)?;
 	let prefix = requires_object.then(|| quote!(let __ion_object = #ion::Object::new(__ion_cx);));
 	let postfix = requires_object.then(|| quote!(let __ion_object = #ion::Object::new(__ion_cx);));
 
@@ -45,7 +45,7 @@ pub(crate) fn impl_to_value(mut input: DeriveInput) -> Result<ItemImpl> {
 }
 
 fn impl_body(
-	ion: &TokenStream, span: Span, data: &Data, tag: Optional<Tag>, inherit: bool,
+	ion: &TokenStream, span: Span, data: &Data, tag: &Optional<Tag>, inherit: bool,
 ) -> Result<(TokenStream, bool)> {
 	let (variants, idents, blocks, requires_object) = match data {
 		Data::Struct(r#struct) => {

@@ -7,17 +7,17 @@
 use std::collections::VecDeque;
 
 use ion::class::Reflector;
-use ion::conversions::ToValue;
+use ion::conversions::ToValue as _;
 use ion::function::Opt;
 use ion::typedarray::{ArrayBufferView, type_to_constructor, type_to_element_size};
 use ion::{
-	ClassDefinition, Context, Error, ErrorKind, FromValue, Local, Object, Promise, Result, ResultExc, Traceable, Value,
-	js_class,
+	ClassDefinition as _, Context, Error, ErrorKind, FromValue, Local, Object, Promise, Result, ResultExc, Traceable,
+	Value, js_class,
 };
 use mozjs::conversions::ConversionBehavior;
 use mozjs::jsapi::{Heap, JSObject};
 
-use crate::globals::streams::readable::controller::{ControllerInternals, ControllerKind, PullIntoDescriptor};
+use crate::globals::streams::readable::controller::{ControllerInternals as _, ControllerKind, PullIntoDescriptor};
 use crate::globals::streams::readable::{ReadableStream, State};
 
 pub type ChunkErrorClosure = dyn Fn(&Context, &Promise, &Value);
@@ -186,12 +186,9 @@ impl CommonReader {
 	pub(crate) fn release_lock(&mut self, cx: &Context) -> Result<()> {
 		if let Some(stream) = self.stream(cx)? {
 			let mut closed = self.closed();
-			match stream.state {
-				State::Readable => {}
-				_ => {
-					self.closed.set(Promise::new(cx).get());
-					closed = self.closed();
-				}
+			if matches!(stream.state, State::Closed | State::Errored) {
+				self.closed.set(Promise::new(cx).get());
+				closed = self.closed();
 			}
 			closed.reject_with_error(cx, &Error::new("Released Reader", ErrorKind::Type));
 

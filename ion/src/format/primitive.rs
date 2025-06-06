@@ -7,11 +7,11 @@
 use std::fmt;
 use std::fmt::{Display, Formatter};
 
-use colored::Colorize;
+use colored::Colorize as _;
 use itoa::Buffer;
 
 use crate::bigint::BigInt;
-use crate::conversions::FromValue;
+use crate::conversions::FromValue as _;
 use crate::format::Config;
 use crate::format::string::format_string;
 use crate::format::symbol::format_symbol;

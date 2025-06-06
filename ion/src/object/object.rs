@@ -365,13 +365,11 @@ impl<'cx> Iterator for ObjectKeysIter<'cx> {
 	type Item = PropertyKey<'cx>;
 
 	fn next(&mut self) -> Option<Self::Item> {
-		if self.index < self.count {
+		(self.index < self.count).then(|| {
 			let key = &self.slice[self.index];
 			self.index += 1;
-			Some(self.cx.root(*key).into())
-		} else {
-			None
-		}
+			self.cx.root(*key).into()
+		})
 	}
 
 	fn size_hint(&self) -> (usize, Option<usize>) {
@@ -381,13 +379,11 @@ impl<'cx> Iterator for ObjectKeysIter<'cx> {
 
 impl DoubleEndedIterator for ObjectKeysIter<'_> {
 	fn next_back(&mut self) -> Option<Self::Item> {
-		if self.index < self.count {
+		(self.index < self.count).then(|| {
 			self.count -= 1;
 			let key = &self.keys[self.count];
-			Some(self.cx.root(*key).into())
-		} else {
-			None
-		}
+			self.cx.root(*key).into()
+		})
 	}
 }
 
@@ -474,7 +470,7 @@ impl FusedIterator for ObjectIter<'_, '_> {}
 
 #[cfg(test)]
 mod tests {
-	use crate::conversions::FromValue;
+	use crate::conversions::FromValue as _;
 	use crate::flags::{IteratorFlags, PropertyFlags};
 	use crate::symbol::WellKnownSymbolCode;
 	use crate::utils::test::TestRuntime;

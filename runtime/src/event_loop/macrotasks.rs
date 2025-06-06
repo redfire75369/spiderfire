@@ -34,6 +34,7 @@ impl SignalMacrotask {
 impl Debug for SignalMacrotask {
 	fn fmt(&self, f: &mut Formatter<'_>) -> fmt::Result {
 		f.debug_struct("SignalMacrotask")
+			.field("callback", &self.callback.as_ref().map(|_| ()))
 			.field("terminate", &self.terminate.as_ref())
 			.field("scheduled", &self.scheduled)
 			.finish()
@@ -51,7 +52,7 @@ pub struct TimerMacrotask {
 }
 
 impl TimerMacrotask {
-	pub fn new(callback: Function, arguments: Box<[JSVal]>, repeat: bool, duration: Duration) -> TimerMacrotask {
+	pub fn new(callback: &Function, arguments: Box<[JSVal]>, repeat: bool, duration: Duration) -> TimerMacrotask {
 		TimerMacrotask {
 			callback: callback.get(),
 			arguments,
@@ -77,7 +78,7 @@ pub struct UserMacrotask {
 }
 
 impl UserMacrotask {
-	pub fn new(callback: Function) -> UserMacrotask {
+	pub fn new(callback: &Function) -> UserMacrotask {
 		UserMacrotask {
 			callback: callback.get(),
 			scheduled: Instant::now(),
@@ -169,7 +170,7 @@ impl MacrotaskQueue {
 	}
 
 	pub fn enqueue(&mut self, mut macrotask: Macrotask, id: Option<u32>) -> u32 {
-		let index = id.unwrap_or_else(|| self.latest.map(|l| l + 1).unwrap_or(0));
+		let index = id.unwrap_or_else(|| self.latest.map_or(0, |l| l + 1));
 
 		let next = self.next.and_then(|next| self.map.get(&next));
 		if let Some(next) = next {

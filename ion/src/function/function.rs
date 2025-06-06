@@ -59,7 +59,7 @@ impl<'f> Function<'f> {
 		cx: &'f Context, name: &CStr, closure: Box<ClosureOnce>, nargs: u32, flags: PropertyFlags,
 	) -> Function<'f> {
 		let closure = create_closure_once_object(cx, closure);
-		Function::create_with_closure(cx, call_closure_once, name, closure, nargs, flags)
+		Function::create_with_closure(cx, call_closure_once, name, &closure, nargs, flags)
 	}
 
 	/// Creates a new [Function] with a [Closure].
@@ -67,11 +67,11 @@ impl<'f> Function<'f> {
 		cx: &'f Context, name: &CStr, closure: Box<Closure>, nargs: u32, flags: PropertyFlags,
 	) -> Function<'f> {
 		let closure = create_closure_object(cx, closure);
-		Function::create_with_closure(cx, call_closure, name, closure, nargs, flags)
+		Function::create_with_closure(cx, call_closure, name, &closure, nargs, flags)
 	}
 
 	fn create_with_closure(
-		cx: &'f Context, call: NativeFunction, name: &CStr, closure: Object, nargs: u32, flags: PropertyFlags,
+		cx: &'f Context, call: NativeFunction, name: &CStr, closure: &Object, nargs: u32, flags: PropertyFlags,
 	) -> Function<'f> {
 		unsafe {
 			let function = Function {
@@ -95,13 +95,9 @@ impl<'f> Function<'f> {
 	/// Creates a new [Function] from an object.
 	/// Returns [None] if the object is not a function.
 	pub fn from_object(cx: &'f Context, obj: &Local<'_, *mut JSObject>) -> Option<Function<'f>> {
-		if unsafe { Function::is_function_raw(obj.get()) } {
-			Some(Function {
-				function: cx.root(unsafe { JS_GetObjectFunction(obj.get()) }),
-			})
-		} else {
-			None
-		}
+		(unsafe { Function::is_function_raw(obj.get()) }).then(|| Function {
+			function: cx.root(unsafe { JS_GetObjectFunction(obj.get()) }),
+		})
 	}
 
 	/// Converts the [Function] into an [Object].

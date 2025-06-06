@@ -7,10 +7,10 @@
 use proc_macro2::{Ident, Span, TokenStream};
 use quote::{quote, quote_spanned};
 use syn::punctuated::Punctuated;
-use syn::spanned::Spanned;
+use syn::spanned::Spanned as _;
 use syn::{Error, ItemImpl, ItemStruct, Member, Path, Result, Token, Type, parse_quote, parse2};
 
-use crate::attribute::ParseAttribute;
+use crate::attribute::ParseAttribute as _;
 use crate::attribute::class::ClassAttribute;
 use crate::attribute::krate::crate_from_attributes;
 use crate::utils::{new_token, path_ends_with};

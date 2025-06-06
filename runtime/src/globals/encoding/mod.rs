@@ -6,7 +6,7 @@
 
 pub use decoder::TextDecoder;
 pub use encoder::TextEncoder;
-use ion::{ClassDefinition, Context, Object};
+use ion::{ClassDefinition as _, Context, Object};
 
 mod decoder;
 mod encoder;

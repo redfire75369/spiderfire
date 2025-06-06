@@ -19,7 +19,7 @@ use utf16string::{WStr, WString};
 
 use crate::string::byte::{ByteStr, ByteString, Latin1};
 use crate::string::external::create_callbacks;
-use crate::utils::BoxExt;
+use crate::utils::BoxExt as _;
 use crate::{Context, Error, ErrorKind, Local};
 
 pub mod byte;

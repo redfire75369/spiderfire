@@ -143,6 +143,7 @@ impl<'cx, K: ToPropertyKey<'cx>> ToPropertyKey<'cx> for Rc<K> {
 
 impl<'cx, K: ToPropertyKey<'cx>> ToPropertyKey<'cx> for Option<K> {
 	fn to_key(&self, cx: &'cx Context) -> Option<PropertyKey<'cx>> {
-		self.as_ref().and_then(|k| k.to_key(cx))
+		let key = self.as_ref()?;
+		key.to_key(cx)
 	}
 }

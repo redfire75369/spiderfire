@@ -14,13 +14,13 @@ use std::time::Instant;
 use ascii_table::{Align, AsciiTable};
 use indent::indent_all_by;
 use indexmap::IndexSet;
-use ion::conversions::FromValue;
+use ion::conversions::FromValue as _;
 use ion::flags::PropertyFlags;
 use ion::format::key::format_key;
 use ion::format::primitive::format_primitive;
 use ion::format::{Config as FormatConfig, format_value, indent_str};
 use ion::function::{Opt, Rest};
-use ion::{Context, Object, OwnedKey, Result, Stack, Value, function_spec, js_fn};
+use ion::{Context, Error, Object, OwnedKey, Result, Stack, Value, function_spec, js_fn};
 use mozjs::jsapi::JSFunctionSpec;
 
 use crate::cache::map::find_sourcemap;
@@ -77,7 +77,7 @@ fn print_args<'cx>(args: impl Iterator<Item = FormatArg<'cx>>, log_level: LogLev
 				eprint!("{arg}");
 			}
 			LogLevel::None => unreachable!(),
-		};
+		}
 		first = false;
 		prev_spaced = spaced;
 	}
@@ -319,7 +319,7 @@ fn table(cx: &Context, data: Value, Opt(columns): Opt<Vec<String>>) -> Result<()
 
 		let (rows, columns) = if let Some(columns) = columns {
 			let mut keys = IndexSet::new();
-			for column in columns.into_iter() {
+			for column in columns {
 				let key = match column.parse::<i32>() {
 					Ok(int) => OwnedKey::Int(int),
 					Err(_) => OwnedKey::String(column),
@@ -333,7 +333,7 @@ fn table(cx: &Context, data: Value, Opt(columns): Opt<Vec<String>>) -> Result<()
 			let mut keys = IndexSet::new();
 
 			for row in &rows {
-				let row = row.as_ref().map_err(|e| e.clone())?;
+				let row = row.as_ref().map_err(Error::clone)?;
 				let value = object.get(cx, row)?.unwrap();
 				if let Ok(object) = Object::from_value(cx, &value, true, ()) {
 					let obj_keys = object.keys(cx, None).map(|key| key.to_owned_key(cx));
@@ -362,7 +362,7 @@ fn table(cx: &Context, data: Value, Opt(columns): Opt<Vec<String>>) -> Result<()
 
 		let cells = get_cells(cx, &object, &rows, &columns, has_values);
 
-		println!("{}", indent_all_by((indents * 2) as usize, table.format(cells)))
+		println!("{}", indent_all_by((indents * 2) as usize, table.format(cells)));
 	} else if Config::global().log_level >= LogLevel::Info {
 		print_indent(LogLevel::Info);
 		println!(

@@ -7,8 +7,8 @@
 use std::collections::VecDeque;
 use std::{ptr, slice};
 
-use ion::class::{NativeObject, Reflector};
-use ion::conversions::{FromValue, ToValue};
+use ion::class::{NativeObject as _, Reflector};
+use ion::conversions::{FromValue as _, ToValue as _};
 use ion::typedarray::{ArrayBuffer, ArrayBufferView, Uint8Array, type_to_constructor};
 use ion::{
 	ClassDefinition, Context, Error, ErrorKind, Exception, Function, Local, Object, Promise, Result, ResultExc,
@@ -151,9 +151,8 @@ impl<'c> Controller<'c> {
 						Some(Reader::Default(reader)) => {
 							if stream.state != State::Readable {
 								return Err(Error::new("Cannot Add Read Request to Read Queue", None).into());
-							} else {
-								reader.common.requests.push_back(request);
 							}
+							reader.common.requests.push_back(request);
 						}
 						_ => return Ok(()),
 					}
@@ -184,12 +183,9 @@ impl<'c> Controller<'c> {
 					(request.chunk)(cx, promise, &array);
 				} else {
 					if controller.auto_allocate_chunk_size != 0 {
-						let buffer = match ArrayBuffer::new(cx, controller.auto_allocate_chunk_size) {
-							Some(buffer) => buffer,
-							None => {
-								controller.error_internal(cx, &Exception::new(cx).unwrap().as_value(cx))?;
-								return Ok(());
-							}
+						let Some(buffer) = ArrayBuffer::new(cx, controller.auto_allocate_chunk_size) else {
+							controller.error_internal(cx, &Exception::new(cx).unwrap().as_value(cx))?;
+							return Ok(());
 						};
 
 						controller.pending_descriptors.push_back(PullIntoDescriptor {
@@ -283,8 +279,10 @@ impl CommonController {
 		let underlying_source = self.source.source_object();
 		let value = controller.as_value(cx);
 		let result = start
-			.map(|start| start.call(cx, &underlying_source, &[value]).map(|v| v.get()))
-			.unwrap_or_else(|| Ok(UndefinedValue()))
+			.map_or_else(
+				|| Ok(UndefinedValue()),
+				|start| start.call(cx, &underlying_source, &[value]).map(|v| v.get()),
+			)
 			.map_err(|report| report.unwrap().exception)?;
 
 		let promise = Promise::resolved(cx, &Value::from(cx.root(result)));
@@ -466,14 +464,13 @@ impl DefaultController {
 				}
 			}
 
-			let result = self
-				.size
-				.as_ref()
-				.map(|size| {
+			let result = self.size.as_ref().map_or_else(
+				|| Ok(Value::i32(cx, 1)),
+				|size| {
 					let size = Function::from(unsafe { Local::from_heap(size) });
 					size.call(cx, &Object::null(cx), slice::from_ref(chunk))
-				})
-				.unwrap_or_else(|| Ok(Value::i32(cx, 1)));
+				},
+			);
 
 			match result {
 				Ok(size) => {
@@ -615,17 +612,14 @@ impl ByteStreamController {
 	pub(crate) fn enqueue_cloned_chunk(
 		&mut self, cx: &Context, buffer: &ArrayBuffer, offset: usize, length: usize,
 	) -> Result<()> {
-		let buffer = match buffer.clone(cx, offset, length) {
-			Some(buffer) => buffer,
-			None => {
-				let error = if let Some(Exception::Error(error)) = Exception::new(cx)? {
-					error
-				} else {
-					Error::new("Failed to clone ArrayBuffer", None)
-				};
-				self.error_internal(cx, &error.as_value(cx))?;
-				return Err(error);
-			}
+		let Some(buffer) = buffer.clone(cx, offset, length) else {
+			let error = if let Some(Exception::Error(error)) = Exception::new(cx)? {
+				error
+			} else {
+				Error::new("Failed to clone ArrayBuffer", None)
+			};
+			self.error_internal(cx, &error.as_value(cx))?;
+			return Err(error);
 		};
 
 		self.queue.push_back((Heap::boxed(buffer.get()), 0, length));
@@ -692,39 +686,36 @@ impl ByteStreamController {
 
 				let PullIntoDescriptor { filled, offset, length, min, .. } = *descriptor;
 
-				match kind {
-					ReaderKind::None => {
-						if filled > 0 {
-							self.enqueue_cloned_chunk(cx, &buffer, offset, length)?;
-						}
-
-						if let Some(Reader::Byob(reader)) = stream.native_reader(cx)? {
-							self.process_descriptors(cx, reader, stream.state)?;
-						}
+				if let ReaderKind::None = kind {
+					if filled > 0 {
+						self.enqueue_cloned_chunk(cx, &buffer, offset, length)?;
 					}
-					_ => {
-						if filled < min {
-							return Ok(());
-						}
 
-						let mut descriptor = self.pending_descriptors.pop_front().unwrap();
-						let remainder = descriptor.filled % descriptor.element;
+					if let Some(Reader::Byob(reader)) = stream.native_reader(cx)? {
+						self.process_descriptors(cx, reader, stream.state)?;
+					}
+				} else {
+					if filled < min {
+						return Ok(());
+					}
 
-						if remainder > 0 {
-							self.enqueue_cloned_chunk(
-								cx,
-								&buffer,
-								descriptor.offset + descriptor.filled - remainder,
-								remainder,
-							)?;
+					let mut descriptor = self.pending_descriptors.pop_front().unwrap();
+					let remainder = descriptor.filled % descriptor.element;
 
-							descriptor.filled -= remainder;
-						}
+					if remainder > 0 {
+						self.enqueue_cloned_chunk(
+							cx,
+							&buffer,
+							descriptor.offset + descriptor.filled - remainder,
+							remainder,
+						)?;
 
-						if let Some(Reader::Byob(reader)) = stream.native_reader(cx)? {
-							descriptor.commit(cx, reader, stream.state)?;
-							self.process_descriptors(cx, reader, stream.state)?;
-						}
+						descriptor.filled -= remainder;
+					}
+
+					if let Some(Reader::Byob(reader)) = stream.native_reader(cx)? {
+						descriptor.commit(cx, reader, stream.state)?;
+						self.process_descriptors(cx, reader, stream.state)?;
 					}
 				}
 			}
@@ -962,7 +953,7 @@ pub struct ByobRequest {
 impl ByobRequest {
 	#[ion(get)]
 	pub fn get_view(&self) -> *mut JSObject {
-		self.view.as_ref().map(|view| view.get()).unwrap_or_else(ptr::null_mut)
+		self.view.as_ref().map_or_else(ptr::null_mut, |view| view.get())
 	}
 
 	pub fn respond(

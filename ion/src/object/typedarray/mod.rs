@@ -18,7 +18,7 @@ use mozjs::typedarray as jsta;
 use mozjs::typedarray::{ArrayBufferU8, ClampedU8, Float32, Float64, Int8, Int16, Int32, Uint8, Uint16, Uint32};
 pub use view::*;
 
-use crate::conversions::{IntoValue, ToValue};
+use crate::conversions::{IntoValue, ToValue as _};
 use crate::{Context, Value};
 
 mod buffer;
@@ -131,18 +131,10 @@ pub fn type_to_constructor(ty: Type) -> Constructor {
 
 pub fn type_to_element_size(ty: Type) -> usize {
 	match ty {
-		Type::Int8 => 1,
-		Type::Uint8 => 1,
-		Type::Int16 => 2,
-		Type::Uint16 => 2,
-		Type::Int32 => 4,
-		Type::Uint32 => 4,
-		Type::Float32 => 4,
-		Type::Float64 => 8,
-		Type::Uint8Clamped => 1,
-		Type::BigInt64 => 8,
-		Type::BigUint64 => 8,
-		Type::MaxTypedArrayViewType => 1,
+		Type::Int8 | Type::Uint8 | Type::Uint8Clamped | Type::MaxTypedArrayViewType => 1,
+		Type::Int16 | Type::Uint16 => 2,
+		Type::Int32 | Type::Uint32 | Type::Float32 => 4,
+		Type::BigInt64 | Type::BigUint64 | Type::Float64 => 8,
 		_ => unreachable!(),
 	}
 }

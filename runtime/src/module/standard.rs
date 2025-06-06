@@ -66,12 +66,8 @@ pub fn init_module<'cx, M: NativeModule<'cx>>(cx: &'cx Context, global: &Object,
 pub fn init_global_module<'cx, M: NativeModule<'cx>>(
 	cx: &'cx Context, global: &Object, module: &M,
 ) -> Option<Object<'cx>> {
-	module
-		.module(cx)
-		.map(|module| {
-			global
-				.define_as(cx, M::VARIABLE_NAME, &module, PropertyFlags::CONSTANT_ENUMERATED)
-				.then_some(module)
-		})
-		.unwrap_or(None)
+	let module = module.module(cx)?;
+	global
+		.define_as(cx, M::VARIABLE_NAME, &module, PropertyFlags::CONSTANT_ENUMERATED)
+		.then_some(module)
 }

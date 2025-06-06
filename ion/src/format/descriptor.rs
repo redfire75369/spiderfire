@@ -5,9 +5,9 @@
  */
 
 use std::fmt;
-use std::fmt::{Display, Formatter, Write};
+use std::fmt::{Display, Formatter, Write as _};
 
-use colored::Colorize;
+use colored::Colorize as _;
 
 use crate::format::object::format_object;
 use crate::format::primitive::format_primitive;

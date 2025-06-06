@@ -57,7 +57,7 @@ pub async fn eval_module(rt: &Runtime<'_>, cx: &Context, test: (&str, &str)) {
 	let on_rejected = Function::from_spec(cx, &ON_REJECTED);
 	promise.unwrap().add_reactions_native(cx, None, Some(on_rejected));
 
-	assert!(rt.run_event_loop().await.is_ok());
+	rt.run_event_loop().await.unwrap();
 
 	let exception = rt.global().get(rt.cx(), EXCEPTION_STRING).unwrap().unwrap();
 	let exception = Exception::from_value(cx, &exception).unwrap();

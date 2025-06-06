@@ -8,7 +8,7 @@ use syn::meta::ParseNestedMeta;
 use syn::{LitStr, Result};
 
 use crate::attribute::name::Name;
-use crate::attribute::{ParseArgument, ParseAttribute};
+use crate::attribute::{ParseArgument as _, ParseAttribute};
 
 #[derive(Default)]
 pub(crate) struct PropertyAttribute {

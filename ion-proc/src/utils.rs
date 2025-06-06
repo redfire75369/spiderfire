@@ -8,7 +8,7 @@ use prettyplease::unparse;
 use proc_macro2::{Ident, TokenStream};
 use quote::quote;
 use syn::punctuated::Punctuated;
-use syn::spanned::Spanned;
+use syn::spanned::Spanned as _;
 use syn::{
 	Attribute, Error, Fields, GenericParam, Generics, Lifetime, LifetimeParam, Meta, Pat, Path, Result, Token, Type,
 	TypeParamBound, parse_quote, parse2,

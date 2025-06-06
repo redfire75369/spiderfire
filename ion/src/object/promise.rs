@@ -6,6 +6,7 @@
 
 use std::future::Future;
 use std::ops::{Deref, DerefMut};
+use std::ptr::NonNull;
 
 use futures_executor::block_on;
 use mozjs::gc::HandleObject;
@@ -64,11 +65,7 @@ impl<'p> Promise<'p> {
 			let executor = function.to_object(cx);
 			let promise = NewPromiseObject(cx.as_ptr(), executor.handle().into());
 
-			if !promise.is_null() {
-				Some(Promise { promise: cx.root(promise) })
-			} else {
-				None
-			}
+			NonNull::new(promise).map(|promise| Promise { promise: cx.root(promise.as_ptr()) })
 		}
 	}
 
@@ -122,11 +119,7 @@ impl<'p> Promise<'p> {
 
 	/// Creates a [Promise] from an object.
 	pub fn from(object: Local<'p, *mut JSObject>) -> Option<Promise<'p>> {
-		if Promise::is_promise(&object) {
-			Some(Promise { promise: object })
-		} else {
-			None
-		}
+		Promise::is_promise(&object).then_some(Promise { promise: object })
 	}
 
 	/// Creates a [Promise] from aj object

@@ -5,9 +5,9 @@
  */
 
 use std::fmt;
-use std::fmt::{Display, Formatter, Write};
+use std::fmt::{Display, Formatter, Write as _};
 
-use ion::conversions::FromValue;
+use ion::conversions::FromValue as _;
 use ion::format::{Config as FormatConfig, ValueDisplay, format_value};
 use ion::{BigInt, Context, Local, Result, Value};
 use mozjs::conversions::ConversionBehavior;
@@ -71,7 +71,7 @@ pub(crate) fn format_args<'cx>(cx: &'cx Context, args: &'cx [Value<'cx>]) -> Vec
 					}
 					index += 1;
 				}
-				Some(b'0'..=b'9') | Some(b'.') | Some(b'd') | Some(b'i') | Some(b'f') => {
+				Some(b'0'..=b'9' | b'.' | b'd' | b'i' | b'f') => {
 					let arg = args.next().unwrap();
 					format_number_arg(cx, arg, &format, &mut index, &mut output)?;
 				}
@@ -101,7 +101,7 @@ pub(crate) fn format_args<'cx>(cx: &'cx Context, args: &'cx [Value<'cx>]) -> Vec
 					output.push(char::from(b));
 					index += 1;
 				}
-			};
+			}
 
 			if args.peek().is_none() {
 				break;
@@ -140,10 +140,10 @@ pub(crate) fn format_number_arg<'cx>(
 		.filter(|b| *b == b'.')
 		.and_then(|_| parse_maximum(&format[*index + 1..]))
 		.unzip();
-	*index += p_len.map(|len| len + 1).unwrap_or(0);
+	*index += p_len.map_or(0, |len| len + 1);
 
 	match get_ascii_at(format, *index) {
-		Some(b'd') | Some(b'i') => {
+		Some(b'd' | b'i') => {
 			if arg.get().is_symbol() {
 				output.push_str("NaN");
 			} else if arg.get().is_bigint() {
@@ -173,7 +173,7 @@ pub(crate) fn format_number_arg<'cx>(
 	Ok(())
 }
 fn get_ascii_at(str: &str, index: usize) -> Option<u8> {
-	str.as_bytes().get(index).copied().filter(|b| b.is_ascii())
+	str.as_bytes().get(index).copied().filter(u8::is_ascii)
 }
 
 fn parse_maximum(str: &str) -> Option<(usize, usize)> {

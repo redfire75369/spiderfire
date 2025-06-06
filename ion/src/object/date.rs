@@ -7,7 +7,7 @@
 use std::ops::{Deref, DerefMut};
 
 use chrono::offset::Utc;
-use chrono::{DateTime, TimeZone};
+use chrono::{DateTime, TimeZone as _};
 use mozjs::jsapi::{ClippedTime, DateGetMsecSinceEpoch, DateIsValid, JSObject, NewDateObject, ObjectIsDate};
 use mozjs::rooted;
 
@@ -35,11 +35,7 @@ impl<'d> Date<'d> {
 	/// Creates a [Date] from an object.
 	/// Returns [None] if it is not a [Date].
 	pub fn from(cx: &Context, object: Local<'d, *mut JSObject>) -> Option<Date<'d>> {
-		if Date::is_date(cx, &object) {
-			Some(Date { date: object })
-		} else {
-			None
-		}
+		Date::is_date(cx, &object).then_some(Date { date: object })
 	}
 
 	/// Creates a [Date] from an object.
@@ -58,7 +54,7 @@ impl<'d> Date<'d> {
 
 	/// Converts the [Date] to a [DateTime].
 	pub fn to_date(&self, cx: &Context) -> Option<DateTime<Utc>> {
-		let mut milliseconds: f64 = f64::MAX;
+		let mut milliseconds = f64::MAX;
 		if !unsafe { DateGetMsecSinceEpoch(cx.as_ptr(), self.date.handle().into(), &mut milliseconds) }
 			|| milliseconds == f64::MAX
 		{
@@ -98,7 +94,7 @@ impl DerefMut for Date<'_> {
 
 #[cfg(test)]
 mod tests {
-	use chrono::{TimeZone, Utc};
+	use chrono::{TimeZone as _, Utc};
 
 	use crate::Date;
 	use crate::utils::test::TestRuntime;

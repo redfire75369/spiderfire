@@ -4,7 +4,7 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/.
  */
 
-use std::fmt::{Display, Formatter, Write};
+use std::fmt::{Display, Formatter, Write as _};
 use std::mem::MaybeUninit;
 use std::{fmt, ptr};
 
@@ -115,7 +115,8 @@ impl Stack {
 
 	/// Captures the [Stack] of the [Context].
 	pub fn from_capture(cx: &Context) -> Option<Stack> {
-		capture_stack(cx, None).and_then(|stack| Stack::from_object(cx, stack))
+		let stack = capture_stack(cx, None)?;
+		Stack::from_object(cx, stack)
 	}
 
 	/// Returns `true` if the stack contains no [records](StackRecord)
@@ -133,7 +134,7 @@ impl Stack {
 
 	/// Formats the [Stack] as a String.
 	pub fn format(&self) -> String {
-		let mut string = String::from("");
+		let mut string = String::new();
 		for record in &self.records {
 			string.push_str(INDENT);
 			string.push_str(&record.to_string());
@@ -156,15 +157,11 @@ fn capture_stack(cx: &Context, max_frames: Option<u32>) -> Option<*mut JSObject>
 		match max_frames {
 			None => JS_StackCapture_AllFrames(capture.as_mut_ptr()),
 			Some(count) => JS_StackCapture_MaxFrames(count, capture.as_mut_ptr()),
-		};
+		}
 		let mut capture = capture.assume_init();
 
 		let mut stack = Object::null(cx);
-		if CaptureCurrentStack(cx.as_ptr(), stack.handle_mut().into(), &mut capture) {
-			Some(stack.handle().get())
-		} else {
-			None
-		}
+		CaptureCurrentStack(cx.as_ptr(), stack.handle_mut().into(), &mut capture).then(|| stack.handle().get())
 	}
 }
 
@@ -173,17 +170,14 @@ fn stack_to_string(cx: &Context, stack: *mut JSObject) -> Option<String> {
 		rooted!(in(cx.as_ptr()) let stack = stack);
 		rooted!(in(cx.as_ptr()) let mut string: *mut JSString);
 
-		if BuildStackString(
+		BuildStackString(
 			cx.as_ptr(),
 			ptr::null_mut(),
 			stack.handle().into(),
 			string.handle_mut().into(),
 			0,
 			StackFormat::SpiderMonkey,
-		) {
-			Some(jsstr_to_string(cx.as_ptr(), string.get()))
-		} else {
-			None
-		}
+		)
+		.then(|| jsstr_to_string(cx.as_ptr(), string.get()))
 	}
 }

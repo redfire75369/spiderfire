@@ -8,12 +8,12 @@ use std::collections::VecDeque;
 use std::rc::Rc;
 
 pub use controller::{ByobRequest, ByteStreamController, CommonController, DefaultController};
-use controller::{Controller, ControllerInternals, ControllerKind};
-use ion::class::{NativeObject, Reflector};
-use ion::conversions::{ConversionBehavior, FromValue, ToValue};
+use controller::{Controller, ControllerInternals as _, ControllerKind};
+use ion::class::{NativeObject as _, Reflector};
+use ion::conversions::{ConversionBehavior, FromValue as _, ToValue as _};
 use ion::function::Opt;
 use ion::{
-	ClassDefinition, Context, Error, ErrorKind, FromValue, Function, Local, Object, Promise, Result, ResultExc,
+	ClassDefinition as _, Context, Error, ErrorKind, FromValue, Function, Local, Object, Promise, Result, ResultExc,
 	Traceable, Value, js_class,
 };
 use mozjs::jsapi::{Heap, JSObject};
@@ -138,26 +138,20 @@ impl ReadableStream {
 			.transpose()?
 			.flatten();
 
-		let (controller_kind, controller) = match controller {
-			Some(controller) => controller,
-			None => {
-				let source = source.unwrap_or_default();
-				let high_water_mark = strategy.high_water_mark.unwrap_or(1.0);
-				let controller = DefaultController::initialise(
-					this,
-					underlying_source.as_ref(),
-					&source,
-					&strategy,
-					high_water_mark,
-				);
-				let controller = Heap::boxed(DefaultController::new_object(cx, Box::new(controller)));
-				unsafe {
-					let controller = Object::from(Local::from_heap(&controller));
-					DefaultController::get_mut_private_unchecked(&controller).start(cx, source.start.as_ref())?;
-				}
-
-				(ControllerKind::Default, controller)
+		let (controller_kind, controller) = if let Some(controller) = controller {
+			controller
+		} else {
+			let source = source.unwrap_or_default();
+			let high_water_mark = strategy.high_water_mark.unwrap_or(1.0);
+			let controller =
+				DefaultController::initialise(this, underlying_source.as_ref(), &source, &strategy, high_water_mark);
+			let controller = Heap::boxed(DefaultController::new_object(cx, Box::new(controller)));
+			unsafe {
+				let controller = Object::from(Local::from_heap(&controller));
+				DefaultController::get_mut_private_unchecked(&controller).start(cx, source.start.as_ref())?;
 			}
+
+			(ControllerKind::Default, controller)
 		};
 
 		Ok(ReadableStream::new(controller_kind, controller))
@@ -368,10 +362,9 @@ impl ReadableStream {
 	}
 
 	pub(crate) fn stored_error(&self) -> Value {
-		self.error
-			.as_ref()
-			.map(|error| Value::from(unsafe { Local::from_heap(error) }))
-			.unwrap_or_else(Value::undefined_handle)
+		self.error.as_ref().map_or_else(Value::undefined_handle, |error| {
+			Value::from(unsafe { Local::from_heap(error) })
+		})
 	}
 
 	pub(crate) fn native_controller(&self, cx: &Context) -> Result<Controller> {

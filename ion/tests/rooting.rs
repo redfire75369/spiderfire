@@ -1,4 +1,4 @@
-use ion::conversions::{ConversionBehavior, FromValue};
+use ion::conversions::{ConversionBehavior, FromValue as _};
 use ion::flags::PropertyFlags;
 use ion::utils::test::TestRuntime;
 use ion::{Arguments, Context, Function, Object, Value};

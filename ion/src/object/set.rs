@@ -10,7 +10,7 @@ use mozjs::jsapi::{
 	IsSetObject, JSObject, NewSetObject, SetAdd, SetClear, SetDelete, SetEntries, SetForEach, SetHas, SetKeys, SetSize,
 };
 
-use crate::conversions::ToValue;
+use crate::conversions::ToValue as _;
 use crate::{Context, Function, Local, Object, Value};
 
 pub struct Set<'s> {
@@ -29,11 +29,7 @@ impl<'s> Set<'s> {
 	///
 	/// Returns [None] if the object is not a set.
 	pub fn from(cx: &Context, object: Local<'s, *mut JSObject>) -> Option<Set<'s>> {
-		if Set::is_set(cx, &object) {
-			Some(Set { set: object })
-		} else {
-			None
-		}
+		Set::is_set(cx, &object).then_some(Set { set: object })
 	}
 
 	/// Creates a [Set] from an [Object].

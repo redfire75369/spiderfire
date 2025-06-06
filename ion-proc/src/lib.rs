@@ -7,7 +7,7 @@
 #![cfg_attr(docsrs, feature(doc_cfg, doc_auto_cfg))]
 
 use proc_macro::TokenStream;
-use quote::ToTokens;
+use quote::ToTokens as _;
 use syn::parse_macro_input;
 
 use crate::class::impl_js_class;

@@ -11,7 +11,7 @@ use std::task::Poll;
 
 use futures_channel::mpsc;
 use futures_channel::mpsc::Receiver;
-use futures_util::Stream;
+use futures_util::Stream as _;
 use mozjs::jsval::JSVal;
 
 use crate::{Context, Promise, Value};

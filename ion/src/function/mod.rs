@@ -13,8 +13,8 @@ pub use closure::{Closure, ClosureOnce};
 pub use function::{Function, NativeFunction};
 use mozjs::conversions::ConversionBehavior;
 
-use crate::conversions::{FromValue, ToValue};
-use crate::{Context, Error, Object, ResultExc, ThrowException, Value};
+use crate::conversions::{FromValue, ToValue as _};
+use crate::{Context, Error, Object, ResultExc, ThrowException as _, Value};
 
 mod arguments;
 mod closure;

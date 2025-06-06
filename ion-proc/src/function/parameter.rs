@@ -7,11 +7,11 @@
 use proc_macro2::{Span, TokenStream};
 use quote::{format_ident, quote, quote_spanned};
 use syn::punctuated::Punctuated;
-use syn::spanned::Spanned;
+use syn::spanned::Spanned as _;
 use syn::visit_mut::visit_type_mut;
 use syn::{Error, Expr, FnArg, Ident, Pat, PatType, Receiver, Result, Stmt, Token, Type, parse_quote, parse2};
 
-use crate::attribute::ParseAttribute;
+use crate::attribute::ParseAttribute as _;
 use crate::attribute::function::ParameterAttribute;
 use crate::utils::{pat_is_ident, path_ends_with};
 use crate::visitors::{LifetimeRemover, SelfRenamer};
@@ -64,12 +64,11 @@ impl Parameter {
 		let pat_ty: PatType = parse2(quote_spanned!(span => #ident: #ty))?;
 
 		let convert;
-		let convert = match &self.convert {
-			Some(convert) => convert,
-			None => {
-				convert = parse_quote!(());
-				&convert
-			}
+		let convert = if let Some(convert) = &self.convert {
+			convert
+		} else {
+			convert = parse_quote!(());
+			&convert
 		};
 
 		parse2(quote_spanned!(span =>

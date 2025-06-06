@@ -1,5 +1,5 @@
 use ion::class::Reflector;
-use ion::conversions::FromValue;
+use ion::conversions::FromValue as _;
 use ion::{Context, Function, Object, Result, Value, js_class};
 
 #[js_class]

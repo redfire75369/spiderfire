@@ -15,7 +15,7 @@ use mozjs::jsapi::{
 };
 use mozjs::typedarray::CreateWith;
 
-use crate::utils::BoxExt;
+use crate::utils::BoxExt as _;
 use crate::{Context, Error, ErrorKind, Local, Object, Result};
 
 #[derive(Debug)]
@@ -70,11 +70,7 @@ impl<'ab> ArrayBuffer<'ab> {
 	}
 
 	pub fn from(object: Local<*mut JSObject>) -> Option<ArrayBuffer> {
-		if ArrayBuffer::is_array_buffer(object.get()) {
-			Some(ArrayBuffer { buffer: object })
-		} else {
-			None
-		}
+		ArrayBuffer::is_array_buffer(object.get()).then_some(ArrayBuffer { buffer: object })
 	}
 
 	pub unsafe fn from_unchecked(object: Local<*mut JSObject>) -> ArrayBuffer {

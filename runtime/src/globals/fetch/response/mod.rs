@@ -7,10 +7,10 @@
 use bytes::Bytes;
 use http::{HeaderMap, StatusCode};
 use hyper::ext::ReasonPhrase;
-use ion::class::{NativeObject, Reflector};
+use ion::class::{NativeObject as _, Reflector};
 use ion::function::Opt;
 use ion::typedarray::{ArrayBufferWrapper, Uint8ArrayWrapper};
-use ion::{ClassDefinition, Context, Error, ErrorKind, Object, Promise, Result, TracedHeap, js_class};
+use ion::{ClassDefinition as _, Context, Error, ErrorKind, Object, Promise, Result, TracedHeap, js_class};
 use mozjs::jsapi::{Heap, JSObject};
 pub use options::*;
 use url::Url;
@@ -157,7 +157,7 @@ impl Response {
 
 	#[ion(get)]
 	pub fn get_ok(&self) -> bool {
-		self.status.as_ref().map(StatusCode::is_success).unwrap_or_default()
+		self.status.as_ref().is_some_and(StatusCode::is_success)
 	}
 
 	#[ion(get)]

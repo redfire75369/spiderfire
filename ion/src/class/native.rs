@@ -5,7 +5,7 @@
  */
 
 use std::fmt;
-use std::fmt::{Debug, Formatter, Write};
+use std::fmt::{Debug, Formatter, Write as _};
 use std::marker::PhantomData;
 
 use mozjs::jsapi::JSClass;

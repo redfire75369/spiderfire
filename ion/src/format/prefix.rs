@@ -5,12 +5,12 @@
  */
 
 use std::fmt;
-use std::fmt::{Display, Formatter, Write};
+use std::fmt::{Display as _, Formatter, Write as _};
 
-use colored::{Color, Colorize};
+use colored::{Color, Colorize as _};
 use mozjs::jsapi::{IdentifyStandardPrototype, JS_GetConstructor, JS_GetPrototype, JS_HasInstance, JSProtoKey};
 
-use crate::conversions::ToValue;
+use crate::conversions::ToValue as _;
 use crate::format::Config;
 use crate::symbol::WellKnownSymbolCode;
 use crate::{Context, Function, Object};
@@ -21,25 +21,23 @@ fn get_constructor_name(cx: &Context, object: &Object, proto: &mut Object) -> Op
 		JS_GetPrototype(cx.as_ptr(), object.handle().into(), proto.handle_mut().into());
 		if proto.handle().get().is_null() {
 			return None;
-		} else {
-			cx.root(JS_GetConstructor(cx.as_ptr(), proto.handle().into()))
 		}
+
+		cx.root(JS_GetConstructor(cx.as_ptr(), proto.handle().into()))
 	};
 
-	Function::from_object(cx, &constructor)
-		.and_then(|constructor_fn| constructor_fn.name(cx).ok())
-		.and_then(|name| {
-			let mut has_instance = false;
-			(unsafe {
-				JS_HasInstance(
-					cx.as_ptr(),
-					constructor.handle().into(),
-					value.handle().into(),
-					&mut has_instance,
-				)
-			} && has_instance)
-				.then_some(name)
-		})
+	let constructor_fn = Function::from_object(cx, &constructor)?;
+	let name = constructor_fn.name(cx).ok()?;
+	let mut has_instance = false;
+	(unsafe {
+		JS_HasInstance(
+			cx.as_ptr(),
+			constructor.handle().into(),
+			value.handle().into(),
+			&mut has_instance,
+		)
+	} && has_instance)
+		.then_some(name)
 }
 
 fn get_tag(cx: &Context, object: &Object) -> crate::Result<Option<String>> {

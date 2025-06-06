@@ -4,7 +4,7 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/.
  */
 
-use convert_case::{Case, Casing};
+use convert_case::{Case, Casing as _};
 pub(crate) use from::*;
 use proc_macro2::Ident;
 use quote::format_ident;

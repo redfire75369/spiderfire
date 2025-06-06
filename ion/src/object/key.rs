@@ -11,7 +11,7 @@ use std::ops::{Deref, DerefMut};
 use mozjs::jsapi::{JS_IdToProtoKey, JS_ValueToId, JSProtoKey, PropertyKey as JSPropertyKey, ProtoKeyToId};
 use mozjs::jsid::{IntId, VoidId};
 
-use crate::conversions::ToPropertyKey;
+use crate::conversions::ToPropertyKey as _;
 use crate::{Context, Local, Result, String, Symbol, Value};
 
 pub struct PropertyKey<'k> {

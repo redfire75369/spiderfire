@@ -16,7 +16,7 @@ pub mod globals;
 pub mod module;
 #[cfg(feature = "tokio-promise")]
 pub mod promise;
-mod runtime;
+pub mod runtime;
 pub mod typescript;
 
 pub const VERSION: &str = env!("CARGO_PKG_VERSION");

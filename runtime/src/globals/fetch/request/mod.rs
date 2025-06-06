@@ -4,13 +4,13 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/.
  */
 
-use std::str::FromStr;
+use std::str::FromStr as _;
 
 use http::{HeaderMap, Method};
-use ion::class::{NativeObject, Reflector};
+use ion::class::{NativeObject as _, Reflector};
 use ion::function::Opt;
 use ion::typedarray::{ArrayBufferWrapper, Uint8ArrayWrapper};
-use ion::{ClassDefinition, Context, Error, ErrorKind, FromValue, Object, Promise, Result, TracedHeap, js_class};
+use ion::{ClassDefinition as _, Context, Error, ErrorKind, FromValue, Object, Promise, Result, TracedHeap, js_class};
 use mozjs::jsapi::{Heap, JSObject};
 pub use options::*;
 use url::Url;

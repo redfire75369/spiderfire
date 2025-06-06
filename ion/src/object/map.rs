@@ -11,7 +11,7 @@ use mozjs::jsapi::{
 	MapValues, NewMapObject,
 };
 
-use crate::conversions::ToValue;
+use crate::conversions::ToValue as _;
 use crate::{Context, Function, Local, Object, Value};
 
 pub struct Map<'m> {
@@ -30,11 +30,7 @@ impl<'m> Map<'m> {
 	///
 	/// Returns [None] if the object is not a map.
 	pub fn from(cx: &Context, object: Local<'m, *mut JSObject>) -> Option<Map<'m>> {
-		if Map::is_map(cx, &object) {
-			Some(Map { map: object })
-		} else {
-			None
-		}
+		Map::is_map(cx, &object).then_some(Map { map: object })
 	}
 
 	/// Creates a [Map] from an [Object].
@@ -58,7 +54,7 @@ impl<'m> Map<'m> {
 
 	/// Returns the value of the [Map] at the given key.
 	pub fn get<'cx>(&self, cx: &'cx Context, key: &Value) -> Option<Value<'cx>> {
-		if self.has(cx, key) {
+		self.has(cx, key).then(|| {
 			let mut rval = Value::undefined(cx);
 			unsafe {
 				MapGet(
@@ -68,10 +64,8 @@ impl<'m> Map<'m> {
 					rval.handle_mut().into(),
 				);
 			}
-			Some(rval)
-		} else {
-			None
-		}
+			rval
+		})
 	}
 
 	/// Sets the value of the [Map] at the given key.

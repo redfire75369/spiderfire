@@ -8,7 +8,7 @@ use syn::meta::ParseNestedMeta;
 use syn::parse::{Parse, ParseStream};
 use syn::{Expr, ExprClosure, Lit, LitStr, Result};
 
-use crate::attribute::{ArgumentError, Optional, ParseArgument, ParseArgumentWith, ParseAttribute};
+use crate::attribute::{ArgumentError, Optional, ParseArgument as _, ParseArgumentWith as _, ParseAttribute};
 
 #[derive(Clone, Default)]
 pub(crate) enum Tag {
@@ -21,7 +21,7 @@ pub(crate) enum Tag {
 impl Parse for Tag {
 	fn parse(input: ParseStream) -> Result<Tag> {
 		let tag: Option<_> = input.parse()?;
-		Ok(tag.map(Tag::Internal).unwrap_or(Tag::External))
+		Ok(tag.map_or(Tag::External, Tag::Internal))
 	}
 }
 

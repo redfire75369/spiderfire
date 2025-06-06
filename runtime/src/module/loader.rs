@@ -36,11 +36,11 @@ pub struct Loader {
 }
 
 impl Loader {
-	fn resolve_specifier(specifier: String, data: Option<&ModuleData>) -> Specifier {
+	fn resolve_specifier(specifier: &str, data: Option<&ModuleData>) -> Specifier {
 		let path = if specifier.starts_with("./") || specifier.starts_with("../") {
-			Path::new(data.and_then(|d| d.path.as_ref()).unwrap()).parent().unwrap().join(&specifier)
+			Path::new(data.and_then(|d| d.path.as_ref()).unwrap()).parent().unwrap().join(specifier)
 		} else {
-			Path::new(&specifier).to_path_buf()
+			Path::new(specifier).to_path_buf()
 		};
 		Specifier::Path(path)
 	}
@@ -51,7 +51,7 @@ impl ModuleLoader for Loader {
 		let specifier = request.specifier(cx).to_owned(cx)?;
 		let data = ModuleData::from_private(cx, private);
 
-		let specifier = Loader::resolve_specifier(specifier, data.as_ref());
+		let specifier = Loader::resolve_specifier(&specifier, data.as_ref());
 		let kind = request.kind(cx);
 
 		let key = ModuleKey { specifier, kind };
@@ -70,8 +70,7 @@ impl ModuleLoader for Loader {
 				let (script, sourcemap) = is_typescript
 					.then(|| locate_in_cache(path, &script))
 					.flatten()
-					.map(|(s, sm)| (s, Some(sm)))
-					.unwrap_or_else(|| (script, None));
+					.map_or_else(|| (script, None), |(s, sm)| (s, Some(sm)));
 				if let Some(sourcemap) = sourcemap {
 					save_sourcemap(path, sourcemap);
 				}

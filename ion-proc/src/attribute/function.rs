@@ -7,7 +7,7 @@
 use syn::meta::ParseNestedMeta;
 use syn::{Expr, Result};
 
-use crate::attribute::{ParseArgument, ParseAttribute};
+use crate::attribute::{ParseArgument as _, ParseAttribute};
 
 #[derive(Default)]
 pub(crate) struct ParameterAttribute {

@@ -10,7 +10,7 @@ use ion::conversions::{BoxedIntoValue, IntoValue};
 use ion::{Context, Promise};
 use tokio::task::spawn_local;
 
-use crate::ContextExt;
+use crate::ContextExt as _;
 
 /// Returns None if no future queue has been initialised.
 pub fn future_to_promise<'cx, F, Fut, O, E>(cx: &'cx Context, func: F) -> Option<Promise<'cx>>

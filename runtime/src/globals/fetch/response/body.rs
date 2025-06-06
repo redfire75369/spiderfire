@@ -4,7 +4,7 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/.
  */
 
-use http_body_util::BodyExt;
+use http_body_util::BodyExt as _;
 use ion::{Result, Traceable};
 
 use crate::globals::fetch::body::{Body, FetchBody};

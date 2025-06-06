@@ -4,7 +4,7 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/.
  */
 
-use ion::{ClassDefinition, Context, Object};
+use ion::{ClassDefinition as _, Context, Object};
 use readable::{
 	ByobReader, ByobRequest, ByteStreamController, CommonController, CommonReader, DefaultController, DefaultReader,
 	ReadableStream,

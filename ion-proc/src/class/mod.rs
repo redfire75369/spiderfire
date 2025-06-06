@@ -6,7 +6,7 @@
 
 use proc_macro2::TokenStream;
 use quote::quote_spanned;
-use syn::spanned::Spanned;
+use syn::spanned::Spanned as _;
 use syn::{Error, Item, Result};
 
 use crate::class::r#impl::impl_js_class_impl;

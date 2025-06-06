@@ -5,14 +5,14 @@
  */
 
 #[cfg(windows)]
-use std::os::windows::fs::MetadataExt;
+use std::os::windows::fs::MetadataExt as _;
 use std::path::{Path, PathBuf};
 use std::{fs, os};
 
 use ion::class::ClassObjectWrapper;
 use ion::flags::PropertyFlags;
 use ion::function::Opt;
-use ion::{ClassDefinition, Context, FromValue, Iterator, Object, Promise, Result, function_spec, js_fn};
+use ion::{ClassDefinition as _, Context, FromValue, Iterator, Object, Promise, Result, function_spec, js_fn};
 use mozjs::jsapi::{JSFunction, JSFunctionSpec, JSObject};
 use runtime::module::NativeModule;
 use runtime::promise::future_to_promise;
@@ -84,7 +84,7 @@ fn open(cx: &Context, path_str: String, Opt(options): Opt<OpenOptions>) -> Optio
 				&path_str,
 				file.into_std().await,
 			)))),
-			Err(err) => Err(file_error("open", &path_str, err, ())),
+			Err(err) => Err(file_error("open", &path_str, &err, ())),
 		}
 	})
 }
@@ -96,7 +96,7 @@ fn open_sync(cx: &Context, path_str: String, Opt(options): Opt<OpenOptions>) -> 
 
 	match options.open(path) {
 		Ok(file) => Ok(FileHandle::new_object(cx, Box::new(FileHandle::new(&path_str, file)))),
-		Err(err) => Err(file_error("open", &path_str, err, ())),
+		Err(err) => Err(file_error("open", &path_str, &err, ())),
 	}
 }
 
@@ -112,7 +112,7 @@ fn create(cx: &Context, path_str: String) -> Option<Promise> {
 				&path_str,
 				file.into_std().await,
 			)))),
-			Err(err) => Err(file_error("create", &path_str, err, ())),
+			Err(err) => Err(file_error("create", &path_str, &err, ())),
 		}
 	})
 }
@@ -125,7 +125,7 @@ fn create_sync(cx: &Context, path_str: String) -> Result<*mut JSObject> {
 
 	match options.open(path) {
 		Ok(file) => Ok(FileHandle::new_object(cx, Box::new(FileHandle::new(&path_str, file)))),
-		Err(err) => Err(file_error("create", &path_str, err, ())),
+		Err(err) => Err(file_error("create", &path_str, &err, ())),
 	}
 }
 
@@ -135,7 +135,7 @@ fn metadata(cx: &Context, path_str: String) -> Option<Promise> {
 		let path = Path::new(&path_str);
 		match tokio::fs::metadata(path).await {
 			Ok(meta) => Ok(Metadata(meta)),
-			Err(err) => Err(metadata_error(&path_str, err)),
+			Err(err) => Err(metadata_error(&path_str, &err)),
 		}
 	})
 }
@@ -145,7 +145,7 @@ fn metadata_sync(path_str: String) -> Result<Metadata> {
 	let path = Path::new(&path_str);
 	match fs::metadata(path) {
 		Ok(meta) => Ok(Metadata(meta)),
-		Err(err) => Err(metadata_error(&path_str, err)),
+		Err(err) => Err(metadata_error(&path_str, &err)),
 	}
 }
 
@@ -155,7 +155,7 @@ fn link_metadata(cx: &Context, path_str: String) -> Option<Promise> {
 		let path = Path::new(&path_str);
 		match tokio::fs::symlink_metadata(path).await {
 			Ok(meta) => Ok(Metadata(meta)),
-			Err(err) => Err(metadata_error(&path_str, err)),
+			Err(err) => Err(metadata_error(&path_str, &err)),
 		}
 	})
 }
@@ -165,7 +165,7 @@ fn link_metadata_sync(path_str: String) -> Result<Metadata> {
 	let path = Path::new(&path_str);
 	match fs::symlink_metadata(path) {
 		Ok(meta) => Ok(Metadata(meta)),
-		Err(err) => Err(metadata_error(&path_str, err)),
+		Err(err) => Err(metadata_error(&path_str, &err)),
 	}
 }
 
@@ -178,7 +178,7 @@ fn read_dir(cx: &Context, path_str: String) -> Option<Promise> {
 			.await
 			.unwrap()
 			.map(DirIterator::new_iterator)
-			.map_err(|err| dir_error("read", &path_str, err))
+			.map_err(|err| dir_error("read", &path_str, &err))
 	})
 }
 
@@ -188,7 +188,7 @@ fn read_dir_sync(path_str: String) -> Result<Iterator> {
 
 	match fs::read_dir(path) {
 		Ok(dir) => Ok(DirIterator::new_iterator(dir)),
-		Err(err) => Err(dir_error("read", &path_str, err)),
+		Err(err) => Err(dir_error("read", &path_str, &err)),
 	}
 }
 
@@ -205,7 +205,7 @@ fn create_dir(cx: &Context, path_str: String, Opt(recursive): Opt<bool>) -> Opti
 		};
 		match result {
 			Ok(_) => Ok(()),
-			Err(err) => Err(dir_error("create", &path_str, err)),
+			Err(err) => Err(dir_error("create", &path_str, &err)),
 		}
 	})
 }
@@ -222,7 +222,7 @@ fn create_dir_sync(path_str: String, Opt(recursive): Opt<bool>) -> Result<()> {
 	};
 	match result {
 		Ok(_) => Ok(()),
-		Err(err) => Err(dir_error("create", &path_str, err)),
+		Err(err) => Err(dir_error("create", &path_str, &err)),
 	}
 }
 
@@ -257,7 +257,7 @@ fn remove(cx: &Context, path_str: String, Opt(recursive): Opt<bool>) -> Option<P
 				}
 			}
 		};
-		result.map_err(|err| base_error("remove", &path_str, err))
+		result.map_err(|err| base_error("remove", &path_str, &err))
 	})
 }
 
@@ -291,7 +291,7 @@ fn remove_sync(path_str: String, Opt(recursive): Opt<bool>) -> Result<()> {
 			}
 		}
 	};
-	result.map_err(|err| base_error("remove", &path_str, err))
+	result.map_err(|err| base_error("remove", &path_str, &err))
 }
 
 #[js_fn]
@@ -302,7 +302,7 @@ fn copy(cx: &Context, from_str: String, to_str: String) -> Option<Promise> {
 
 		tokio::fs::copy(from, to)
 			.await
-			.map_err(|err| translate_error("copy from", &from_str, &to_str, err))
+			.map_err(|err| translate_error("copy from", &from_str, &to_str, &err))
 	})
 }
 
@@ -311,7 +311,7 @@ fn copy_sync(from_str: String, to_str: String) -> Result<u64> {
 	let from = Path::new(&from_str);
 	let to = Path::new(&to_str);
 
-	fs::copy(from, to).map_err(|err| translate_error("copy from", &from_str, &to_str, err))
+	fs::copy(from, to).map_err(|err| translate_error("copy from", &from_str, &to_str, &err))
 }
 
 #[js_fn]
@@ -322,7 +322,7 @@ fn rename(cx: &Context, from_str: String, to_str: String) -> Option<Promise> {
 
 		tokio::fs::rename(from, to)
 			.await
-			.map_err(|err| translate_error("rename from", &from_str, &to_str, err))
+			.map_err(|err| translate_error("rename from", &from_str, &to_str, &err))
 	})
 }
 
@@ -331,7 +331,7 @@ fn rename_sync(from_str: String, to_str: String) -> Result<()> {
 	let from = Path::new(&from_str);
 	let to = Path::new(&to_str);
 
-	fs::rename(from, to).map_err(|err| translate_error("rename from", &from_str, &to_str, err))
+	fs::rename(from, to).map_err(|err| translate_error("rename from", &from_str, &to_str, &err))
 }
 
 #[js_fn]
@@ -353,7 +353,7 @@ fn symlink(cx: &Context, original_str: String, link_str: String) -> Option<Promi
 				tokio::fs::symlink_file(original, link).await
 			};
 		}
-		result.map_err(|err| translate_error("symlink", &original_str, &link_str, err))
+		result.map_err(|err| translate_error("symlink", &original_str, &link_str, &err))
 	})
 }
 
@@ -375,7 +375,7 @@ fn symlink_sync(original_str: String, link_str: String) -> Result<()> {
 			os::windows::fs::symlink_file(original, link)
 		};
 	}
-	result.map_err(|err| translate_error("symlink", &original_str, &link_str, err))
+	result.map_err(|err| translate_error("symlink", &original_str, &link_str, &err))
 }
 
 #[js_fn]
@@ -386,7 +386,7 @@ fn link(cx: &Context, original_str: String, link_str: String) -> Option<Promise>
 
 		tokio::fs::hard_link(original, link)
 			.await
-			.map_err(|err| translate_error("link", &original_str, &link_str, err))
+			.map_err(|err| translate_error("link", &original_str, &link_str, &err))
 	})
 }
 
@@ -395,7 +395,7 @@ fn link_sync(original_str: String, link_str: String) -> Result<()> {
 	let original = Path::new(&original_str);
 	let link = Path::new(&link_str);
 
-	fs::hard_link(original, link).map_err(|err| translate_error("link", &original_str, &link_str, err))
+	fs::hard_link(original, link).map_err(|err| translate_error("link", &original_str, &link_str, &err))
 }
 
 #[js_fn]
@@ -405,7 +405,7 @@ fn read_link(cx: &Context, path_str: String) -> Option<Promise> {
 
 		match tokio::fs::read_link(&path).await {
 			Ok(path) => Ok(path.to_string_lossy().into_owned()),
-			Err(err) => Err(base_error("read link", &path_str, err)),
+			Err(err) => Err(base_error("read link", &path_str, &err)),
 		}
 	})
 }
@@ -416,7 +416,7 @@ fn read_link_sync(path_str: String) -> Result<String> {
 
 	match fs::read_link(path) {
 		Ok(path) => Ok(path.to_string_lossy().into_owned()),
-		Err(err) => Err(base_error("read link", &path_str, err)),
+		Err(err) => Err(base_error("read link", &path_str, &err)),
 	}
 }
 
@@ -427,7 +427,7 @@ fn canonical(cx: &Context, path_str: String) -> Option<Promise> {
 
 		match tokio::fs::canonicalize(&path).await {
 			Ok(path) => Ok(path.to_string_lossy().into_owned()),
-			Err(err) => Err(base_error("read link", &path_str, err)),
+			Err(err) => Err(base_error("read link", &path_str, &err)),
 		}
 	})
 }
@@ -438,7 +438,7 @@ fn canonical_sync(path_str: String) -> Result<String> {
 
 	match fs::canonicalize(path) {
 		Ok(path) => Ok(path.to_string_lossy().into_owned()),
-		Err(err) => Err(base_error("read link", &path_str, err)),
+		Err(err) => Err(base_error("read link", &path_str, &err)),
 	}
 }
 
@@ -486,11 +486,7 @@ impl<'cx> NativeModule<'cx> for FileSystemSync {
 	fn module(&self, cx: &'cx Context) -> Option<Object<'cx>> {
 		let fs = Object::new(cx);
 
-		if unsafe { fs.define_methods(cx, SYNC_FUNCTIONS) } {
-			Some(fs)
-		} else {
-			None
-		}
+		unsafe { fs.define_methods(cx, SYNC_FUNCTIONS) }.then_some(fs)
 	}
 }
 

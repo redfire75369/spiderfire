@@ -8,21 +8,21 @@ use std::cell::Cell;
 use std::rc::Rc;
 
 use bytes::{Buf, Bytes};
-use ion::class::NativeObject;
+use ion::class::NativeObject as _;
 use ion::clone::StructuredCloneBuffer;
-use ion::conversions::{FromValue, ToValue};
+use ion::conversions::{FromValue as _, ToValue as _};
 use ion::function::Opt;
 use ion::typedarray::{ArrayBuffer, ArrayBufferView, Uint8Array};
 use ion::{
-	ClassDefinition, Context, Exception, Function, JSIterator, Local, Object, Promise, Result, ResultExc, Traceable,
-	TracedHeap, Value,
+	ClassDefinition as _, Context, Exception, Function, JSIterator, Local, Object, Promise, Result, ResultExc,
+	Traceable, TracedHeap, Value,
 };
 use mozjs::gc::HandleObject;
 use mozjs::jsapi::{CloneDataPolicy, Heap, JSFunction, JSObject, StructuredCloneScope};
 use mozjs::jsval::{JSVal, UndefinedValue};
 
 use crate::globals::clone::{STRUCTURED_CLONE_CALLBACKS, StructuredCloneDataHolder};
-use crate::globals::streams::readable::controller::ControllerInternals;
+use crate::globals::streams::readable::controller::ControllerInternals as _;
 use crate::globals::streams::readable::reader::{ReaderKind, Request};
 use crate::globals::streams::readable::{ByobRequest, ByteStreamController, ReadableStream, ReaderOptions};
 
@@ -264,7 +264,7 @@ impl StreamSource {
 								state.common.reading.set(false);
 								if state.read_again[0].get() {
 									controller1.common.source.pull(cx, controller1.reflector().get())?;
-								} else if state.read_again[0].get() {
+								} else if state.read_again[1].get() {
 									controller2.common.source.pull(cx, controller2.reflector().get())?;
 								}
 

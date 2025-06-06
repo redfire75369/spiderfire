@@ -22,7 +22,7 @@ pub(super) fn impl_constructor(ion: &TokenStream, mut constructor: ItemFn, ty: &
 	)?;
 
 	check_abi(&mut constructor)?;
-	set_signature(&mut constructor)?;
+	set_signature(&mut constructor);
 	constructor.attrs.clear();
 
 	let body = parse_quote!({

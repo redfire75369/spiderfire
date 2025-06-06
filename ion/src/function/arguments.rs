@@ -5,6 +5,7 @@
  */
 
 use std::borrow::Cow;
+use std::iter::repeat_with;
 
 use mozjs::jsapi::CallArgs;
 use mozjs::jsval::JSVal;
@@ -232,8 +233,9 @@ where
 	type Config = T::Config;
 
 	fn from_argument(accessor: &mut Accessor<'_, 'cx>, config: Self::Config) -> Result<Rest<T>> {
-		(0..accessor.len())
-			.map(|_| T::from_value(accessor.cx(), &accessor.value(), false, config.clone()))
+		let len = accessor.len();
+		repeat_with(|| T::from_value(accessor.cx(), &accessor.value(), false, config.clone()))
+			.take(len.into())
 			.collect::<Result<Box<[_]>>>()
 			.map(Rest)
 	}

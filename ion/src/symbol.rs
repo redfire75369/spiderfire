@@ -12,7 +12,7 @@ use mozjs::jsapi::{
 	SymbolCode as JSSymbolCode,
 };
 
-use crate::conversions::{FromValue, ToValue};
+use crate::conversions::{FromValue as _, ToValue as _};
 use crate::{Context, Local};
 
 /// Represents a well-known symbol code.

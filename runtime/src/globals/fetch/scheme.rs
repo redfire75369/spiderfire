@@ -11,15 +11,15 @@ use std::str;
 use arrayvec::ArrayVec;
 use bytes::Bytes;
 use data_url::DataUrl;
-use headers::{HeaderMapExt, Range};
+use headers::{HeaderMapExt as _, Range};
 use http::header::{CONTENT_LENGTH, CONTENT_RANGE, CONTENT_TYPE};
 use http::{HeaderMap, HeaderName, HeaderValue, Method, StatusCode};
 use ion::class::Reflector;
-use ion::{ClassDefinition, Context, Local, Object};
+use ion::{ClassDefinition as _, Context, Local, Object};
 use tokio::fs::read;
 use url::Url;
 
-use crate::ContextExt;
+use crate::ContextExt as _;
 use crate::globals::fetch::header::HeadersKind;
 use crate::globals::fetch::response::network_error;
 use crate::globals::fetch::{Headers, Request, Response};
@@ -55,9 +55,8 @@ fn blob_fetch(cx: &Context, request: &Request, url: Url) -> Response {
 		return network_error();
 	}
 
-	let uuid = match parse_uuid_from_url_path(&url) {
-		Some(uuid) => uuid,
-		_ => return network_error(),
+	let Some(uuid) = parse_uuid_from_url_path(&url) else {
+		return network_error();
 	};
 	let blob = unsafe {
 		match cx.get_private().blob_store.get(&uuid) {
@@ -70,9 +69,8 @@ fn blob_fetch(cx: &Context, request: &Request, url: Url) -> Response {
 	let blob = Blob::get_private(cx, &blob).unwrap();
 
 	let kind = blob.kind.as_deref().unwrap_or("");
-	let kind = match HeaderValue::from_str(kind) {
-		Ok(kind) => kind,
-		Err(_) => return network_error(),
+	let Ok(kind) = HeaderValue::from_str(kind) else {
+		return network_error();
 	};
 
 	let mut response_headers = ArrayVec::<_, 3>::new();
@@ -104,15 +102,13 @@ fn blob_fetch(cx: &Context, request: &Request, url: Url) -> Response {
 }
 
 fn data_fetch(cx: &Context, url: Url) -> Response {
-	let data_url = match DataUrl::process(url.as_str()) {
-		Ok(data_url) => data_url,
-		Err(_) => return network_error(),
+	let Ok(data_url) = DataUrl::process(url.as_str()) else {
+		return network_error();
+	};
+	let Ok((body, _)) = data_url.decode_to_vec() else {
+		return network_error();
 	};
 
-	let (body, _) = match data_url.decode_to_vec() {
-		Ok(decoded) => decoded,
-		Err(_) => return network_error(),
-	};
 	let mime = data_url.mime_type();
 	let mime = format!("{}/{}", mime.type_, mime.subtype);
 
@@ -182,9 +178,8 @@ fn get_ranged_bytes<const N: usize>(
 					(Bound::Included(s), Bound::Unbounded) => (s, len - 1),
 					_ => unreachable!(),
 				};
-				let range = match HeaderValue::from_str(&format!("{start}-{end}/{len}")) {
-					Ok(range) => range,
-					Err(_) => return Err(network_error()),
+				let Ok(range) = HeaderValue::from_str(&format!("{start}-{end}/{len}")) else {
+					return Err(network_error());
 				};
 
 				response_headers.push((CONTENT_RANGE, range));

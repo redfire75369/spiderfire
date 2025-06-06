@@ -12,7 +12,7 @@ use ion::class::Reflector;
 use ion::clone::{StructuredCloneBuffer, read_uint64, write_uint64};
 use ion::flags::PropertyFlags;
 use ion::function::Opt;
-use ion::{ClassDefinition, Context, FromValue, Local, Object, ResultExc, Value, js_fn};
+use ion::{ClassDefinition as _, Context, FromValue, Local, Object, ResultExc, Value, js_fn};
 use mozjs::jsapi::{
 	CloneDataPolicy, Handle, JS_ReadBytes, JS_ReadString, JS_WriteBytes, JS_WriteString, JS_WriteUint32Pair, JSContext,
 	JSObject, JSStructuredCloneCallbacks, JSStructuredCloneReader, JSStructuredCloneWriter, StructuredCloneScope,

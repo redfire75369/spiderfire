@@ -7,7 +7,7 @@
 use proc_macro2::TokenStream;
 use quote::{ToTokens, format_ident, quote, quote_spanned};
 use syn::punctuated::Punctuated;
-use syn::spanned::Spanned;
+use syn::spanned::Spanned as _;
 use syn::{Error, FnArg, GenericParam, ItemFn, Result, ReturnType, Type, parse_quote, parse2};
 
 use crate::function::inner::impl_inner_fn;
@@ -95,7 +95,7 @@ pub(crate) fn impl_wrapper_fn(
 
 		#wrapper_inner
 
-		#[allow(clippy::let_unit_value)]
+		#[allow(clippy::let_unit_value, clippy::redundant_type_annotations, clippy::used_underscore_binding)]
 		let __result: #output = #inner_call;
 		#result
 	}))?;

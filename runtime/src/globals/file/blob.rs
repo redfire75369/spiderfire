@@ -6,14 +6,14 @@
 
 use std::str::FromStr;
 
-use bytes::{BufMut, Bytes, BytesMut};
+use bytes::{BufMut as _, Bytes, BytesMut};
 use encoding_rs::UTF_8;
 use ion::class::Reflector;
 use ion::conversions::FromValue;
 use ion::format::NEWLINE;
 use ion::function::{Clamp, Opt};
 use ion::typedarray::{ArrayBuffer, ArrayBufferView, ArrayBufferWrapper, Uint8ArrayWrapper};
-use ion::{ClassDefinition, Context, Error, ErrorKind, FromValue, Object, Promise, Result, Value, js_class};
+use ion::{ClassDefinition as _, Context, Error, ErrorKind, FromValue, Object, Promise, Result, Value, js_class};
 use mozjs::jsapi::JSObject;
 
 use crate::promise::future_to_promise;
@@ -206,13 +206,13 @@ impl Blob {
 		if start < 0 {
 			start = 0.max(size + start);
 		}
-		let start = start.min(size) as usize;
+		let start = usize::try_from(start.min(size)).unwrap();
 
 		let mut end = end.unwrap_or(Clamp(size)).0;
 		if end < 0 {
 			end = 0.max(size + end);
 		}
-		let end = end.min(size) as usize;
+		let end = usize::try_from(end.min(size)).unwrap();
 
 		let span = 0.max(end - start);
 		let bytes = self.bytes.slice(start..start + span);

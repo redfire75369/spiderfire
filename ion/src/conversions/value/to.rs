@@ -130,19 +130,19 @@ impl<'cx> ToValue<'cx> for String {
 
 impl<'cx, T: ToOwned + ToValue<'cx>> ToValue<'cx> for Cow<'_, T> {
 	fn to_value(&self, cx: &'cx Context, value: &mut Value) {
-		self.as_ref().to_value(cx, value)
+		self.as_ref().to_value(cx, value);
 	}
 }
 
 impl<'cx, T: BytePredicate> ToValue<'cx> for ByteStr<T> {
 	fn to_value(&self, cx: &'cx Context, value: &mut Value) {
-		unsafe { JS_NewStringCopyN(cx.as_ptr(), self.as_ptr().cast(), self.len()).to_value(cx, value) }
+		unsafe { JS_NewStringCopyN(cx.as_ptr(), self.as_ptr().cast(), self.len()).to_value(cx, value) };
 	}
 }
 
 impl<'cx, T: BytePredicate> ToValue<'cx> for ByteString<T> {
 	fn to_value(&self, cx: &'cx Context, value: &mut Value) {
-		(**self).to_value(cx, value)
+		(**self).to_value(cx, value);
 	}
 }
 
@@ -202,13 +202,13 @@ impl<T: jsta::TypedArrayElement, S: jsta::JSObjectStorage> ToValue<'_> for jsta:
 
 impl<'cx> ToValue<'cx> for ArrayBuffer<'cx> {
 	fn to_value(&self, cx: &'cx Context, value: &mut Value) {
-		self.handle().to_value(cx, value)
+		self.handle().to_value(cx, value);
 	}
 }
 
 impl<'cx, T: TypedArrayElement> ToValue<'cx> for TypedArray<'cx, T> {
 	fn to_value(&self, cx: &'cx Context, value: &mut Value) {
-		self.handle().to_value(cx, value)
+		self.handle().to_value(cx, value);
 	}
 }
 
@@ -288,7 +288,7 @@ impl<'cx, T: ToValue<'cx>> ToValue<'cx> for Option<T> {
 		match self {
 			Some(t) => t.to_value(cx, value),
 			None => value.handle_mut().set(NullValue()),
-		};
+		}
 	}
 }
 

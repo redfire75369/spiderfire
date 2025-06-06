@@ -6,7 +6,7 @@
 
 use proc_macro2::{Ident, Span, TokenStream};
 use quote::{quote, quote_spanned};
-use syn::spanned::Spanned;
+use syn::spanned::Spanned as _;
 use syn::{
 	Block, Data, DeriveInput, Error, Expr, Field, Fields, Generics, ItemImpl, Result, Type, parse_quote,
 	parse_quote_spanned, parse2,
@@ -14,7 +14,7 @@ use syn::{
 
 use crate::attribute::krate::crate_from_attributes;
 use crate::attribute::value::{DataAttribute, DefaultValue, FieldFromAttribute, Tag, VariantAttribute};
-use crate::attribute::{Optional, ParseAttribute};
+use crate::attribute::{Optional, ParseAttribute as _};
 use crate::utils::{
 	add_lifetime_generic, add_trait_bounds, find_repr, format_type, path_ends_with, wrap_in_fields_group,
 };
@@ -38,7 +38,7 @@ pub(crate) fn impl_from_value(mut input: DeriveInput) -> Result<ItemImpl> {
 		input.span(),
 		&input.data,
 		name,
-		attribute.tag,
+		&attribute.tag,
 		attribute.inherit,
 		repr,
 	)?;
@@ -63,7 +63,7 @@ pub(crate) fn impl_from_value(mut input: DeriveInput) -> Result<ItemImpl> {
 }
 
 fn impl_body(
-	ion: &TokenStream, span: Span, data: &Data, ident: &Ident, tag: Optional<Tag>, inherit: bool, repr: Option<Ident>,
+	ion: &TokenStream, span: Span, data: &Data, ident: &Ident, tag: &Optional<Tag>, inherit: bool, repr: Option<Ident>,
 ) -> Result<(Box<Block>, bool)> {
 	match data {
 		Data::Struct(r#struct) => match &r#struct.fields {
@@ -255,9 +255,8 @@ fn map_fields(
 							field.span(),
 							"Cannot have Default Expression with Inherited Field. Use a Closure with One Argument Instead",
 						));
-					} else {
-						quote_spanned!(field.span() => #base.unwrap_or_else(|_| #expr);)
 					}
+					quote_spanned!(field.span() => #base.unwrap_or_else(|_| #expr);)
 				}
 				Some(DefaultValue::Closure(closure)) => {
 					quote_spanned!(field.span() => #base.unwrap_or_else(#closure);)

@@ -13,18 +13,19 @@ use sourcemap::SourceMap;
 use swc_core::common::comments::{Comments, SingleThreadedComments};
 use swc_core::common::errors::{ColorConfig, Handler};
 use swc_core::common::input::StringInput;
+use swc_core::common::source_map::DefaultSourceMapGenConfig;
 use swc_core::common::sync::Lrc;
 use swc_core::common::{BytePos, FileName, GLOBALS, Globals, LineCol, Mark, SourceMap as SwcSourceMap};
-use swc_core::ecma::ast::{EsVersion, Pass, Program};
+use swc_core::ecma::ast::{EsVersion, Pass as _, Program};
 use swc_core::ecma::codegen::text_writer::JsWriter;
 use swc_core::ecma::codegen::{Config as CodegenConfig, Emitter};
 use swc_core::ecma::parser::lexer::Lexer;
-use swc_core::ecma::parser::{Capturing, Parser, Syntax, TsSyntax};
+use swc_core::ecma::parser::{Parser, Syntax, TsSyntax};
 use swc_core::ecma::transforms::base::fixer::fixer;
 use swc_core::ecma::transforms::base::hygiene::hygiene;
 use swc_core::ecma::transforms::base::resolver;
 use swc_core::ecma::transforms::typescript::strip;
-use swc_core::ecma::visit::VisitMut;
+use swc_core::ecma::visit::VisitMut as _;
 
 use crate::config::Config;
 
@@ -55,7 +56,7 @@ pub fn compile_typescript(filename: &str, source: &str) -> Result<(String, Sourc
 	};
 	handle_program(&mut program, &mut emitter)?;
 
-	let source_map = source_map.build_source_map(&mappings);
+	let source_map = source_map.build_source_map(&mappings, None, DefaultSourceMapGenConfig);
 	Ok((String::from_utf8(buffer)?, source_map))
 }
 
@@ -78,7 +79,7 @@ pub fn handle_program(
 
 fn initialise_parser<'a>(
 	source_map: Lrc<SwcSourceMap>, comments: &'a dyn Comments, input: StringInput<'a>,
-) -> (Handler, Parser<Capturing<Lexer<'a>>>) {
+) -> (Handler, Parser<Lexer<'a>>) {
 	let handler = Handler::with_tty_emitter(ColorConfig::Auto, true, false, Some(source_map));
 	let lexer = Lexer::new(
 		Syntax::Typescript(TsSyntax::default()),
@@ -86,8 +87,7 @@ fn initialise_parser<'a>(
 		input,
 		Some(comments),
 	);
-	let capturing = Capturing::new(lexer);
-	let mut parser = Parser::new_from(capturing);
+	let mut parser = Parser::new_from(lexer);
 
 	for error in parser.take_errors() {
 		error.into_diagnostic(&handler).emit();

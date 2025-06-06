@@ -8,7 +8,7 @@ use std::cell::RefCell;
 use std::fmt::{Display, Formatter};
 use std::fs::File;
 use std::future::{Future, poll_fn};
-use std::io::{Read, Seek, SeekFrom, Write};
+use std::io::{Read as _, Seek as _, SeekFrom, Write as _};
 use std::rc::Rc;
 use std::str::FromStr;
 use std::sync::Arc;
@@ -16,7 +16,7 @@ use std::task::Poll;
 use std::{io, slice};
 
 use ion::class::Reflector;
-use ion::conversions::{ConversionBehavior, FromValue, IntoValue, ToValue};
+use ion::conversions::{ConversionBehavior, FromValue, IntoValue, ToValue as _};
 use ion::function::Opt;
 use ion::typedarray::{Uint8Array, Uint8ArrayWrapper};
 use ion::{Context, Error, ErrorKind, Promise, Result, TracedHeap, Value, js_class};
@@ -160,12 +160,12 @@ impl FileHandle {
 		F: FnOnce(&mut File) -> io::Result<T> + Send + 'static,
 		T: for<'cx2> IntoValue<'cx2> + Send + 'static,
 		A: FnOnce() + 'static,
-		E: for<'p> FnOnce(&'static str, &'p str, io::Error, D) -> Error + 'static,
+		E: for<'p, 'e> FnOnce(&'static str, &'p str, &'e io::Error, D) -> Error + 'static,
 		D: 'static,
 	{
 		let task = self.with_blocking_task(callback);
 		future_to_promise(cx, move |_| async move {
-			let result = task.await.map_err(|err| error_callback(action, &path, err, error_data));
+			let result = task.await.map_err(|err| error_callback(action, &path, &err, error_data));
 			callback_after();
 			result
 		})
@@ -197,7 +197,7 @@ impl FileHandle {
 	pub fn read_sync(&self, Opt(array): Opt<Uint8Array>) -> Result<ReadResult> {
 		self.with_sync(|file| {
 			let bytes = array.as_ref().map(|array| unsafe { array.as_mut_slice() });
-			read_inner(file, bytes).map_err(|err| file_error("read", &self.path, err, ()))
+			read_inner(file, bytes).map_err(|err| file_error("read", &self.path, &err, ()))
 		})
 	}
 
@@ -223,7 +223,7 @@ impl FileHandle {
 			let contents = unsafe { contents.as_slice() };
 			match file.write(contents) {
 				Ok(bytes) => Ok(bytes as u64),
-				Err(err) => Err(file_error("write", &self.path, err, ())),
+				Err(err) => Err(file_error("write", &self.path, &err, ())),
 			}
 		})
 	}
@@ -251,7 +251,7 @@ impl FileHandle {
 			let contents = unsafe { contents.as_slice() };
 			match file.write_all(contents) {
 				Ok(_) => Ok(()),
-				Err(err) => Err(file_error("write", &self.path, err, ())),
+				Err(err) => Err(file_error("write", &self.path, &err, ())),
 			}
 		})
 	}
@@ -279,7 +279,7 @@ impl FileHandle {
 	) -> Result<()> {
 		self.with_sync(|file| {
 			file.set_len(length.unwrap_or(0))
-				.map_err(|err| file_error("truncate", &self.path, err, ()))
+				.map_err(|err| file_error("truncate", &self.path, &err, ()))
 		})
 	}
 
@@ -312,7 +312,7 @@ impl FileHandle {
 		self.with_sync(|file| {
 			let mode = mode.unwrap_or_default();
 			let seek = seek_from_mode(offset, mode);
-			file.seek(seek).map_err(|err| seek_error("", &self.path, err, (mode, offset)))
+			file.seek(seek).map_err(|err| seek_error("", &self.path, &err, (mode, offset)))
 		})
 	}
 
@@ -323,7 +323,7 @@ impl FileHandle {
 
 	#[ion(name = "syncSync")]
 	pub fn sync_sync(&self) -> Result<()> {
-		self.with_sync(|file| file.sync_all().map_err(|err| file_error("sync", &self.path, err, ())))
+		self.with_sync(|file| file.sync_all().map_err(|err| file_error("sync", &self.path, &err, ())))
 	}
 
 	#[ion(name = "syncData")]
@@ -342,7 +342,7 @@ impl FileHandle {
 
 	#[ion(name = "syncDataSync")]
 	pub fn sync_data_sync(&self) -> Result<()> {
-		self.with_sync(|file| file.sync_data().map_err(|err| file_error("sync data for", &self.path, err, ())))
+		self.with_sync(|file| file.sync_data().map_err(|err| file_error("sync data for", &self.path, &err, ())))
 	}
 
 	pub fn metadata<'cx>(&self, cx: &'cx Context) -> Option<Promise<'cx>> {
@@ -363,7 +363,7 @@ impl FileHandle {
 		self.with_sync(|file| {
 			file.metadata()
 				.map(Metadata)
-				.map_err(|err| file_error("get metadata for", &self.path, err, ()))
+				.map_err(|err| file_error("get metadata for", &self.path, &err, ()))
 		})
 	}
 }
@@ -383,7 +383,7 @@ fn seek_from_mode(offset: i64, mode: SeekMode) -> SeekFrom {
 	use SeekMode as SM;
 	match mode {
 		SM::Current => SeekFrom::Current(offset),
-		SM::Start => SeekFrom::Start(offset.max(0) as u64),
+		SM::Start => SeekFrom::Start(u64::try_from(offset.max(0)).unwrap()),
 		SM::End => SeekFrom::End(offset),
 	}
 }

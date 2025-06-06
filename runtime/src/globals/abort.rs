@@ -13,14 +13,14 @@ use std::time::Duration;
 use std::{ptr, task};
 
 use ion::class::Reflector;
-use ion::conversions::{FromValue, ToValue};
+use ion::conversions::{FromValue, ToValue as _};
 use ion::function::{Enforce, Opt};
-use ion::{ClassDefinition, Context, Error, ErrorKind, Exception, Object, Result, ResultExc, Value, js_class};
+use ion::{ClassDefinition as _, Context, Error, ErrorKind, Exception, Object, Result, ResultExc, Value, js_class};
 use mozjs::jsapi::{Heap, JSObject};
 use mozjs::jsval::JSVal;
 use tokio::sync::watch::{Receiver, Sender, channel};
 
-use crate::ContextExt;
+use crate::ContextExt as _;
 use crate::event_loop::macrotasks::{Macrotask, SignalMacrotask};
 
 #[derive(Clone, Debug, Default)]

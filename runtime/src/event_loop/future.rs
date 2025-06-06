@@ -7,10 +7,10 @@
 use std::task;
 use std::task::Poll;
 
-use futures_util::StreamExt;
+use futures_util::StreamExt as _;
 use futures_util::stream::FuturesUnordered;
 use ion::conversions::BoxedIntoValue;
-use ion::{Context, Error, ErrorKind, ErrorReport, Promise, ThrowException, Value};
+use ion::{Context, Error, ErrorKind, ErrorReport, Promise, ThrowException as _, Value};
 use mozjs::jsapi::JSObject;
 use tokio::task::JoinHandle;
 

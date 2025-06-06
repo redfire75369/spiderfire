@@ -8,7 +8,7 @@ use std::fmt::{Display, Formatter};
 use std::{fmt, str};
 
 use arrayvec::ArrayVec;
-use bitflags::{Flags, bitflags};
+use bitflags::{Flags as _, bitflags};
 use mozjs::jsapi::{
 	JSITER_FORAWAITOF, JSITER_HIDDEN, JSITER_OWNONLY, JSITER_PRIVATE, JSITER_SYMBOLS, JSITER_SYMBOLSONLY,
 	JSPROP_ENUMERATE, JSPROP_PERMANENT, JSPROP_READONLY, JSPROP_RESOLVING, RegExpFlag_DotAll, RegExpFlag_Global,
@@ -99,7 +99,7 @@ impl Display for RegExpFlags {
 				}
 			}
 		}
-		flags.sort();
+		flags.sort_unstable();
 		f.write_str(unsafe { str::from_utf8_unchecked(&flags) })
 	}
 }

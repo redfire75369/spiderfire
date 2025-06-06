@@ -6,14 +6,14 @@
 
 use std::cmp::Ordering;
 use std::fmt;
-use std::fmt::{Display, Formatter, Write};
+use std::fmt::{Display, Formatter, Write as _};
 
-use colored::{Color, Colorize};
+use colored::{Color, Colorize as _};
 use itoa::Buffer;
 use mozjs::jsapi::{ESClass, JSProtoKey, Type};
 use mozjs::typedarray::{ClampedU8, Float32, Float64, Int8, Int16, Int32, Uint8, Uint16, Uint32};
 
-use crate::conversions::ToValue;
+use crate::conversions::ToValue as _;
 use crate::format::array::format_array;
 use crate::format::boxed::format_boxed_primitive;
 use crate::format::date::format_date;
@@ -190,7 +190,7 @@ pub(crate) fn write_remaining(f: &mut Formatter, remaining: usize, inner: Option
 					"...".color(colour),
 					buffer.format(remaining).color(colour),
 					"more items".color(colour)
-				)?
+				)?;
 			}
 			_ => (),
 		}

@@ -8,7 +8,7 @@ use ion::flags::PropertyFlags;
 use ion::{Context, Error, Function, Object, Result, function_spec, js_fn};
 use mozjs::jsapi::JSFunctionSpec;
 
-use crate::ContextExt;
+use crate::ContextExt as _;
 use crate::event_loop::microtasks::Microtask;
 
 #[js_fn]

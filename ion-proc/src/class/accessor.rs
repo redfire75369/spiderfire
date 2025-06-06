@@ -7,10 +7,10 @@
 use std::collections::HashMap;
 use std::collections::hash_map::Entry;
 
-use convert_case::{Case, Casing};
+use convert_case::{Case, Casing as _};
 use proc_macro2::{Ident, TokenStream};
 use quote::{format_ident, quote};
-use syn::spanned::Spanned;
+use syn::spanned::Spanned as _;
 use syn::{Error, ItemFn, Result, Type};
 
 use crate::class::method::{Method, impl_method};

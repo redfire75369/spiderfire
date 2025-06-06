@@ -4,7 +4,7 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/.
  */
 
-use convert_case::{Case, Casing};
+use convert_case::{Case, Casing as _};
 use proc_macro2::{Ident, Span, TokenStream};
 use quote::format_ident;
 use syn::parse::{Parse, ParseStream};
@@ -33,7 +33,7 @@ impl Name {
 			Name::String(literal) => {
 				let mut name = literal.value();
 				if name.is_case(Case::UpperSnake) {
-					name = name.to_case(Case::Camel)
+					name = name.to_case(Case::Camel);
 				}
 				(
 					Box::new(Expr::Lit(ExprLit {

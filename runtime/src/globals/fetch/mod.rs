@@ -5,7 +5,7 @@
  */
 
 use std::str;
-use std::str::FromStr;
+use std::str::FromStr as _;
 
 use async_recursion::async_recursion;
 use body::FetchBody;
@@ -22,11 +22,11 @@ use http::header::{
 };
 use http::{HeaderValue, Method, StatusCode};
 use ion::class::{ClassObjectWrapper, Reflector};
-use ion::conversions::ToValue;
+use ion::conversions::ToValue as _;
 use ion::flags::PropertyFlags;
 use ion::function::Opt;
 use ion::{
-	ClassDefinition, Context, Error, ErrorKind, Exception, Local, Object, Promise, ResultExc, TracedHeap, js_fn,
+	ClassDefinition as _, Context, Error, ErrorKind, Exception, Local, Object, Promise, ResultExc, TracedHeap, js_fn,
 };
 use request::{Referrer, ReferrerPolicy, RequestCache, RequestCredentials, RequestMode, RequestRedirect};
 pub use request::{Request, RequestInfo, RequestInit};
@@ -76,7 +76,7 @@ fn fetch<'cx>(cx: &'cx Context, resource: RequestInfo, init: Opt<RequestInit>) -
 	}
 
 	let mut locales = get_locales().enumerate();
-	let mut locale_string = locales.next().map(|(_, s)| s).unwrap_or_else(|| String::from("*"));
+	let mut locale_string = locales.next().map_or_else(|| String::from("*"), |(_, s)| s);
 	for (index, locale) in locales {
 		locale_string.push(',');
 		locale_string.push_str(&locale);
@@ -99,20 +99,19 @@ async fn fetch_internal(cx: &Context, request: &Object<'_>, client: Client) -> R
 	let signal = Object::from(unsafe { Local::from_heap(&request.signal_object) });
 	let signal = AbortSignal::get_private(cx, &signal)?.signal.clone().poll();
 	let send = Box::pin(main_fetch(cx, request, client, 0));
+
 	let response = match select(send, signal).await {
 		Either::Left((response, _)) => Ok(response),
 		Either::Right((exception, _)) => Err(Exception::Other(exception)),
-	};
-	response.and_then(|response| {
-		if response.kind == ResponseKind::Error {
-			Err(Exception::Error(Error::new(
-				format!("Network Error: Failed to fetch from {}", &request.url),
-				ErrorKind::Type,
-			)))
-		} else {
-			Ok(ClassObjectWrapper(Box::new(response)))
-		}
-	})
+	}?;
+	if response.kind == ResponseKind::Error {
+		Err(Exception::Error(Error::new(
+			format!("Network Error: Failed to fetch from {}", &request.url),
+			ErrorKind::Type,
+		)))
+	} else {
+		Ok(ClassObjectWrapper(Box::new(response)))
+	}
 }
 
 static BAD_PORTS: &[u16] = &[
@@ -262,10 +261,10 @@ async fn main_fetch(cx: &Context, request: &mut Request, client: Client, redirec
 		|| response.status.as_ref().map(StatusCode::as_u16) == Some(103) // Early Hints
 		|| matches!(
 				response.status,
-				Some(StatusCode::SWITCHING_PROTOCOLS)
-					| Some(StatusCode::NO_CONTENT)
-					| Some(StatusCode::RESET_CONTENT)
-					| Some(StatusCode::NOT_MODIFIED)
+				Some(StatusCode::SWITCHING_PROTOCOLS
+					| StatusCode::NO_CONTENT
+					| StatusCode::RESET_CONTENT
+					| StatusCode::NOT_MODIFIED)
 			)) {
 		response.body = None;
 	}
@@ -297,7 +296,7 @@ async fn main_fetch(cx: &Context, request: &mut Request, client: Client, redirec
 					.into_iter()
 					.map(|v| {
 						if v == "*" {
-							allows_all = true
+							allows_all = true;
 						}
 						v.clone()
 					})
@@ -364,7 +363,7 @@ async fn http_network_fetch(cx: &Context, request: &Request, client: Client, is_
 	let length = request
 		.body
 		.as_ref()
-		.and_then(|body| body.len())
+		.and_then(FetchBody::len)
 		.or_else(|| (request.body.is_none() && matches!(request.method, Method::POST | Method::PUT)).then_some(0));
 
 	if let Some(length) = length {
@@ -431,12 +430,12 @@ async fn http_network_fetch(cx: &Context, request: &Request, client: Client, is_
 	let uri = url_to_uri(&request.url).unwrap();
 	let mut builder = hyper::Request::builder().method(request.method.clone()).uri(uri);
 	*builder.headers_mut().unwrap() = headers;
-	let body = request.body.as_ref().map(|req| req.to_http_body()).unwrap_or_else(|| Body::Empty);
+	let body = request.body.as_ref().map_or_else(|| Body::Empty, FetchBody::to_http_body);
 	let req = builder.body(body).unwrap();
 
 	let mut response = match client.request(req).await {
 		Ok(response) => {
-			let response = response.map(Body::Incoming);
+			let response = response.map(|incoming| Body::Incoming { incoming });
 			let (headers, response) = Response::from_hyper(response, request.url.clone());
 
 			let headers = Headers {
@@ -458,7 +457,7 @@ async fn http_network_fetch(cx: &Context, request: &Request, client: Client, is_
 
 	if response.status == Some(StatusCode::MISDIRECTED_REQUEST)
 		&& !is_new
-		&& !request.body.as_ref().map(FetchBody::is_stream).unwrap_or_default()
+		&& !request.body.as_ref().is_some_and(FetchBody::is_stream)
 	{
 		return http_network_fetch(cx, request, client, true).await;
 	}
@@ -504,9 +503,7 @@ async fn http_redirect_fetch(
 		return network_error();
 	}
 
-	if response.status != Some(StatusCode::SEE_OTHER)
-		&& request.body.as_ref().map(FetchBody::is_stream).unwrap_or_default()
-	{
+	if response.status != Some(StatusCode::SEE_OTHER) && request.body.as_ref().is_some_and(FetchBody::is_stream) {
 		return network_error();
 	}
 

@@ -14,7 +14,7 @@ mod latin1 {
 
 	use mozjs::jsapi::MallocSizeOf;
 
-	use crate::utils::BoxExt;
+	use crate::utils::BoxExt as _;
 
 	pub(crate) unsafe extern "C" fn finalise(data: *const c_void, chars: *mut u8) {
 		let _ = unsafe { Box::from_raw_parts(chars, data as usize) };
@@ -30,7 +30,7 @@ mod utf16 {
 
 	use mozjs::jsapi::MallocSizeOf;
 
-	use crate::utils::BoxExt;
+	use crate::utils::BoxExt as _;
 
 	pub(crate) unsafe extern "C" fn finalise(data: *const c_void, chars: *mut u16) {
 		let _ = unsafe { Box::from_raw_parts(chars.cast::<u8>(), data as usize * 2) };

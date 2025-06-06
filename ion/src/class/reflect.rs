@@ -4,7 +4,7 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/.
  */
 
-use std::any::{Any, TypeId};
+use std::any::{Any as _, TypeId};
 use std::ptr;
 
 use mozjs::gc::Traceable;

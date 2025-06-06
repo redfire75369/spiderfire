@@ -11,11 +11,11 @@ use std::path::{Path, PathBuf};
 use std::str::{Utf8Error, from_utf8};
 use std::{fmt, io};
 
-use base64::Engine;
+use base64::Engine as _;
 use base64::prelude::BASE64_URL_SAFE;
 use dirs::home_dir;
 use dunce::canonicalize;
-use sha3::{Digest, Sha3_512};
+use sha3::{Digest as _, Sha3_512};
 use sourcemap::SourceMap;
 
 use crate::config::Config;
@@ -107,7 +107,7 @@ impl Cache {
 			let source_file = path.file_stem().and_then(OsStr::to_str).ok_or(Error::Other)?;
 			let extension = path.extension().and_then(OsStr::to_str).ok_or(Error::Other)?;
 
-			let source_hash = source_hash.map(String::from).unwrap_or_else(|| hash(source, None));
+			let source_hash = source_hash.map_or_else(|| hash(source, None), String::from);
 			let destination_file = folder.join(source_file).with_extension("js");
 			let map_file = folder.join(source_file).with_extension("js.map");
 

@@ -14,7 +14,7 @@ use ion::format::{Config, format_value};
 use ion::{Context, ErrorReport, Local, Promise};
 use mozjs::jsapi::{Handle, Heap, JSContext, JSObject, PromiseRejectionHandlingState};
 
-use crate::ContextExt;
+use crate::ContextExt as _;
 use crate::event_loop::future::FutureQueue;
 use crate::event_loop::macrotasks::MacrotaskQueue;
 use crate::event_loop::microtasks::MicrotaskQueue;
@@ -78,9 +78,9 @@ impl EventLoop {
 	}
 
 	fn is_empty(&self) -> bool {
-		self.microtasks.as_ref().map(|m| m.is_empty()).unwrap_or(true)
-			&& self.futures.as_ref().map(|f| f.is_empty()).unwrap_or(true)
-			&& self.macrotasks.as_ref().map(|m| m.is_empty()).unwrap_or(true)
+		self.microtasks.as_ref().is_none_or(MicrotaskQueue::is_empty)
+			&& self.futures.as_ref().is_none_or(FutureQueue::is_empty)
+			&& self.macrotasks.as_ref().is_none_or(MacrotaskQueue::is_empty)
 	}
 }
 

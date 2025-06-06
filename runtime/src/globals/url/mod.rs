@@ -6,16 +6,16 @@
 
 use std::cmp::Ordering;
 
-use ion::class::{NativeObject, Reflector};
+use ion::class::{NativeObject as _, Reflector};
 use ion::function::Opt;
-use ion::{ClassDefinition, Context, Error, FromValue, Local, Object, Result, js_class};
+use ion::{ClassDefinition as _, Context, Error, FromValue, Local, Object, Result, js_class};
 use mozjs::jsapi::{Heap, JSObject};
 pub use search_params::URLSearchParams;
 use url::Url;
 use uuid::Uuid;
 
 use crate::globals::file::Blob;
-use crate::runtime::ContextExt;
+use crate::runtime::ContextExt as _;
 
 mod search_params;
 

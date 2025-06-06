@@ -8,7 +8,7 @@ use std::fmt;
 use std::fmt::{Display, Formatter};
 
 use http::StatusCode;
-use ion::conversions::FromValue;
+use ion::conversions::FromValue as _;
 use ion::{Context, Error, ErrorKind, FromValue, Result, Traceable, Value};
 use mozjs::conversions::ConversionBehavior;
 
@@ -19,14 +19,14 @@ pub struct ResponseInit<'cx> {
 	#[ion(default)]
 	pub(crate) headers: HeadersInit<'cx>,
 
-	#[ion(default, parser = |s| parse_status(__ion_cx, s))]
+	#[ion(default, parser = |s| parse_status(__ion_cx, &s))]
 	pub(crate) status: StatusCode,
 	#[ion(default)]
 	pub(crate) status_text: Option<String>,
 }
 
-fn parse_status(cx: &Context, status: Value) -> Result<StatusCode> {
-	let code = u16::from_value(cx, &status, true, ConversionBehavior::Clamp).map(StatusCode::from_u16);
+fn parse_status(cx: &Context, status: &Value) -> Result<StatusCode> {
+	let code = u16::from_value(cx, status, true, ConversionBehavior::Clamp).map(StatusCode::from_u16);
 	match code {
 		Ok(Ok(code)) => Ok(code),
 		_ => Err(Error::new("Invalid response status code", ErrorKind::Range)),

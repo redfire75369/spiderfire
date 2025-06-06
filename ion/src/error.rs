@@ -65,7 +65,7 @@ impl ErrorKind {
 	pub fn to_exception_type(&self) -> JSExnType {
 		use {ErrorKind as EK, JSExnType as JSET};
 		match self {
-			EK::Normal => JSET::JSEXN_ERR,
+			EK::Normal | EK::None => JSET::JSEXN_ERR,
 			EK::Internal => JSET::JSEXN_INTERNALERR,
 			EK::Aggregate => JSET::JSEXN_AGGREGATEERR,
 			EK::Eval => JSET::JSEXN_EVALERR,
@@ -76,7 +76,6 @@ impl ErrorKind {
 			EK::WasmCompile => JSET::JSEXN_WASMCOMPILEERROR,
 			EK::WasmLink => JSET::JSEXN_WASMLINKERROR,
 			EK::WasmRuntime => JSET::JSEXN_WASMRUNTIMEERROR,
-			EK::None => JSET::JSEXN_ERR,
 		}
 	}
 }
@@ -95,7 +94,7 @@ impl Display for ErrorKind {
 			EK::Type => "TypeError",
 			EK::WasmCompile => "CompileError",
 			EK::WasmLink => "LinkError",
-			EK::WasmRuntime => "CompileError",
+			EK::WasmRuntime => "RuntimeError",
 			EK::None => "Not an Error",
 		};
 		f.write_str(str)
@@ -220,7 +219,7 @@ impl From<Error> for fmt::Error {
 
 impl From<Error> for ErrorReport {
 	fn from(error: Error) -> ErrorReport {
-		ErrorReport::from(Exception::Error(error), None)
+		ErrorReport::from_exception(Exception::Error(error), None)
 	}
 }
 
@@ -248,6 +247,6 @@ impl ThrowException for Error {
 
 impl<'cx> ToValue<'cx> for Error {
 	fn to_value(&self, cx: &'cx Context, value: &mut Value) {
-		self.to_object(cx).to_value(cx, value)
+		self.to_object(cx).to_value(cx, value);
 	}
 }

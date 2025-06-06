@@ -6,10 +6,12 @@
 
 use form_urlencoded::{Serializer, parse};
 use ion::class::Reflector;
-use ion::conversions::{FromValue, ToValue};
+use ion::conversions::{FromValue, ToValue as _};
 use ion::function::Opt;
 use ion::symbol::WellKnownSymbolCode;
-use ion::{ClassDefinition, Context, Error, ErrorKind, JSIterator, Local, Object, OwnedKey, Result, Value, js_class};
+use ion::{
+	ClassDefinition as _, Context, Error, ErrorKind, JSIterator, Local, Object, OwnedKey, Result, Value, js_class,
+};
 use mozjs::jsapi::{Heap, JSObject};
 use url::Url;
 
@@ -112,9 +114,9 @@ impl URLSearchParams {
 
 	pub fn delete(&mut self, name: String, Opt(value): Opt<String>) {
 		if let Some(value) = value {
-			self.pairs.retain(|(k, v)| k != &name || v != &value)
+			self.pairs.retain(|(k, v)| k != &name || v != &value);
 		} else {
-			self.pairs.retain(|(k, _)| k != &name)
+			self.pairs.retain(|(k, _)| k != &name);
 		}
 		self.update();
 	}
@@ -158,12 +160,12 @@ impl URLSearchParams {
 			None => self.pairs.push((key, value)),
 		}
 
-		self.update()
+		self.update();
 	}
 
 	pub fn sort(&mut self) {
 		self.pairs.sort_by(|(a, _), (b, _)| a.encode_utf16().cmp(b.encode_utf16()));
-		self.update()
+		self.update();
 	}
 
 	#[ion(name = "toString")]

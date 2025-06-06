@@ -17,7 +17,7 @@ use mozjs::rooted;
 #[cfg(feature = "sourcemap")]
 use sourcemap::SourceMap;
 
-use crate::conversions::{FromValue, ToValue};
+use crate::conversions::{FromValue as _, ToValue};
 use crate::format::{Config, NEWLINE, format_value};
 use crate::stack::Location;
 use crate::{Context, Error, ErrorKind, Object, Result, Stack, Value};
@@ -145,7 +145,7 @@ impl ThrowException for Exception {
 							cx.as_ptr(),
 							exception.handle().into(),
 							ExceptionStackBehavior::DoNotCapture,
-						)
+						);
 					}
 				} else {
 					error.throw(cx);
@@ -220,7 +220,7 @@ impl ErrorReport {
 	}
 
 	/// Creates an [ErrorReport] from an existing [Exception] and optionally a [Stack].
-	pub fn from<S: Into<Option<Stack>>>(exception: Exception, stack: S) -> ErrorReport {
+	pub fn from_exception<S: Into<Option<Stack>>>(exception: Exception, stack: S) -> ErrorReport {
 		ErrorReport { exception, stack: stack.into() }
 	}
 
@@ -242,7 +242,7 @@ impl ErrorReport {
 	pub fn transform_with_sourcemap(&mut self, sourcemap: &SourceMap) {
 		self.exception.transform_with_sourcemap(sourcemap);
 		if let Some(stack) = &mut self.stack {
-			stack.transform_with_sourcemap(sourcemap)
+			stack.transform_with_sourcemap(sourcemap);
 		}
 	}
 

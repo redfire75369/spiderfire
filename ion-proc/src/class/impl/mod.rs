@@ -5,11 +5,11 @@
  */
 
 use proc_macro2::{Ident, Span, TokenStream};
-use quote::{ToTokens, quote, quote_spanned};
-use syn::spanned::Spanned;
+use quote::{ToTokens as _, quote, quote_spanned};
+use syn::spanned::Spanned as _;
 use syn::{Error, FnArg, ImplItem, ImplItemFn, ItemFn, ItemImpl, Result, Type, Visibility, parse_quote, parse2};
 
-use crate::attribute::ParseAttribute;
+use crate::attribute::ParseAttribute as _;
 use crate::attribute::class::MethodAttribute;
 use crate::attribute::krate::crate_from_attributes;
 use crate::attribute::name::Name;
@@ -54,6 +54,7 @@ pub(super) fn impl_js_class_impl(r#impl: &mut ItemImpl) -> Result<[ItemImpl; 2]>
 				}
 			}
 			ImplItem::Fn(r#fn) => {
+				r#fn.attrs.push(parse_quote!(#[allow(clippy::needless_pass_by_value)]));
 				if let Some(parsed_constructor) = parse_class_method(ion, r#fn, &mut specs, &r#type)? {
 					if let Some(constructor) = constructor.as_ref() {
 						return Err(Error::new(
@@ -63,9 +64,9 @@ pub(super) fn impl_js_class_impl(r#impl: &mut ItemImpl) -> Result<[ItemImpl; 2]>
 								constructor.method.sig.ident, parsed_constructor.method.sig.ident
 							),
 						));
-					} else {
-						constructor = Some(parsed_constructor);
 					}
+					r#fn.attrs.push(parse_quote!(#[allow(clippy::same_name_method)]));
+					constructor = Some(parsed_constructor);
 				}
 			}
 			_ => (),
@@ -94,8 +95,8 @@ fn parse_class_method(
 	let mut names = vec![];
 
 	let attribute = MethodAttribute::from_attributes_mut("ion", &mut r#fn.attrs)?;
-	let MethodAttribute { name, alias, kind, skip } = attribute;
-	for alias in alias {
+	let MethodAttribute { name, aliases, kind, skip } = attribute;
+	for alias in aliases {
 		names.push(Name::String(alias));
 	}
 	if skip {

@@ -8,7 +8,7 @@ use syn::meta::ParseNestedMeta;
 use syn::{LitStr, Result};
 
 use crate::attribute::name::Name;
-use crate::attribute::{ArgumentError, ParseArgument, ParseArgumentWith, ParseAttribute};
+use crate::attribute::{ArgumentError, ParseArgument as _, ParseArgumentWith as _, ParseAttribute};
 use crate::class::method::MethodKind;
 
 // TODO: Add `inspectable` to provide `toString` and `toJSON`
@@ -27,7 +27,7 @@ impl ParseAttribute for ClassAttribute {
 #[derive(Default)]
 pub(crate) struct MethodAttribute {
 	pub(crate) name: Option<Name>,
-	pub(crate) alias: Vec<LitStr>,
+	pub(crate) aliases: Vec<LitStr>,
 	pub(crate) kind: Option<MethodKind>,
 	pub(crate) skip: bool,
 }
@@ -38,7 +38,7 @@ impl ParseAttribute for MethodAttribute {
 			ArgumentError::Full("Method cannot have multiple `constructor`, `get`, or `set` attributes.");
 
 		self.name.parse_argument(meta, "name", "Method")?;
-		self.alias.parse_argument(meta, "alias", None)?;
+		self.aliases.parse_argument(meta, "alias", None)?;
 		self.kind
 			.parse_argument_with(meta, MethodKind::Constructor, "constructor", METHOD_KIND_ERROR)?;
 		self.kind.parse_argument_with(meta, MethodKind::Getter, "get", METHOD_KIND_ERROR)?;

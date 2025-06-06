@@ -13,7 +13,7 @@ use mozjs::jsapi::{
 	CurrentGlobalOrNull, Handle, JSContext, JSFunction, JSObject, JobQueueIsEmpty, JobQueueMayNotBeEmpty,
 };
 
-use crate::ContextExt;
+use crate::ContextExt as _;
 
 #[derive(Clone, Debug)]
 pub enum Microtask {

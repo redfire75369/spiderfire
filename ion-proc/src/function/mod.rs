@@ -25,7 +25,7 @@ pub(crate) fn impl_js_fn(mut function: ItemFn) -> Result<ItemFn> {
 	let (wrapper, _) = impl_wrapper_fn(ion, function.clone(), None, false, &ident.to_string())?;
 
 	check_abi(&mut function)?;
-	set_signature(&mut function)?;
+	set_signature(&mut function);
 
 	function.attrs.clear();
 	function.block = impl_fn_body(ion, &wrapper)?;
@@ -43,7 +43,7 @@ pub(crate) fn check_abi(function: &mut ItemFn) -> Result<()> {
 	Ok(())
 }
 
-pub(crate) fn set_signature(function: &mut ItemFn) -> Result<()> {
+pub(crate) fn set_signature(function: &mut ItemFn) {
 	function.sig.unsafety = Some(new_token![unsafe]);
 	function.sig.generics = Generics::default();
 	function.sig.inputs = Punctuated::from_iter::<[FnArg; 3]>([
@@ -52,7 +52,6 @@ pub(crate) fn set_signature(function: &mut ItemFn) -> Result<()> {
 		parse_quote!(vp: *mut ::mozjs::jsval::JSVal),
 	]);
 	function.sig.output = parse_quote!(-> ::core::primitive::bool);
-	Ok(())
 }
 
 pub(crate) fn impl_fn_body(ion: &TokenStream, wrapper: &ItemFn) -> Result<Box<Block>> {

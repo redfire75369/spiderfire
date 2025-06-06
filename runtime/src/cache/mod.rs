@@ -26,12 +26,11 @@ pub fn locate_in_cache<P: AsRef<Path>>(path: P, script: &str) -> Option<(String,
 
 	match result {
 		Some(Ok(s)) => Some(s),
-		Some(Err(Error::HashedSource(_))) | Some(Err(Error::Other)) => None,
+		Some(Err(Error::HashedSource(_) | Error::Other)) | None => None,
 		Some(Err(err)) => {
 			eprintln!("Error occurred while compiling TypeScript");
 			eprintln!("{err}");
 			None
 		}
-		None => None,
 	}
 }

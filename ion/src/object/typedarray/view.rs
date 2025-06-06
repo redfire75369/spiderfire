@@ -25,7 +25,7 @@ use mozjs::typedarray::{
 };
 
 use crate::typedarray::buffer::ArrayBuffer;
-use crate::utils::BoxExt;
+use crate::utils::BoxExt as _;
 use crate::{Context, Local, Object};
 
 pub trait TypedArrayElement: jsta::TypedArrayElement {

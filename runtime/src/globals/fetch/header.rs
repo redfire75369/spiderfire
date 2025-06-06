@@ -8,7 +8,7 @@
 
 use std::cmp::Ordering;
 use std::fmt::{Display, Formatter};
-use std::str::FromStr;
+use std::str::FromStr as _;
 use std::{fmt, str, vec};
 
 use http::header::{
@@ -23,7 +23,8 @@ use ion::function::Opt;
 use ion::string::byte::{ByteString, VisibleAscii};
 use ion::symbol::WellKnownSymbolCode;
 use ion::{
-	Array, ClassDefinition, Context, Error, ErrorKind, FromValue, JSIterator, Object, OwnedKey, Result, Value, js_class,
+	Array, ClassDefinition as _, Context, Error, ErrorKind, FromValue, JSIterator, Object, OwnedKey, Result, Value,
+	js_class,
 };
 use mime::{APPLICATION, FORM_DATA, MULTIPART, Mime, PLAIN, TEXT, WWW_FORM_URLENCODED};
 
@@ -51,7 +52,7 @@ impl Display for Header {
 
 impl ToValue<'_> for Header {
 	fn to_value(&self, cx: &Context, value: &mut Value) {
-		self.to_string().to_value(cx, value)
+		self.to_string().to_value(cx, value);
 	}
 }
 
@@ -88,7 +89,7 @@ impl<'cx> FromValue<'cx> for HeadersObject {
 	fn from_value(cx: &'cx Context, value: &Value, _: bool, _: ()) -> Result<HeadersObject> {
 		let object = Object::from_value(cx, value, true, ())?;
 		let mut headers = HeaderMap::new();
-		append_to_headers(cx, &mut headers, object)?;
+		append_to_headers(cx, &mut headers, &object)?;
 		Ok(HeadersObject(headers))
 	}
 }
@@ -279,15 +280,14 @@ impl JSIterator for HeadersIterator {
 	fn next_value<'cx>(&mut self, cx: &'cx Context, private: &Value<'cx>) -> Option<Value<'cx>> {
 		let object = private.to_object(cx);
 		let headers = Headers::get_private(cx, &object).unwrap();
-		let key = self.keys.next();
-		key.and_then(|key| {
-			if key == SET_COOKIE.as_str() {
-				self.cookies.next().map(|value| [key.as_str(), value.to_str().unwrap()].as_value(cx))
-			} else {
-				get_header(&headers.headers, &HeaderName::from_bytes(key.as_bytes()).unwrap())
-					.map(|value| [key.as_str(), &value.to_string()].as_value(cx))
-			}
-		})
+
+		let key = self.keys.next()?;
+		if key == SET_COOKIE.as_str() {
+			self.cookies.next().map(|value| [key.as_str(), value.to_str().unwrap()].as_value(cx))
+		} else {
+			get_header(&headers.headers, &HeaderName::from_bytes(key.as_bytes()).unwrap())
+				.map(|value| [key.as_str(), &value.to_string()].as_value(cx))
+		}
 	}
 }
 
@@ -453,7 +453,7 @@ fn remove_privileged_no_cors_headers(headers: &mut HeaderMap, kind: HeadersKind)
 	}
 }
 
-fn append_to_headers(cx: &Context, headers: &mut HeaderMap, obj: Object) -> Result<()> {
+fn append_to_headers(cx: &Context, headers: &mut HeaderMap, obj: &Object) -> Result<()> {
 	for key in obj.keys(cx, None).map(|key| key.to_owned_key(cx)) {
 		let key = match key {
 			Ok(OwnedKey::Int(i)) => i.to_string(),
@@ -477,7 +477,7 @@ fn append_to_headers(cx: &Context, headers: &mut HeaderMap, obj: Object) -> Resu
 			headers.insert(name, value);
 		} else {
 			return Err(Error::new("Could not convert value to Header Value", ErrorKind::Type));
-		};
+		}
 	}
 	Ok(())
 }

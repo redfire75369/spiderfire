@@ -13,7 +13,7 @@ use mozjs::jsval::{
 };
 
 use crate::bigint::BigInt;
-use crate::conversions::ToValue;
+use crate::conversions::ToValue as _;
 use crate::{Array, Context, Local, Object, Symbol};
 
 /// Represents a JavaScript Value in the runtime.

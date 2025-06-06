@@ -18,7 +18,7 @@ use mozjs::jsapi::{
 	JSStructuredCloneWriter, StructuredCloneScope,
 };
 
-use crate::conversions::ToValue;
+use crate::conversions::ToValue as _;
 use crate::{Context, Exception, Object, ResultExc, Value};
 
 pub struct StructuredCloneBuffer {

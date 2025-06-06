@@ -6,7 +6,7 @@
 
 use std::ffi::CString;
 
-use convert_case::{Case, Casing};
+use convert_case::{Case, Casing as _};
 use proc_macro2::{Ident, TokenStream};
 use quote::{format_ident, quote};
 use syn::{ItemFn, LitCStr, Result, Signature, Type};
@@ -48,7 +48,7 @@ impl Method {
 				Name::String(literal) => {
 					let mut name = literal.value();
 					if name.is_case(Case::Snake) {
-						name = name.to_case(Case::Camel)
+						name = name.to_case(Case::Camel);
 					}
 					let literal = LitCStr::new(&CString::new(name).unwrap(), literal.span());
 					quote!(#ion::function_spec!(#class::#ident, #literal, #nargs, #ion::flags::PropertyFlags::CONSTANT_ENUMERATED))
@@ -70,24 +70,24 @@ where
 	let fn_ident = &method.sig.ident;
 	let (wrapper, parameters) = impl_wrapper_fn(ion, method.clone(), Some(ty), false, &format!("{class}.{fn_ident}"))?;
 
-	predicate(&method.sig).and_then(|_| {
-		check_abi(&mut method)?;
-		set_signature(&mut method)?;
+	predicate(&method.sig)?;
 
-		method.attrs.clear();
-		method.sig.ident = format_ident!("__ion_bindings_method_{}", method.sig.ident);
-		method.block = impl_fn_body(ion, &wrapper)?;
+	check_abi(&mut method)?;
+	set_signature(&mut method);
 
-		let method = Method {
-			receiver: if parameters.this.is_some() {
-				MethodReceiver::Dynamic
-			} else {
-				MethodReceiver::Static
-			},
-			method,
-			nargs: parameters.nargs,
-			names: vec![],
-		};
-		Ok((method, parameters))
-	})
+	method.attrs.clear();
+	method.sig.ident = format_ident!("__ion_bindings_method_{}", method.sig.ident);
+	method.block = impl_fn_body(ion, &wrapper)?;
+
+	let method = Method {
+		receiver: if parameters.this.is_some() {
+			MethodReceiver::Dynamic
+		} else {
+			MethodReceiver::Static
+		},
+		method,
+		nargs: parameters.nargs,
+		names: vec![],
+	};
+	Ok((method, parameters))
 }

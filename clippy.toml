@@ -1,1 +1,3 @@
 allow-mixed-uninlined-format-args = false
+semicolon-inside-block-ignore-singleline = true
+semicolon-outside-block-ignore-multiline = true

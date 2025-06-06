@@ -32,11 +32,7 @@ pub struct ContextPrivate {
 
 unsafe impl Traceable for ContextPrivate {
 	unsafe fn trace(&self, trc: *mut JSTracer) {
-		for blob in self.blob_store.values() {
-			unsafe {
-				blob.trace(trc);
-			}
-		}
+		self.blob_store.values().for_each(|blob| unsafe { blob.trace(trc) });
 	}
 }
 

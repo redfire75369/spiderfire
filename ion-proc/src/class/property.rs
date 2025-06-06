@@ -8,7 +8,7 @@ use proc_macro2::{Ident, TokenStream};
 use quote::{format_ident, quote};
 use syn::{ImplItemConst, Result, Type};
 
-use crate::attribute::ParseAttribute;
+use crate::attribute::ParseAttribute as _;
 use crate::attribute::name::Name;
 use crate::attribute::property::PropertyAttribute;
 use crate::utils::path_ends_with;

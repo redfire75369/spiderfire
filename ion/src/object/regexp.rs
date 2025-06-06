@@ -33,11 +33,7 @@ impl<'r> RegExp<'r> {
 	/// Creates a [RegExp] from an object.
 	/// Returns [None] if it is not a [RegExp].
 	pub fn from(cx: &Context, object: Local<'r, *mut JSObject>) -> Option<RegExp<'r>> {
-		if RegExp::is_regexp(cx, &object) {
-			Some(RegExp { re: object })
-		} else {
-			None
-		}
+		RegExp::is_regexp(cx, &object).then_some(RegExp { re: object })
 	}
 
 	/// Creates a [RegExp] from an object.
