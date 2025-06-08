@@ -32,7 +32,11 @@ impl DirEntry {
 	}
 
 	pub fn metadata(&self) -> Result<Metadata> {
-		self.entry.metadata().map(Metadata).map_err(|err| metadata_error(&self.path(), &err))
+		self.entry
+			.metadata()
+			.as_ref()
+			.map(Metadata::new)
+			.map_err(|err| metadata_error(&self.path(), err))
 	}
 }
 

@@ -134,7 +134,7 @@ fn metadata(cx: &Context, path_str: String) -> Option<Promise> {
 	future_to_promise(cx, |_| async move {
 		let path = Path::new(&path_str);
 		match tokio::fs::metadata(path).await {
-			Ok(meta) => Ok(Metadata(meta)),
+			Ok(meta) => Ok(Metadata::new(&meta)),
 			Err(err) => Err(metadata_error(&path_str, &err)),
 		}
 	})
@@ -144,7 +144,7 @@ fn metadata(cx: &Context, path_str: String) -> Option<Promise> {
 fn metadata_sync(path_str: String) -> Result<Metadata> {
 	let path = Path::new(&path_str);
 	match fs::metadata(path) {
-		Ok(meta) => Ok(Metadata(meta)),
+		Ok(meta) => Ok(Metadata::new(&meta)),
 		Err(err) => Err(metadata_error(&path_str, &err)),
 	}
 }
@@ -154,7 +154,7 @@ fn link_metadata(cx: &Context, path_str: String) -> Option<Promise> {
 	future_to_promise(cx, |_| async move {
 		let path = Path::new(&path_str);
 		match tokio::fs::symlink_metadata(path).await {
-			Ok(meta) => Ok(Metadata(meta)),
+			Ok(meta) => Ok(Metadata::new(&meta)),
 			Err(err) => Err(metadata_error(&path_str, &err)),
 		}
 	})
@@ -164,7 +164,7 @@ fn link_metadata(cx: &Context, path_str: String) -> Option<Promise> {
 fn link_metadata_sync(path_str: String) -> Result<Metadata> {
 	let path = Path::new(&path_str);
 	match fs::symlink_metadata(path) {
-		Ok(meta) => Ok(Metadata(meta)),
+		Ok(meta) => Ok(Metadata::new(&meta)),
 		Err(err) => Err(metadata_error(&path_str, &err)),
 	}
 }

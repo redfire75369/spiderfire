@@ -6,23 +6,14 @@
 
 use encoding_rs::{Encoder, UTF_8};
 use ion::class::Reflector;
-use ion::conversions::ToValue;
 use ion::function::Opt;
 use ion::typedarray::{Uint8Array, Uint8ArrayWrapper};
-use ion::{Context, Object, Value, js_class};
+use ion::{ToValue, js_class};
 
+#[derive(ToValue)]
 pub struct EncodeResult {
 	read: u64,
 	written: u64,
-}
-
-impl<'cx> ToValue<'cx> for EncodeResult {
-	fn to_value(&self, cx: &'cx Context, value: &mut Value) {
-		let object = Object::new(cx);
-		object.set_as(cx, "read", &self.read);
-		object.set_as(cx, "written", &self.written);
-		object.to_value(cx, value);
-	}
 }
 
 #[js_class]

@@ -7,11 +7,9 @@
 use std::io;
 use std::time::SystemTime;
 
-use chrono::DateTime;
 pub use fs::*;
 pub use handle::*;
-use ion::conversions::ToValue;
-use ion::{Context, Date, Error, Object, Value};
+use ion::{Error, ToValue};
 
 mod dir;
 mod fs;
@@ -44,28 +42,29 @@ pub(crate) fn translate_error(action: &str, from: &str, to: &str, err: &io::Erro
 	Error::new(format!("Could not {action} {from} to {to}: {err}"), None)
 }
 
-#[derive(Debug)]
-pub struct Metadata(pub(crate) std::fs::Metadata);
+#[derive(Debug, ToValue)]
+pub struct Metadata {
+	size: u64,
+	is_file: bool,
+	is_directory: bool,
+	is_symlink: bool,
+	created: Option<SystemTime>,
+	accessed: Option<SystemTime>,
+	modified: Option<SystemTime>,
+	readonly: bool,
+}
 
-impl ToValue<'_> for Metadata {
-	fn to_value(&self, cx: &Context, value: &mut Value) {
-		fn system_time_into_date(cx: &Context, time: io::Result<SystemTime>) -> Option<Date> {
-			time.ok().map(|time| Date::from_date(cx, DateTime::from(time)))
+impl Metadata {
+	fn new(meta: &std::fs::Metadata) -> Metadata {
+		Metadata {
+			size: meta.len(),
+			is_file: meta.is_file(),
+			is_directory: meta.is_dir(),
+			is_symlink: meta.is_symlink(),
+			created: meta.created().ok(),
+			accessed: meta.accessed().ok(),
+			modified: meta.modified().ok(),
+			readonly: meta.permissions().readonly(),
 		}
-
-		let obj = Object::new(cx);
-		obj.set_as(cx, "size", &self.0.len());
-
-		obj.set_as(cx, "isFile", &self.0.is_file());
-		obj.set_as(cx, "isDirectory", &self.0.is_dir());
-		obj.set_as(cx, "isSymlink", &self.0.is_symlink());
-
-		obj.set_as(cx, "created", &system_time_into_date(cx, self.0.created()));
-		obj.set_as(cx, "accessed", &system_time_into_date(cx, self.0.accessed()));
-		obj.set_as(cx, "modified", &system_time_into_date(cx, self.0.modified()));
-
-		obj.set_as(cx, "readonly", &self.0.permissions().readonly());
-
-		obj.to_value(cx, value);
 	}
 }

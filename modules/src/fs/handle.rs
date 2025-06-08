@@ -351,7 +351,7 @@ impl FileHandle {
 			cx,
 			"get metadata for",
 			path,
-			move |file| file.metadata().map(Metadata),
+			move |file| file.metadata().map(|meta| Metadata::new(&meta)),
 			|| {},
 			file_error,
 			(),
@@ -362,8 +362,9 @@ impl FileHandle {
 	pub fn metadata_sync(&self) -> Result<Metadata> {
 		self.with_sync(|file| {
 			file.metadata()
-				.map(Metadata)
-				.map_err(|err| file_error("get metadata for", &self.path, &err, ()))
+				.as_ref()
+				.map(Metadata::new)
+				.map_err(|err| file_error("get metadata for", &self.path, err, ()))
 		})
 	}
 }
