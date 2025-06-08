@@ -18,14 +18,16 @@ use ion::{
 };
 use mozjs::jsapi::{Heap, JSObject};
 use mozjs::jsval::JSVal;
-pub use reader::{ByobReader, CommonReader, DefaultReader};
-use reader::{Reader, ReaderKind};
-pub use source::StreamSource;
-use source::{TeeBytesState, TeeDefaultState, forward_reader_error};
+
+pub use crate::globals::streams::readable::reader::{ByobReader, CommonReader, DefaultReader};
+use crate::globals::streams::readable::reader::{Reader, ReaderKind};
+pub use crate::globals::streams::readable::source::StreamSource;
+use crate::globals::streams::readable::tee::{TeeBytesState, TeeDefaultState, forward_reader_error};
 
 mod controller;
 mod reader;
 mod source;
+mod tee;
 
 #[derive(Default, FromValue)]
 pub struct UnderlyingSource<'cx> {
