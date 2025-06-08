@@ -7,7 +7,9 @@
 use std::borrow::Cow;
 use std::ptr::NonNull;
 use std::rc::Rc;
+use std::time::SystemTime;
 
+use chrono::DateTime;
 use mozjs::jsapi::{
 	JS_GetFunctionObject, JS_IdToValue, JS_NewStringCopyN, JS_WrapValue, JSFunction, JSObject, JSString,
 	PropertyKey as JSPropertyKey, Symbol as JSSymbol,
@@ -179,6 +181,12 @@ impl<'cx> ToValue<'cx> for Array<'cx> {
 impl<'cx> ToValue<'cx> for Date<'cx> {
 	fn to_value(&self, cx: &'cx Context, value: &mut Value) {
 		self.handle().to_value(cx, value);
+	}
+}
+
+impl ToValue<'_> for SystemTime {
+	fn to_value(&self, cx: &Context, value: &mut Value) {
+		Date::from_date(cx, DateTime::from(*self)).to_value(cx, value);
 	}
 }
 

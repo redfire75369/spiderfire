@@ -27,14 +27,17 @@ pub(crate) fn impl_to_value(mut input: DeriveInput) -> Result<ItemImpl> {
 
 	let name = &input.ident;
 	let (body, requires_object) = impl_body(ion, input.span(), &input.data, &attribute.tag, attribute.inherit)?;
+
 	let prefix = requires_object.then(|| quote!(let __ion_object = #ion::Object::new(__ion_cx);));
-	let postfix = requires_object.then(|| quote!(let __ion_object = #ion::Object::new(__ion_cx);));
+	let postfix = requires_object.then(|| {
+		quote!(
+			#ion::conversions::ToValue::to_value(&__ion_object, __ion_cx, __ion_value);
+		)
+	});
 
 	parse2(quote_spanned!(input.span() =>
 		#[automatically_derived]
 		impl #impl_generics #ion::conversions::ToValue<'cx> for #name #ty_generics #where_clause {
-			type Config = ();
-
 			fn to_value(&self, __ion_cx: &'cx #ion::Context, __ion_value: &mut #ion::Value) {
 				#prefix
 				#body
@@ -57,7 +60,7 @@ fn impl_body(
 				#requirement
 				#(#statements)*
 			}))?;
-			(vec![None], vec![wrapped], vec![block], requires_object)
+			(None, vec![wrapped], vec![block], requires_object)
 		}
 		Data::Enum(r#enum) => {
 			let mut variants = Vec::with_capacity(r#enum.variants.len());
@@ -85,12 +88,12 @@ fn impl_body(
 					#(#statements)*
 				}))?;
 
-				variants.push(Some(variant.ident.clone()));
+				variants.push(variant.ident.clone());
 				variant_idents.push(wrapped);
 				blocks.push(block);
 			}
 
-			(variants, variant_idents, blocks, requires_object)
+			(Some(variants), variant_idents, blocks, requires_object)
 		}
 		Data::Union(_) => {
 			return Err(Error::new(
@@ -100,21 +103,29 @@ fn impl_body(
 		}
 	};
 
-	Ok((
+	let body = if let Some(variants) = variants {
 		quote_spanned!(span => match self {
 			#(Self::#variants #idents => #blocks)*
-		}),
-		requires_object,
-	))
+		})
+	} else {
+		quote_spanned!(span => match self {
+			#(Self #idents => #blocks)*
+		})
+	};
+
+	Ok((body, requires_object))
 }
 
 fn tag_requirement(
 	ion: &TokenStream, tag: Option<&Tag>, variant: Option<String>, requires_object: bool,
 ) -> Result<Option<TokenStream>> {
-	if variant.is_none() && matches!(&tag, Some(Tag::External | Tag::Internal(_))) {
-		return Err(Error::new(Span::call_site(), "Cannot have Tag for Struct"));
-	}
-	let variant = variant.unwrap();
+	let Some(variant) = variant else {
+		return if matches!(&tag, Some(Tag::External | Tag::Internal(_))) {
+			Err(Error::new(Span::call_site(), "Cannot have Tag for Struct"))
+		} else {
+			Ok(None)
+		};
+	};
 
 	let object = requires_object.then(|| {
 		quote!(
