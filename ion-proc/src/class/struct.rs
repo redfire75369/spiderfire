@@ -43,7 +43,7 @@ pub(super) fn impl_js_class_struct(r#struct: &mut ItemStruct) -> Result<[ItemImp
 		r#struct.attrs.push(parse_quote!(#[derive(#ion::Traceable)]));
 	}
 
-	let attribute = ClassAttribute::from_attributes_mut("ion", &mut r#struct.attrs)?;
+	let attribute = ClassAttribute::from_attributes("ion", &mut r#struct.attrs, ())?;
 
 	if !r#struct.generics.params.is_empty() {
 		return Err(Error::new(

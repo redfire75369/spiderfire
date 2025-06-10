@@ -16,14 +16,16 @@ pub(crate) struct ParameterAttribute {
 }
 
 impl ParseAttribute for ParameterAttribute {
-	fn parse(&mut self, meta: &ParseNestedMeta) -> Result<()> {
-		self.this.parse_argument(meta, "this", "Parameter")?;
-		self.convert.parse_argument(meta, "convert", "Parameter")?;
+	type Parent<'a> = ();
+
+	fn parse(&mut self, meta: &ParseNestedMeta) -> Result<bool> {
+		let success = self.this.parse_argument(meta, "this", "Parameter")?
+			|| self.convert.parse_argument(meta, "convert", "Parameter")?;
 
 		if self.this && self.convert.is_some() {
 			return Err(meta.error("Parameter with `this` attribute cannot have `convert` attributes."));
 		}
 
-		Ok(())
+		Ok(success)
 	}
 }

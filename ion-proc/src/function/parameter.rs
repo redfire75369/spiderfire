@@ -44,7 +44,7 @@ impl Parameter {
 		match arg {
 			FnArg::Typed(pat_ty) => {
 				let mut pat_ty = pat_ty.clone();
-				let attribute = ParameterAttribute::from_attributes_mut("ion", &mut pat_ty.attrs)?;
+				let attribute = ParameterAttribute::from_attributes("ion", &mut pat_ty.attrs, ())?;
 				Ok(Parameter { pat_ty, convert: attribute.convert })
 			}
 			FnArg::Receiver(_) => Err(Error::new(arg.span(), "Expected Typed Function Argument")),
@@ -89,7 +89,7 @@ impl ThisParameter {
 						parse_this(pat_ty, true, span).map(Some)
 					}
 					_ => {
-						let attribute = ParameterAttribute::from_attributes_mut("ion", &mut pat_ty.attrs)?;
+						let attribute = ParameterAttribute::from_attributes("ion", &mut pat_ty.attrs, ())?;
 						if attribute.this {
 							return parse_this(pat_ty, class_ty.is_some(), span).map(Some);
 						}

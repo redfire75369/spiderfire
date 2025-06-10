@@ -4,11 +4,12 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/.
  */
 
-use proc_macro2::Ident;
+use proc_macro2::{Ident, TokenStream};
+use quote::quote;
 use syn::meta::ParseNestedMeta;
 use syn::parse::Parse;
 use syn::punctuated::Punctuated;
-use syn::{Attribute, Result, Token, bracketed};
+use syn::{Attribute, Meta, MetaList, Path, Result, Token, bracketed};
 
 pub(crate) mod class;
 pub(crate) mod function;
@@ -63,30 +64,30 @@ pub(crate) trait ParseArgumentWith {
 
 	fn handle_argument_with<'a>(
 		&mut self, meta: &ParseNestedMeta, with: Self::With, key: &str, error: impl Into<ArgumentError<'a>>,
-	) -> Result<()>;
+	) -> Result<bool>;
 
 	fn parse_argument_with<'a>(
 		&mut self, meta: &ParseNestedMeta, with: Self::With, key: &str, error: impl Into<ArgumentError<'a>>,
-	) -> Result<()> {
+	) -> Result<bool> {
 		if meta.path.is_ident(key) {
-			self.handle_argument_with(meta, with, key, error)?;
+			return self.handle_argument_with(meta, with, key, error);
 		}
-		Ok(())
+		Ok(false)
 	}
 }
 
 pub(crate) trait ParseArgument: ParseArgumentWith {
 	fn handle_argument<'a>(
 		&mut self, meta: &ParseNestedMeta, key: &str, error: impl Into<ArgumentError<'a>>,
-	) -> Result<()>;
+	) -> Result<bool>;
 
 	fn parse_argument<'a>(
 		&mut self, meta: &ParseNestedMeta, key: &str, error: impl Into<ArgumentError<'a>>,
-	) -> Result<()> {
+	) -> Result<bool> {
 		if meta.path.is_ident(key) {
-			self.handle_argument(meta, key, error)?;
+			return self.handle_argument(meta, key, error);
 		}
-		Ok(())
+		Ok(false)
 	}
 }
 
@@ -95,19 +96,20 @@ impl ParseArgumentWith for bool {
 
 	fn handle_argument_with<'a>(
 		&mut self, meta: &ParseNestedMeta, with: bool, key: &str, error: impl Into<ArgumentError<'a>>,
-	) -> Result<()> {
+	) -> Result<bool> {
 		if *self {
 			error.into().error(meta, key)?;
+			return Ok(false);
 		}
 		*self = with;
-		Ok(())
+		Ok(true)
 	}
 }
 
 impl ParseArgument for bool {
 	fn handle_argument<'a>(
 		&mut self, meta: &ParseNestedMeta, key: &str, error: impl Into<ArgumentError<'a>>,
-	) -> Result<()> {
+	) -> Result<bool> {
 		self.handle_argument_with(meta, true, key, error)
 	}
 }
@@ -117,19 +119,20 @@ impl<T> ParseArgumentWith for Option<T> {
 
 	fn handle_argument_with<'a>(
 		&mut self, meta: &ParseNestedMeta, with: T, key: &str, error: impl Into<ArgumentError<'a>>,
-	) -> Result<()> {
+	) -> Result<bool> {
 		if self.is_some() {
 			error.into().error(meta, key)?;
+			return Ok(false);
 		}
 		*self = Some(with);
-		Ok(())
+		Ok(true)
 	}
 }
 
 impl<T: Parse> ParseArgument for Option<T> {
 	fn handle_argument<'a>(
 		&mut self, meta: &ParseNestedMeta, key: &str, error: impl Into<ArgumentError<'a>>,
-	) -> Result<()> {
+	) -> Result<bool> {
 		let _: Token![=] = meta.input.parse()?;
 		let argument = meta.input.parse()?;
 		self.handle_argument_with(meta, argument, key, error)
@@ -141,19 +144,20 @@ impl<T> ParseArgumentWith for Optional<T> {
 
 	fn handle_argument_with<'a>(
 		&mut self, meta: &ParseNestedMeta, with: T, key: &str, error: impl Into<ArgumentError<'a>>,
-	) -> Result<()> {
+	) -> Result<bool> {
 		if self.0.is_some() {
 			error.into().error(meta, key)?;
+			return Ok(false);
 		}
 		self.0 = Some(with);
-		Ok(())
+		Ok(true)
 	}
 }
 
 impl<T: Parse + Default> ParseArgument for Optional<T> {
 	fn handle_argument<'a>(
 		&mut self, meta: &ParseNestedMeta, key: &str, error: impl Into<ArgumentError<'a>>,
-	) -> Result<()> {
+	) -> Result<bool> {
 		let eq: Option<Token![=]> = meta.input.parse()?;
 		let argument = eq.map(|_| meta.input.parse()).transpose()?.unwrap_or_default();
 		self.handle_argument_with(meta, argument, key, error)
@@ -166,19 +170,20 @@ impl<T> ParseArgumentWith for Vec<T> {
 	fn handle_argument_with<'a>(
 		&mut self, meta: &ParseNestedMeta, with: Punctuated<T, Token![,]>, key: &str,
 		error: impl Into<ArgumentError<'a>>,
-	) -> Result<()> {
+	) -> Result<bool> {
 		if !self.is_empty() {
 			error.into().error(meta, key)?;
+			return Ok(false);
 		}
 		self.extend(with);
-		Ok(())
+		Ok(true)
 	}
 }
 
 impl<T: Parse> ParseArgument for Vec<T> {
 	fn handle_argument<'a>(
 		&mut self, meta: &ParseNestedMeta, key: &str, error: impl Into<ArgumentError<'a>>,
-	) -> Result<()> {
+	) -> Result<bool> {
 		let _: Token![=] = meta.input.parse()?;
 		let inner;
 		bracketed!(inner in meta.input);
@@ -188,37 +193,55 @@ impl<T: Parse> ParseArgument for Vec<T> {
 }
 
 pub(crate) trait ParseAttribute: Default {
-	fn parse(&mut self, meta: &ParseNestedMeta) -> Result<()>;
+	type Parent<'a>: Copy;
 
-	fn from_attributes<I: ?Sized>(path: &I, attrs: &[Attribute]) -> Result<Self>
-	where
-		Ident: PartialEq<I>,
-	{
-		let mut attribute = Self::default();
-		for attr in attrs {
-			if attr.path().is_ident(path) {
-				attr.parse_nested_meta(|meta| attribute.parse(&meta))?;
-			}
-		}
-		Ok(attribute)
+	fn from_parent(_parent: Self::Parent<'_>) -> Self {
+		Self::default()
 	}
 
-	fn from_attributes_mut<I: ?Sized>(path: &I, attrs: &mut Vec<Attribute>) -> Result<Self>
+	fn merge(&mut self, _parent: Self::Parent<'_>) {}
+
+	fn parse(&mut self, meta: &ParseNestedMeta) -> Result<bool>;
+
+	fn from_attributes<I: ?Sized>(path: &I, attributes: &mut Vec<Attribute>, parent: Self::Parent<'_>) -> Result<Self>
 	where
 		Ident: PartialEq<I>,
 	{
-		let mut indices = Vec::new();
-		let mut attribute = Self::default();
-		for (i, attr) in attrs.iter().enumerate() {
-			if attr.path().is_ident(path) {
-				attr.parse_nested_meta(|meta| attribute.parse(&meta))?;
-				indices.push(i);
-				break;
+		let mut data = Self::from_parent(parent);
+
+		attributes.retain_mut(|attribute| {
+			if !attribute.path().is_ident(path) {
+				return true;
 			}
-		}
-		while let Some(index) = indices.pop() {
-			attrs.remove(index);
-		}
-		Ok(attribute)
+
+			let mut raw: Vec<(Path, TokenStream)> = Vec::new();
+			let mut parsed = Vec::new();
+
+			let _ = attribute.parse_nested_meta(|meta| {
+				raw.push((meta.path.clone(), meta.input.fork().parse()?));
+				if data.parse(&meta)? {
+					parsed.push(raw.len());
+				}
+
+				Ok(())
+			});
+
+			if parsed.len() == raw.len() {
+				return false;
+			}
+
+			if let Meta::List(MetaList { tokens, .. }) = &mut attribute.meta {
+				let raw = raw
+					.into_iter()
+					.enumerate()
+					.filter_map(|(i, (k, v))| (!parsed.contains(&i)).then(|| quote!(#k #v)));
+				*tokens = quote!(#(#raw),*);
+			}
+
+			true
+		});
+
+		data.merge(parent);
+		Ok(data)
 	}
 }

@@ -19,7 +19,7 @@ pub(super) fn impl_trace(mut input: DeriveInput) -> Result<ItemImpl> {
 	let impl_generics: Generics = parse2(quote_spanned!(impl_generics.span() => #impl_generics))?;
 
 	let name = &input.ident;
-	let body = impl_body(input.span(), &input.data)?;
+	let body = impl_body(input.span(), &mut input.data)?;
 
 	parse2(quote_spanned!(input.span() =>
 		#[automatically_derived]
@@ -32,7 +32,7 @@ pub(super) fn impl_trace(mut input: DeriveInput) -> Result<ItemImpl> {
 	))
 }
 
-fn impl_body(span: Span, data: &Data) -> Result<Box<Block>> {
+fn impl_body(span: Span, data: &mut Data) -> Result<Box<Block>> {
 	let mut variants = Vec::new();
 	let mut variant_idents = Vec::new();
 	let mut variant_traced = Vec::new();
@@ -40,16 +40,16 @@ fn impl_body(span: Span, data: &Data) -> Result<Box<Block>> {
 
 	match data {
 		Data::Struct(r#struct) => {
-			let (idents, traced) = field_idents(&r#struct.fields)?;
+			let (idents, traced) = field_idents(&mut r#struct.fields)?;
 			variants.push(quote!(Self));
 			variant_idents.push(idents);
 			variant_traced.push(traced);
 			fields.push(r#struct.fields.clone());
 		}
 		Data::Enum(r#enum) => {
-			for variant in &r#enum.variants {
+			for variant in &mut r#enum.variants {
 				let ident = &variant.ident;
-				let (idents, traced) = field_idents(&variant.fields)?;
+				let (idents, traced) = field_idents(&mut variant.fields)?;
 				variants.push(quote!(Self::#ident));
 				variant_idents.push(idents);
 				variant_traced.push(traced);
@@ -81,11 +81,11 @@ fn impl_body(span: Span, data: &Data) -> Result<Box<Block>> {
 	}))
 }
 
-fn field_idents(fields: &Fields) -> Result<(Vec<Ident>, Vec<Ident>)> {
+fn field_idents(fields: &mut Fields) -> Result<(Vec<Ident>, Vec<Ident>)> {
 	let mut idents = Vec::with_capacity(fields.len());
 	let mut traced = Vec::with_capacity(fields.len());
-	for (index, field) in fields.iter().enumerate() {
-		let attribute = TraceAttribute::from_attributes("trace", &field.attrs)?;
+	for (index, field) in fields.iter_mut().enumerate() {
+		let attribute = TraceAttribute::from_attributes("trace", &mut field.attrs, ())?;
 		let ident = match &field.ident {
 			Some(ident) => ident.clone(),
 			None => format_ident!("_self_{}", index),

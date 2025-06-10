@@ -19,12 +19,14 @@ pub(crate) struct PropertyAttribute {
 }
 
 impl ParseAttribute for PropertyAttribute {
-	fn parse(&mut self, meta: &ParseNestedMeta) -> Result<()> {
-		self.name.parse_argument(meta, "name", "Property")?;
-		self.alias.parse_argument(meta, "alias", None)?;
-		self.skip.parse_argument(meta, "skip", "Property")?;
-		self.r#static.parse_argument(meta, "static", "Property")?;
+	type Parent<'a> = ();
 
-		Ok(())
+	fn parse(&mut self, meta: &ParseNestedMeta) -> Result<bool> {
+		let success = self.name.parse_argument(meta, "name", "Property")?
+			|| self.alias.parse_argument(meta, "alias", None)?
+			|| self.skip.parse_argument(meta, "skip", "Property")?
+			|| self.r#static.parse_argument(meta, "static", "Property")?;
+
+		Ok(success)
 	}
 }

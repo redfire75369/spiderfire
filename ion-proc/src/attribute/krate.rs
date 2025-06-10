@@ -4,7 +4,7 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/.
  */
 
-use proc_macro2::{Ident, TokenStream};
+use proc_macro2::TokenStream;
 use syn::meta::ParseNestedMeta;
 use syn::{Attribute, Result, parse_quote};
 
@@ -16,33 +16,14 @@ struct CrateAttribute {
 }
 
 impl ParseAttribute for CrateAttribute {
-	fn parse(&mut self, meta: &ParseNestedMeta) -> Result<()> {
-		self.krate.parse_argument(meta, "crate", "Attribute")?;
-		Ok(())
-	}
+	type Parent<'a> = ();
 
-	fn from_attributes_mut<I: ?Sized>(path: &I, attrs: &mut Vec<Attribute>) -> Result<Self>
-	where
-		Ident: PartialEq<I>,
-	{
-		let mut indices = Vec::new();
-		let mut attribute = Self::default();
-		for (i, attr) in attrs.iter().enumerate() {
-			if attr.path().is_ident(path) {
-				if attr.parse_nested_meta(|meta| attribute.parse(&meta)).is_ok() {
-					indices.push(i);
-				}
-				break;
-			}
-		}
-		while let Some(index) = indices.pop() {
-			attrs.remove(index);
-		}
-		Ok(attribute)
+	fn parse(&mut self, meta: &ParseNestedMeta) -> Result<bool> {
+		self.krate.parse_argument(meta, "crate", "Attribute")
 	}
 }
 
 pub(crate) fn crate_from_attributes(attrs: &mut Vec<Attribute>) -> TokenStream {
-	let attribute = CrateAttribute::from_attributes_mut("ion", attrs).unwrap();
+	let attribute = CrateAttribute::from_attributes("ion", attrs, ()).unwrap();
 	attribute.krate.unwrap_or_else(|| parse_quote!(::ion))
 }

@@ -15,8 +15,9 @@ pub(crate) struct TraceAttribute {
 }
 
 impl ParseAttribute for TraceAttribute {
-	fn parse(&mut self, meta: &ParseNestedMeta) -> Result<()> {
-		self.no_trace.parse_argument(meta, "no_trace", "Field")?;
-		Ok(())
+	type Parent<'a> = ();
+
+	fn parse(&mut self, meta: &ParseNestedMeta) -> Result<bool> {
+		self.no_trace.parse_argument(meta, "no_trace", "Field")
 	}
 }

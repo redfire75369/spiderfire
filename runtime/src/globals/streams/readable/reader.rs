@@ -129,6 +129,7 @@ impl<'r> Reader<'r> {
 }
 
 #[js_class]
+#[ion(name = "ReadableStreamCommonReader")]
 pub struct CommonReader {
 	reflector: Reflector,
 

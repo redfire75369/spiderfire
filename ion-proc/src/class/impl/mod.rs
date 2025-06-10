@@ -94,7 +94,7 @@ fn parse_class_method(
 
 	let mut names = vec![];
 
-	let attribute = MethodAttribute::from_attributes_mut("ion", &mut r#fn.attrs)?;
+	let attribute = MethodAttribute::from_attributes("ion", &mut r#fn.attrs, ())?;
 	let MethodAttribute { name, aliases, kind, skip } = attribute;
 	for alias in aliases {
 		names.push(Name::String(alias));

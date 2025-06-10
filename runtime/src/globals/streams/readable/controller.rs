@@ -227,6 +227,7 @@ impl<'c> Controller<'c> {
 }
 
 #[js_class]
+#[ion(name = "ReadableStreamCommonController")]
 pub struct CommonController {
 	reflector: Reflector,
 

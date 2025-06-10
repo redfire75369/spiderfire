@@ -4,13 +4,14 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/.
  */
 
+use either::Either;
 use syn::meta::ParseNestedMeta;
 use syn::parse::{Parse, ParseStream};
 use syn::{Expr, ExprClosure, Lit, LitStr, Result};
 
 use crate::attribute::{ArgumentError, Optional, ParseArgument as _, ParseArgumentWith as _, ParseAttribute};
 
-#[derive(Clone, Default)]
+#[derive(Clone, Debug, Default)]
 pub(crate) enum Tag {
 	Untagged,
 	#[default]
@@ -45,51 +46,62 @@ impl Parse for DefaultValue {
 	}
 }
 
-#[derive(Default)]
+#[derive(Debug, Default)]
 pub(crate) struct DataAttribute {
 	pub(crate) tag: Optional<Tag>,
 	pub(crate) inherit: bool,
 }
 
 impl ParseAttribute for DataAttribute {
-	fn parse(&mut self, meta: &ParseNestedMeta) -> Result<()> {
+	type Parent<'a> = ();
+
+	fn parse(&mut self, meta: &ParseNestedMeta) -> Result<bool> {
 		const TAG_ERROR: &str = "Data cannot have multiple `untagged`, or `tag` attributes.";
 
-		self.tag
-			.parse_argument_with(meta, Tag::Untagged, "untagged", ArgumentError::Full(TAG_ERROR))?;
-		self.tag.parse_argument(meta, "tag", ArgumentError::Full(TAG_ERROR))?;
-		self.inherit.parse_argument(meta, "inherit", "Data")?;
+		let success = self
+			.tag
+			.parse_argument_with(meta, Tag::Untagged, "untagged", ArgumentError::Full(TAG_ERROR))?
+			|| self.tag.parse_argument(meta, "tag", ArgumentError::Full(TAG_ERROR))?
+			|| self.inherit.parse_argument(meta, "inherit", "Data")?;
 
-		Ok(())
+		Ok(success)
 	}
 }
 
-#[derive(Default)]
+#[derive(Debug, Default)]
 pub(crate) struct VariantAttribute {
 	pub(crate) tag: Optional<Tag>,
 	pub(crate) inherit: bool,
 	pub(crate) skip: bool,
 }
 
-impl VariantAttribute {
-	pub(crate) fn merge(&mut self, old_tag: Option<&Tag>, old_inherit: bool) {
-		let tag = self.tag.0.take();
-		self.tag = Optional(tag.or(old_tag.cloned()));
-		self.inherit = self.inherit || old_inherit;
-	}
-}
-
 impl ParseAttribute for VariantAttribute {
-	fn parse(&mut self, meta: &ParseNestedMeta) -> Result<()> {
+	type Parent<'a> = &'a DataAttribute;
+
+	fn from_parent(parent: Self::Parent<'_>) -> VariantAttribute {
+		VariantAttribute {
+			inherit: parent.inherit,
+			..VariantAttribute::default()
+		}
+	}
+
+	fn merge(&mut self, parent: Self::Parent<'_>) {
+		if self.tag.0.is_none() {
+			self.tag = parent.tag.clone();
+		}
+	}
+
+	fn parse(&mut self, meta: &ParseNestedMeta) -> Result<bool> {
 		const TAG_ERROR: &str = "Variant cannot have multiple `untagged`, or `tag` attributes.";
 
-		self.tag
-			.parse_argument_with(meta, Tag::Untagged, "untagged", ArgumentError::Full(TAG_ERROR))?;
-		self.tag.parse_argument(meta, "tag", ArgumentError::Full(TAG_ERROR))?;
-		self.inherit.parse_argument(meta, "inherit", "Variant")?;
-		self.skip.parse_argument(meta, "skip", "Variant")?;
+		let success = self
+			.tag
+			.parse_argument_with(meta, Tag::Untagged, "untagged", ArgumentError::Full(TAG_ERROR))?
+			|| self.tag.parse_argument(meta, "tag", ArgumentError::Full(TAG_ERROR))?
+			|| self.inherit.parse_argument(meta, "inherit", "Variant")?
+			|| self.skip.parse_argument(meta, "skip", "Variant")?;
 
-		Ok(())
+		Ok(success)
 	}
 }
 
@@ -100,19 +112,29 @@ pub(crate) struct FieldAttribute {
 	pub(crate) skip: bool,
 }
 
-impl FieldAttribute {
-	pub(crate) fn merge(&mut self, old_inherit: bool) {
-		self.inherit = self.inherit || old_inherit;
-	}
-}
-
 impl ParseAttribute for FieldAttribute {
-	fn parse(&mut self, meta: &ParseNestedMeta) -> Result<()> {
-		self.name.parse_argument(meta, "name", "Field")?;
-		self.inherit.parse_argument(meta, "inherit", "Field")?;
-		self.skip.parse_argument(meta, "skip", "Field")?;
+	type Parent<'a> = Either<&'a DataAttribute, &'a VariantAttribute>;
 
-		Ok(())
+	fn from_parent(parent: Self::Parent<'_>) -> FieldAttribute {
+		let mut attribute = FieldAttribute::default();
+		match parent {
+			Either::Left(data) => {
+				attribute.inherit = data.inherit;
+			}
+			Either::Right(variant) => {
+				attribute.inherit = variant.inherit;
+				attribute.skip = variant.skip;
+			}
+		}
+		attribute
+	}
+
+	fn parse(&mut self, meta: &ParseNestedMeta) -> Result<bool> {
+		let success = self.name.parse_argument(meta, "name", "Field")?
+			|| self.inherit.parse_argument(meta, "inherit", "Field")?
+			|| self.skip.parse_argument(meta, "skip", "Field")?;
+
+		Ok(success)
 	}
 }
 
@@ -126,13 +148,22 @@ pub(crate) struct FieldFromAttribute {
 }
 
 impl ParseAttribute for FieldFromAttribute {
-	fn parse(&mut self, meta: &ParseNestedMeta) -> Result<()> {
-		self.base.parse(meta)?;
-		self.default.parse_argument(meta, "default", "Field")?;
-		self.convert.parse_argument(meta, "convert", "Field")?;
-		self.strict.parse_argument(meta, "strict", "Field")?;
-		self.parser.parse_argument(meta, "parser", "Field")?;
+	type Parent<'a> = Either<&'a DataAttribute, &'a VariantAttribute>;
 
-		Ok(())
+	fn from_parent(parent: Self::Parent<'_>) -> Self {
+		FieldFromAttribute {
+			base: FieldAttribute::from_parent(parent),
+			..FieldFromAttribute::default()
+		}
+	}
+
+	fn parse(&mut self, meta: &ParseNestedMeta) -> Result<bool> {
+		let success = self.base.parse(meta)?
+			|| self.default.parse_argument(meta, "default", "Field")?
+			|| self.convert.parse_argument(meta, "convert", "Field")?
+			|| self.strict.parse_argument(meta, "strict", "Field")?
+			|| self.parser.parse_argument(meta, "parser", "Field")?;
+
+		Ok(success)
 	}
 }

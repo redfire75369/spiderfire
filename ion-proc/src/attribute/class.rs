@@ -18,9 +18,10 @@ pub(crate) struct ClassAttribute {
 }
 
 impl ParseAttribute for ClassAttribute {
-	fn parse(&mut self, meta: &ParseNestedMeta) -> Result<()> {
-		self.name.parse_argument(meta, "name", "Class")?;
-		Ok(())
+	type Parent<'a> = ();
+
+	fn parse(&mut self, meta: &ParseNestedMeta) -> Result<bool> {
+		self.name.parse_argument(meta, "name", "Class")
 	}
 }
 
@@ -33,18 +34,21 @@ pub(crate) struct MethodAttribute {
 }
 
 impl ParseAttribute for MethodAttribute {
-	fn parse(&mut self, meta: &ParseNestedMeta) -> Result<()> {
+	type Parent<'a> = ();
+
+	fn parse(&mut self, meta: &ParseNestedMeta) -> Result<bool> {
 		const METHOD_KIND_ERROR: ArgumentError =
 			ArgumentError::Full("Method cannot have multiple `constructor`, `get`, or `set` attributes.");
 
-		self.name.parse_argument(meta, "name", "Method")?;
-		self.aliases.parse_argument(meta, "alias", None)?;
-		self.kind
-			.parse_argument_with(meta, MethodKind::Constructor, "constructor", METHOD_KIND_ERROR)?;
-		self.kind.parse_argument_with(meta, MethodKind::Getter, "get", METHOD_KIND_ERROR)?;
-		self.kind.parse_argument_with(meta, MethodKind::Setter, "set", METHOD_KIND_ERROR)?;
-		self.skip.parse_argument(meta, "skip", "Method")?;
+		let success = self.name.parse_argument(meta, "name", "Method")?
+			|| self.aliases.parse_argument(meta, "alias", None)?
+			|| self
+				.kind
+				.parse_argument_with(meta, MethodKind::Constructor, "constructor", METHOD_KIND_ERROR)?
+			|| self.kind.parse_argument_with(meta, MethodKind::Getter, "get", METHOD_KIND_ERROR)?
+			|| self.kind.parse_argument_with(meta, MethodKind::Setter, "set", METHOD_KIND_ERROR)?
+			|| self.skip.parse_argument(meta, "skip", "Method")?;
 
-		Ok(())
+		Ok(success)
 	}
 }

@@ -8,6 +8,7 @@ authors = ["Redfire <redfire75369@hotmail.com>"]
 
 [dependencies]
 convert_case.workspace = true
+either.workspace = true
 prettyplease.workspace = true
 proc-macro2.workspace = true
 quote.workspace = true

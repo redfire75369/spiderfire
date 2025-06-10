@@ -4,6 +4,7 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/.
  */
 
+use either::Either;
 use proc_macro2::{Ident, Span, TokenStream};
 use quote::{quote, quote_spanned};
 use syn::spanned::Spanned as _;
@@ -12,9 +13,9 @@ use syn::{
 	parse_quote_spanned, parse2,
 };
 
+use crate::attribute::ParseAttribute as _;
 use crate::attribute::krate::crate_from_attributes;
 use crate::attribute::value::{DataAttribute, DefaultValue, FieldFromAttribute, Tag, VariantAttribute};
-use crate::attribute::{Optional, ParseAttribute as _};
 use crate::utils::{
 	add_lifetime_generic, add_trait_bounds, find_repr, format_type, path_ends_with, wrap_in_fields_group,
 };
@@ -28,20 +29,12 @@ pub(crate) fn impl_from_value(mut input: DeriveInput) -> Result<ItemImpl> {
 	let mut impl_generics: Generics = parse2(quote_spanned!(impl_generics.span() => #impl_generics))?;
 	add_lifetime_generic(&mut impl_generics, parse_quote!('cx));
 
-	let attribute = DataAttribute::from_attributes("ion", &input.attrs)?;
+	let attribute = DataAttribute::from_attributes("ion", &mut input.attrs, ())?;
 
 	let repr = find_repr(&input.attrs)?;
 	let name = &input.ident;
 
-	let (body, requires_object) = impl_body(
-		ion,
-		input.span(),
-		&input.data,
-		name,
-		&attribute.tag,
-		attribute.inherit,
-		repr,
-	)?;
+	let (body, requires_object) = impl_body(ion, input.span(), &mut input.data, name, &attribute, repr)?;
 
 	let object = requires_object.then(|| {
 		quote_spanned!(input.span() =>
@@ -63,14 +56,14 @@ pub(crate) fn impl_from_value(mut input: DeriveInput) -> Result<ItemImpl> {
 }
 
 fn impl_body(
-	ion: &TokenStream, span: Span, data: &Data, ident: &Ident, tag: &Optional<Tag>, inherit: bool, repr: Option<Ident>,
+	ion: &TokenStream, span: Span, data: &mut Data, ident: &Ident, attribute: &DataAttribute, repr: Option<Ident>,
 ) -> Result<(Box<Block>, bool)> {
 	match data {
 		Data::Struct(r#struct) => match &r#struct.fields {
 			Fields::Named(_) | Fields::Unnamed(_) => {
-				let requirement = tag_requirement(ion, tag.0.as_ref(), None)?;
+				let requirement = tag_requirement(ion, attribute.tag.0.as_ref(), None)?;
 				let (idents, declarations, requires_object) =
-					map_fields(ion, &r#struct.fields, tag.0.as_ref(), inherit)?;
+					map_fields(ion, &mut r#struct.fields, Either::Left(attribute))?;
 				let wrapped = wrap_in_fields_group(idents, &r#struct.fields);
 
 				let block = parse2(quote_spanned!(span => {
@@ -88,12 +81,11 @@ fn impl_body(
 
 			let mut variants = Vec::with_capacity(r#enum.variants.len());
 
-			for variant in &r#enum.variants {
+			for variant in &mut r#enum.variants {
 				let variant_ident = &variant.ident;
 				let variant_string = variant_ident.to_string();
 
-				let mut attribute = VariantAttribute::from_attributes("ion", &variant.attrs)?;
-				attribute.merge(tag.0.as_ref(), inherit);
+				let attribute = VariantAttribute::from_attributes("ion", &mut variant.attrs, attribute)?;
 				if attribute.skip {
 					continue;
 				}
@@ -103,9 +95,9 @@ fn impl_body(
 				});
 				let variant: Block = match &variant.fields {
 					Fields::Named(_) | Fields::Unnamed(_) => {
-						let requirement = tag_requirement(ion, tag.0.as_ref(), Some(variant_string))?;
+						let requirement = tag_requirement(ion, attribute.tag.0.as_ref(), Some(variant_string))?;
 						let (idents, declarations, req_object) =
-							map_fields(ion, &variant.fields, attribute.tag.0.as_ref(), attribute.inherit)?;
+							map_fields(ion, &mut variant.fields, Either::Right(&attribute))?;
 						let wrapped = wrap_in_fields_group(idents, &variant.fields);
 						requires_object = requires_object || req_object;
 
@@ -202,13 +194,13 @@ fn tag_requirement(ion: &TokenStream, tag: Option<&Tag>, variant: Option<String>
 }
 
 fn map_fields(
-	ion: &TokenStream, fields: &Fields, tag: Option<&Tag>, inherit: bool,
+	ion: &TokenStream, fields: &mut Fields, attribute: Either<&DataAttribute, &VariantAttribute>,
 ) -> Result<(Vec<Ident>, Vec<TokenStream>, bool)> {
-	let mut requires_object = matches!(tag, Some(Tag::External | Tag::Internal(_)));
+	let mut requires_object = matches!(get_tag(attribute), Some(Tag::External | Tag::Internal(_)));
 	let mut idents = Vec::with_capacity(fields.len());
 	let mut declarations = Vec::with_capacity(fields.len());
 
-	for (index, field) in fields.iter().enumerate() {
+	for (index, field) in fields.iter_mut().enumerate() {
 		let (ident, mut key) = field_to_ident_key(field, index);
 		let ty = &field.ty;
 
@@ -219,8 +211,7 @@ fn map_fields(
 			}
 		}
 
-		let mut attribute = FieldFromAttribute::from_attributes("ion", &field.attrs)?;
-		attribute.base.merge(inherit);
+		let attribute = FieldFromAttribute::from_attributes("ion", &mut field.attrs, attribute)?;
 		if let Some(name) = attribute.base.name {
 			key = name.value();
 		}
@@ -303,5 +294,12 @@ fn field_base(
 			let #ident: #ty = __ion_object.get_as(__ion_cx, #key, #strict || strict, #convert)?
 					.ok_or_else(|| #ion::Error::new(#error, #ion::ErrorKind::Type))
 		))
+	}
+}
+
+fn get_tag<'a>(attribute: Either<&'a DataAttribute, &'a VariantAttribute>) -> Option<&'a Tag> {
+	match attribute {
+		Either::Left(data) => data.tag.0.as_ref(),
+		Either::Right(variant) => variant.tag.0.as_ref(),
 	}
 }

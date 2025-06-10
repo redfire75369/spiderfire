@@ -31,7 +31,7 @@ impl Property {
 	pub(super) fn from_const(r#const: &mut ImplItemConst) -> Result<Option<(Property, bool)>> {
 		let mut names = Vec::new();
 
-		let attribute = PropertyAttribute::from_attributes_mut("ion", &mut r#const.attrs)?;
+		let attribute = PropertyAttribute::from_attributes("ion", &mut r#const.attrs, ())?;
 
 		let PropertyAttribute { name, alias, skip, r#static } = attribute;
 		for alias in alias {
