@@ -5,12 +5,15 @@
  */
 
 use ion::{ClassDefinition as _, Context, Object};
-use readable::{
+
+use crate::globals::streams::readable::{
 	ByobReader, ByobRequest, ByteStreamController, CommonController, CommonReader, DefaultController, DefaultReader,
 	ReadableStream,
 };
+use crate::globals::streams::strategy::{ByteLengthQueuingStrategy, CountQueuingStrategy};
 
 pub mod readable;
+mod strategy;
 
 pub fn define<'cx>(cx: &'cx Context, global: &'cx Object) -> bool {
 	let dummy = Object::new(cx);
@@ -22,4 +25,6 @@ pub fn define<'cx>(cx: &'cx Context, global: &'cx Object) -> bool {
 		&& CommonReader::init_class(cx, &dummy).0
 		&& DefaultReader::init_class(cx, global).0
 		&& ByobReader::init_class(cx, global).0
+		&& ByteLengthQueuingStrategy::init_class(cx, global).0
+		&& CountQueuingStrategy::init_class(cx, global).0
 }

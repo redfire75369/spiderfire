@@ -5,7 +5,7 @@
  */
 
 use std::collections::VecDeque;
-use std::{ptr, slice};
+use std::ptr;
 
 use ion::class::{NativeObject as _, Reflector};
 use ion::conversions::{FromValue as _, ToValue as _};
@@ -15,13 +15,12 @@ use ion::{
 	Traceable, TracedHeap, Value, js_class,
 };
 use mozjs::conversions::ConversionBehavior;
-use mozjs::jsapi::{Handle, Heap, JSContext, JSFunction, JSObject, Type};
+use mozjs::jsapi::{Handle, Heap, JSContext, JSObject, Type};
 use mozjs::jsval::{DoubleValue, Int32Value, JSVal, NullValue, UndefinedValue};
 
 use crate::globals::streams::readable::reader::{Reader, ReaderKind, Request};
-use crate::globals::streams::readable::{
-	ByobReader, QueueingStrategy, ReadableStream, State, StreamSource, UnderlyingSource,
-};
+use crate::globals::streams::readable::{ByobReader, ReadableStream, State, StreamSource, UnderlyingSource};
+use crate::globals::streams::strategy::{QueuingStrategy, SizeCallback};
 
 #[derive(Traceable)]
 pub(crate) struct PullIntoDescriptor {
@@ -132,10 +131,12 @@ impl<'c> Controller<'c> {
 	pub fn pull(&mut self, cx: &Context, promise: &Promise, request: Request) -> ResultExc<()> {
 		match self {
 			Controller::Default(controller) => {
-				if let Some((chunk, _)) = controller.queue.pop_front() {
+				if let Some((chunk, size)) = controller.queue.pop_front() {
+					controller.common.queue_size -= size as usize;
+
 					if controller.common.close_requested && controller.queue.is_empty() {
 						controller.common.source.clear_algorithms();
-						controller.size = None;
+						controller.size = SizeCallback::None;
 
 						let stream = controller.common.stream(cx)?;
 						stream.close(cx)?;
@@ -410,21 +411,19 @@ pub(crate) trait ControllerInternals: ClassDefinition {
 #[ion(name = "ReadableStreamDefaultController")]
 pub struct DefaultController {
 	pub(crate) common: CommonController,
-	pub(crate) size: Option<Box<Heap<*mut JSFunction>>>,
+	pub(crate) size: SizeCallback,
 	pub(crate) queue: VecDeque<(Box<Heap<JSVal>>, u64)>,
 }
 
 #[js_class]
 impl DefaultController {
 	pub(crate) fn initialise(
-		stream: &Object, source_object: Option<&Object>, source: &UnderlyingSource, strategy: &QueueingStrategy,
+		stream: &Object, source_object: Option<&Object>, source: &UnderlyingSource, strategy: &QueuingStrategy,
 		high_water_mark: f64,
 	) -> DefaultController {
-		let size = strategy.size.as_ref().map(|s| Heap::boxed(s.get()));
-
 		DefaultController {
 			common: CommonController::new_from_script(stream, source_object, source, high_water_mark),
-			size,
+			size: strategy.size(),
 			queue: VecDeque::new(),
 		}
 	}
@@ -441,7 +440,7 @@ impl DefaultController {
 				self.common.close_requested = true;
 			}
 			self.common.source.clear_algorithms();
-			self.size = None;
+			self.size = SizeCallback::None;
 
 			stream.close(cx)
 		} else {
@@ -464,15 +463,7 @@ impl DefaultController {
 				}
 			}
 
-			let result = self.size.as_ref().map_or_else(
-				|| Ok(Value::i32(cx, 1)),
-				|size| {
-					let size = Function::from(unsafe { Local::from_heap(size) });
-					size.call(cx, &Object::null(cx), slice::from_ref(chunk))
-				},
-			);
-
-			match result {
+			match self.size.compute(cx, chunk) {
 				Ok(size) => {
 					let size = u64::from_value(cx, &size, false, ConversionBehavior::EnforceRange);
 					match size {
@@ -486,10 +477,9 @@ impl DefaultController {
 						}
 					}
 				}
-				Err(Some(report)) => {
-					self.error_internal(cx, &report.exception.as_value(cx))?;
+				Err(exception) => {
+					self.error_internal(cx, &exception.as_value(cx))?;
 				}
-				Err(None) => unreachable!(),
 			}
 			Ok(())
 		} else {
@@ -514,7 +504,7 @@ impl ControllerInternals for DefaultController {
 
 	fn clear_algorithms(&mut self) {
 		self.common().source.clear_algorithms();
-		self.size = None;
+		self.size = SizeCallback::None;
 	}
 }
 

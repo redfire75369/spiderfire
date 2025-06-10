@@ -4,6 +4,7 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/.
  */
 
+use std::any::TypeId;
 use std::collections::HashMap;
 use std::ptr;
 
@@ -15,6 +16,7 @@ use mozjs::glue::CreateJobQueue;
 use mozjs::jsapi::{
 	ContextOptionsRef, Heap, JSAutoRealm, JSObject, JSTracer, SetJobQueue, SetPromiseRejectionTrackerCallback,
 };
+use mozjs::jsval::JSVal;
 use uuid::Uuid;
 
 use crate::event_loop::future::FutureQueue;
@@ -28,11 +30,13 @@ use crate::module::StandardModules;
 pub struct ContextPrivate {
 	pub(crate) event_loop: EventLoop,
 	pub(crate) blob_store: HashMap<Uuid, Box<Heap<*mut JSObject>>>,
+	pub(crate) globals: HashMap<TypeId, Box<Heap<JSVal>>>,
 }
 
 unsafe impl Traceable for ContextPrivate {
 	unsafe fn trace(&self, trc: *mut JSTracer) {
 		self.blob_store.values().for_each(|blob| unsafe { blob.trace(trc) });
+		self.globals.values().for_each(|global| unsafe { global.trace(trc) });
 	}
 }
 

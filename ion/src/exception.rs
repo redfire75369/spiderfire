@@ -70,7 +70,7 @@ impl Exception {
 		unsafe {
 			let handle = exception.handle();
 			if exception.get_builtin_class(cx) == ESClass::Error {
-				let message = String::from_value(cx, &exception.get(cx, "message")?.unwrap(), true, ()).unwrap();
+				let message = String::from_value(cx, &exception.get(cx, "message")?.unwrap(), true, ())?;
 				let file: String = exception.get_as(cx, "fileName", true, ())?.unwrap();
 				let lineno: u32 = exception.get_as(cx, "lineNumber", true, ConversionBehavior::Clamp)?.unwrap();
 				let column: u32 = exception.get_as(cx, "columnNumber", true, ConversionBehavior::Clamp)?.unwrap();

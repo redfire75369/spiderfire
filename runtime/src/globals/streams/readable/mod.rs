@@ -7,8 +7,6 @@
 use std::collections::VecDeque;
 use std::rc::Rc;
 
-pub use controller::{ByobRequest, ByteStreamController, CommonController, DefaultController};
-use controller::{Controller, ControllerInternals as _, ControllerKind};
 use ion::class::{NativeObject as _, Reflector};
 use ion::conversions::{ConversionBehavior, FromValue as _, ToValue as _};
 use ion::function::Opt;
@@ -19,10 +17,15 @@ use ion::{
 use mozjs::jsapi::{Heap, JSObject};
 use mozjs::jsval::JSVal;
 
+pub use crate::globals::streams::readable::controller::{
+	ByobRequest, ByteStreamController, CommonController, DefaultController,
+};
+use crate::globals::streams::readable::controller::{Controller, ControllerInternals as _, ControllerKind};
 pub use crate::globals::streams::readable::reader::{ByobReader, CommonReader, DefaultReader};
 use crate::globals::streams::readable::reader::{Reader, ReaderKind};
 pub use crate::globals::streams::readable::source::StreamSource;
 use crate::globals::streams::readable::tee::{TeeBytesState, TeeDefaultState, forward_reader_error};
+use crate::globals::streams::strategy::{QueuingStrategy, SizeCallback};
 
 mod controller;
 mod reader;
@@ -51,12 +54,6 @@ impl UnderlyingSource<'_> {
 			None => StreamSource::None,
 		}
 	}
-}
-
-#[derive(Default, FromValue)]
-pub struct QueueingStrategy<'cx> {
-	high_water_mark: Option<f64>,
-	size: Option<Function<'cx>>,
 }
 
 #[derive(Default, FromValue)]
@@ -91,7 +88,7 @@ impl ReadableStream {
 	#[ion(constructor)]
 	pub fn constructor<'cx: 'o, 'o>(
 		cx: &'cx Context, #[ion(this)] this: &Object, Opt(underlying_source): Opt<Object<'o>>,
-		Opt(strategy): Opt<QueueingStrategy>,
+		Opt(strategy): Opt<QueuingStrategy>,
 	) -> ResultExc<ReadableStream> {
 		let strategy = strategy.unwrap_or_default();
 		let mut source = None;
@@ -104,18 +101,18 @@ impl ReadableStream {
 
 				let source = source.as_ref().unwrap();
 				if source.ty.as_deref() == Some("bytes") {
-					if strategy.size.is_some() {
+					if strategy.has_size() {
 						return Err(Error::new("Implementation preserved member 'size'", ErrorKind::Range).into());
 					}
 
-					if let Some(high_water_mark) = strategy.high_water_mark {
+					if let Some(high_water_mark) = strategy.high_water_mark() {
 						if high_water_mark.is_nan() {
 							return Err(Error::new("highWaterMark cannot be NaN", ErrorKind::Range).into());
 						} else if high_water_mark < 0.0 {
 							return Err(Error::new("highWaterMark must be non-negative", ErrorKind::Range).into());
 						}
 					}
-					let high_water_mark = strategy.high_water_mark.unwrap_or(0.0);
+					let high_water_mark = strategy.high_water_mark().unwrap_or(0.0);
 
 					let controller =
 						ByteStreamController::initialise(this, underlying_source, source, high_water_mark)?;
@@ -144,7 +141,7 @@ impl ReadableStream {
 			controller
 		} else {
 			let source = source.unwrap_or_default();
-			let high_water_mark = strategy.high_water_mark.unwrap_or(1.0);
+			let high_water_mark = strategy.high_water_mark().unwrap_or(1.0);
 			let controller =
 				DefaultController::initialise(this, underlying_source.as_ref(), &source, &strategy, high_water_mark);
 			let controller = Heap::boxed(DefaultController::new_object(cx, Box::new(controller)));
@@ -252,7 +249,7 @@ impl ReadableStream {
 					let source = StreamSource::TeeDefault(state, second);
 					let controller = DefaultController {
 						common: CommonController::new(&branch, source, 1.0),
-						size: None,
+						size: SizeCallback::None,
 						queue: VecDeque::default(),
 					};
 					let controller = Heap::boxed(DefaultController::new_object(cx, Box::new(controller)));

@@ -3,7 +3,7 @@
 declare module "assert" {
 	declare export function ok(assertion?: boolean, message?: string): void;
 
-	declare export function equal(actual: any, expected: any, message?: string): void;
+	declare export function equals(actual: any, expected: any, message?: string): void;
 
 	declare export function throws(func: () => void, message?: string): void;
 

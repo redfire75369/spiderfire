@@ -1,0 +1,21 @@
+// @flow
+
+declare interface QueuingStrategyInit {
+	highWatermark: number;
+}
+
+declare class ByteLengthQueuingStrategy {
+	constructor(init: QueuingStrategyInit): ByteLengthQueuingStrategy;
+
+	get highWaterMark(): number;
+
+	get size(): (chunk: any) => number;
+}
+
+declare class CountQueuingStrategy {
+	constructor(init: QueuingStrategyInit): CountQueuingStrategy;
+
+	get highWaterMark(): number;
+
+	get size(): () => number;
+}

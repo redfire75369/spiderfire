@@ -12,11 +12,11 @@ declare interface UnderlyingSource {
 	autoAllocateChunkSize?: number,
 }
 
-declare type QueueingStrategySize = (chunk: any) => number;
+declare type QueuingStrategySize = (chunk: any) => number;
 
-declare interface QueueingStrategy {
+declare interface QueuingStrategy {
 	highWaterMark?: number,
-	size: QueueingStrategySize,
+	size: QueuingStrategySize,
 }
 
 declare type ReadableStreamReaderMode = "byob";
@@ -26,7 +26,7 @@ declare interface ReadableStreamGetReaderOptions {
 }
 
 declare class ReadableStream {
-	constructor(underlyingSource?: UnderlyingSource, strategy?: QueueingStrategy);
+	constructor(underlyingSource?: UnderlyingSource, strategy?: QueuingStrategy);
 
 	get locked(): boolean;
 

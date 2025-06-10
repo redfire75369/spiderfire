@@ -25,7 +25,9 @@ declare module "fs" {
 
 	export class DirEntry {
 		name(): string;
+
 		path(): string;
+
 		metadata(): Metadata;
 	}
 
@@ -37,21 +39,27 @@ declare module "fs" {
 		readSync(array: Uint8Array): number;
 
 		write(source: BufferSource): Promise<number>;
+
 		writeSync(source: BufferSource): number;
 
 		writeAll(source: BufferSource): Promise<void>;
+
 		writeAllSync(source: BufferSource): void;
 
 		truncate(length?: number): Promise<void>;
+
 		truncateSync(length?: number): void;
 
 		seek(offset: number, mode?: SeekMode): Promise<number>;
+
 		seekSync(offset: number, mode?: SeekMode): number;
 
 		sync(): Promise<void>;
+
 		syncSync(): void;
 
 		syncData(): Promise<void>;
+
 		syncDataSync(): void;
 
 		metadata(): Promise<Metadata>;
