@@ -13,7 +13,7 @@ ion.workspace = true
 modules.workspace = true
 mozjs.workspace = true
 rustyline-derive.workspace = true
-sourcemap.workspace = true
+swc_sourcemap.workspace = true
 
 [dependencies.clap]
 workspace = true

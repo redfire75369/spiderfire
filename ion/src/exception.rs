@@ -15,7 +15,7 @@ use mozjs::jsapi::{
 use mozjs::jsval::{JSVal, ObjectValue, UndefinedValue};
 use mozjs::rooted;
 #[cfg(feature = "sourcemap")]
-use sourcemap::SourceMap;
+use swc_sourcemap::SourceMap;
 
 use crate::conversions::{FromValue as _, ToValue};
 use crate::format::{Config, NEWLINE, format_value};

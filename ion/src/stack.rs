@@ -15,7 +15,7 @@ use mozjs::jsapi::{
 };
 use mozjs::rooted;
 #[cfg(feature = "sourcemap")]
-use sourcemap::SourceMap;
+use swc_sourcemap::SourceMap;
 
 use crate::format::{INDENT, NEWLINE};
 use crate::utils::normalise_path;

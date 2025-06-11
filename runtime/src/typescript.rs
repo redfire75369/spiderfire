@@ -9,7 +9,6 @@ use std::fmt::{Display, Formatter};
 use std::path::PathBuf;
 use std::string::FromUtf8Error;
 
-use sourcemap::SourceMap;
 use swc_core::common::comments::{Comments, SingleThreadedComments};
 use swc_core::common::errors::{ColorConfig, Handler};
 use swc_core::common::input::StringInput;
@@ -26,6 +25,7 @@ use swc_core::ecma::transforms::base::hygiene::hygiene;
 use swc_core::ecma::transforms::base::resolver;
 use swc_core::ecma::transforms::typescript::strip;
 use swc_core::ecma::visit::VisitMut as _;
+use swc_sourcemap::SourceMap;
 
 use crate::config::Config;
 

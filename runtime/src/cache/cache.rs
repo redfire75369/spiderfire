@@ -16,7 +16,7 @@ use base64::prelude::BASE64_URL_SAFE;
 use dirs::home_dir;
 use dunce::canonicalize;
 use sha3::{Digest as _, Sha3_512};
-use sourcemap::SourceMap;
+use swc_sourcemap::SourceMap;
 
 use crate::config::Config;
 use crate::typescript;

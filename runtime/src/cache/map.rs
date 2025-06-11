@@ -11,7 +11,7 @@ use std::path::{Path, PathBuf};
 
 use ion::utils::normalise_path;
 use ion::{Error, ErrorReport, Exception};
-use sourcemap::SourceMap;
+use swc_sourcemap::SourceMap;
 
 thread_local!(static SOURCEMAP_CACHE: RefCell<HashMap<PathBuf, SourceMap>> = RefCell::new(HashMap::new()));
 

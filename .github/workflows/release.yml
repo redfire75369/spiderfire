@@ -58,6 +58,7 @@ jobs:
           MOZ_LTO: full,cross
           CFLAGS: /clang:-flto
           CPPFLAGS: /clang:-flto
+          CXXFLAGS: /clang:-flto
           RUSTFLAGS: -Clinker-plugin-lto -Clinker=lld-link
         run: |
           just build-ci-release -v --target $env:TARGET

@@ -20,7 +20,7 @@ use runtime::cache::map::{save_sourcemap, transform_error_report_with_sourcemaps
 use runtime::config::Config;
 use runtime::module::Loader;
 use runtime::{Runtime, RuntimeBuilder};
-use sourcemap::SourceMap;
+use swc_sourcemap::SourceMap;
 
 pub(crate) async fn eval_inline(rt: &Runtime<'_>, source: &str) {
 	let result = Script::compile_and_evaluate(rt.cx(), Path::new("inline.js"), source);

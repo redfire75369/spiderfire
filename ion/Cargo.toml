@@ -27,14 +27,14 @@ utf16string.workspace = true
 workspace = true
 optional = true
 
-[dependencies.sourcemap]
+[dependencies.swc_sourcemap]
 workspace = true
 optional = true
 
 [features]
 debugmozjs = ["mozjs/debugmozjs"]
 macros = ["dep:ion-proc"]
-sourcemap = ["dep:sourcemap"]
+sourcemap = ["dep:swc_sourcemap"]
 
 [lints]
 workspace = true

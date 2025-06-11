@@ -7,7 +7,7 @@
 use std::path::Path;
 
 pub use cache::*;
-use sourcemap::SourceMap;
+use swc_sourcemap::SourceMap;
 
 mod cache;
 pub mod map;

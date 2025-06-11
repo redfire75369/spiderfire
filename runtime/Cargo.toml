@@ -23,7 +23,7 @@ indexmap.workspace = true
 mime.workspace = true
 mozjs.workspace = true
 sha3.workspace = true
-sourcemap.workspace = true
+swc_sourcemap.workspace = true
 uri-url.workspace = true
 url.workspace = true
 
