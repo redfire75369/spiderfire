@@ -39,10 +39,10 @@ pub fn save_sourcemap<P: AsRef<Path>>(path: P, sourcemap: SourceMap) -> bool {
 }
 
 pub fn transform_error_report_with_sourcemaps(report: &mut ErrorReport) {
-	if let Exception::Error(Error { location: Some(location), .. }) = &mut report.exception {
-		if let Some(sourcemap) = find_sourcemap(&location.file) {
-			report.exception.transform_with_sourcemap(&sourcemap);
-		}
+	if let Exception::Error(Error { location: Some(location), .. }) = &mut report.exception
+		&& let Some(sourcemap) = find_sourcemap(&location.file)
+	{
+		report.exception.transform_with_sourcemap(&sourcemap);
 	}
 	if let Some(stack) = &mut report.stack {
 		for record in &mut stack.records {

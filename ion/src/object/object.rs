@@ -54,7 +54,7 @@ impl<'o> Object<'o> {
 	pub fn has<'cx, K: ToPropertyKey<'cx>>(&self, cx: &'cx Context, key: K) -> bool {
 		let key = key.to_key(cx).unwrap();
 		let mut found = false;
-		if unsafe { JS_HasPropertyById(cx.as_ptr(), self.handle().into(), key.handle().into(), &mut found) } {
+		if unsafe { JS_HasPropertyById(cx.as_ptr(), self.handle().into(), key.handle().into(), &raw mut found) } {
 			found
 		} else {
 			Exception::clear(cx);
@@ -68,7 +68,7 @@ impl<'o> Object<'o> {
 	pub fn has_own<'cx, K: ToPropertyKey<'cx>>(&self, cx: &'cx Context, key: K) -> bool {
 		let key = key.to_key(cx).unwrap();
 		let mut found = false;
-		if unsafe { JS_HasOwnPropertyById(cx.as_ptr(), self.handle().into(), key.handle().into(), &mut found) } {
+		if unsafe { JS_HasOwnPropertyById(cx.as_ptr(), self.handle().into(), key.handle().into(), &raw mut found) } {
 			found
 		} else {
 			Exception::clear(cx);
@@ -123,7 +123,7 @@ impl<'o> Object<'o> {
 					key.handle().into(),
 					desc.handle_mut().into(),
 					holder.handle_mut().into(),
-					&mut is_none,
+					&raw mut is_none,
 				)
 			};
 
@@ -257,7 +257,7 @@ impl<'o> Object<'o> {
 	pub fn get_builtin_class(&self, cx: &Context) -> ESClass {
 		let mut class = ESClass::Other;
 		unsafe {
-			GetBuiltinClass(cx.as_ptr(), self.handle().into(), &mut class);
+			GetBuiltinClass(cx.as_ptr(), self.handle().into(), &raw mut class);
 		}
 		class
 	}
@@ -485,7 +485,7 @@ mod tests {
 	const ENUMERABLE_PROPERTIES: [Property; 2] = [SET, ENUMERABLE];
 	const PROPERTIES: [Property; 3] = [SET, DEFINE, ENUMERABLE];
 
-	fn create_object(cx: &Context) -> Object {
+	fn create_object(cx: &Context) -> Object<'_> {
 		let object = Object::new(cx);
 
 		assert!(object.set(cx, SET.0, &Value::i32(cx, SET.1)));
@@ -495,7 +495,7 @@ mod tests {
 		object
 	}
 
-	fn create_mixed_object(cx: &Context) -> Object {
+	fn create_mixed_object(cx: &Context) -> Object<'_> {
 		let object = Object::new(cx);
 
 		assert!(object.set(cx, 16, &Value::i32(cx, 16)));

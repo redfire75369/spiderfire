@@ -148,7 +148,7 @@ impl Symbol<'_> {
 	}
 
 	/// Creates a well-known symbol with its corresponding code.
-	pub fn well_known(cx: &Context, code: WellKnownSymbolCode) -> Symbol {
+	pub fn well_known(cx: &Context, code: WellKnownSymbolCode) -> Symbol<'_> {
 		let symbol = unsafe { GetWellKnownSymbol(cx.as_ptr(), code.into()) };
 		Symbol { sym: cx.root(symbol) }
 	}

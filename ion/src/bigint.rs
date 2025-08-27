@@ -21,23 +21,23 @@ pub struct BigInt<'b> {
 
 impl<'b> BigInt<'b> {
 	/// Creates a [BigInt] from a boolean.
-	pub fn from_bool(cx: &Context, boolean: bool) -> BigInt {
+	pub fn from_bool(cx: &Context, boolean: bool) -> BigInt<'_> {
 		BigInt::from(cx.root(unsafe { BigIntFromBool(cx.as_ptr(), boolean) }))
 	}
 
 	/// Creates a [BigInt] from a 64-bit signed integer.
-	pub fn from_i64(cx: &Context, number: i64) -> BigInt {
+	pub fn from_i64(cx: &Context, number: i64) -> BigInt<'_> {
 		BigInt::from(cx.root(unsafe { BigIntFromInt64(cx.as_ptr(), number) }))
 	}
 
 	/// Creates a [BigInt] from a 64-bit unsigned integer.
-	pub fn from_u64(cx: &Context, number: u64) -> BigInt {
+	pub fn from_u64(cx: &Context, number: u64) -> BigInt<'_> {
 		BigInt::from(cx.root(unsafe { BigIntFromUint64(cx.as_ptr(), number) }))
 	}
 
 	/// Creates a [BigInt] from a double.
 	/// Returns an error if `number` is `NaN`, `Infinity`, `-Infinity` or contains a fractional component.
-	pub fn from_f64(cx: &Context, number: f64) -> Result<BigInt, Exception> {
+	pub fn from_f64(cx: &Context, number: f64) -> Result<BigInt<'_>, Exception> {
 		let bi = unsafe { NumberToBigInt(cx.as_ptr(), number) };
 		if !bi.is_null() {
 			Ok(BigInt::from(cx.root(bi)))
@@ -69,7 +69,7 @@ impl<'b> BigInt<'b> {
 			},
 			_phantom_0: PhantomData,
 		};
-		let bi = unsafe { StringToBigInt1(cx.as_ptr(), &chars) };
+		let bi = unsafe { StringToBigInt1(cx.as_ptr(), &raw const chars) };
 		if !bi.is_null() {
 			Ok(BigInt::from(cx.root(bi)))
 		} else {
@@ -80,13 +80,13 @@ impl<'b> BigInt<'b> {
 	/// Converts a [BigInt] to a 64-bit signed integer if possible.
 	pub fn to_i64(&self) -> Option<i64> {
 		let mut result = 0;
-		unsafe { BigIntIsInt64(self.get(), &mut result).then_some(result) }
+		unsafe { BigIntIsInt64(self.get(), &raw mut result).then_some(result) }
 	}
 
 	/// Converts a [BigInt] to a 64-bit unsigned integer if possible.
 	pub fn to_u64(&self) -> Option<u64> {
 		let mut result = 0;
-		unsafe { BigIntIsUint64(self.get(), &mut result).then_some(result) }
+		unsafe { BigIntIsUint64(self.get(), &raw mut result).then_some(result) }
 	}
 
 	/// Converts a [BigInt] to a double.
@@ -98,7 +98,7 @@ impl<'b> BigInt<'b> {
 	/// Converts a [BigInt] to a double if it fits in a double.
 	pub fn fits_f64(&self) -> Option<f64> {
 		let mut result = 0.0;
-		unsafe { BigIntFitsNumber(self.get(), &mut result).then_some(result) }
+		unsafe { BigIntFitsNumber(self.get(), &raw mut result).then_some(result) }
 	}
 
 	/// Converts a [BigInt] to a string.

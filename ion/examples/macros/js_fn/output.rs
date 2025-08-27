@@ -9,7 +9,7 @@ fn output_regular() -> i8 {
 }
 
 #[js_fn]
-fn output_object(cx: &Context) -> Object {
+fn output_object(cx: &Context) -> Object<'_> {
 	Object::new(cx)
 }
 
@@ -27,7 +27,7 @@ fn output_result_regular() -> Result<f64> {
 
 #[js_fn]
 #[expect(clippy::unnecessary_wraps)]
-fn output_result_array(cx: &Context) -> Result<Array> {
+fn output_result_array(cx: &Context) -> Result<Array<'_>> {
 	Ok(Array::new_with_length(cx, 8))
 }
 

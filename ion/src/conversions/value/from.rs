@@ -484,7 +484,7 @@ where
 		let mut value = Value::undefined(cx);
 		loop {
 			let mut done = false;
-			if unsafe { !iterator.next(value.handle_mut().into(), &mut done) } {
+			if unsafe { !iterator.next(value.handle_mut().into(), &raw mut done) } {
 				return Err(Error::new("Failed to Execute Next on Iterator", ErrorKind::Type));
 			}
 

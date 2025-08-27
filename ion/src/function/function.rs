@@ -6,6 +6,7 @@
 
 use std::ffi::{CStr, CString};
 use std::ops::Deref;
+use std::ptr::NonNull;
 
 use mozjs::conversions::jsstr_to_string;
 use mozjs::gc::{RootableVec, RootedVec};
@@ -106,10 +107,10 @@ impl<'f> Function<'f> {
 	}
 
 	/// Converts the [Function] into a [String] in the form of its definition/source.
-	pub fn to_string(&self, cx: &Context) -> String {
+	pub fn to_string(&self, cx: &Context) -> Option<String> {
 		unsafe {
-			let str = JS_DecompileFunction(cx.as_ptr(), self.handle().into());
-			jsstr_to_string(cx.as_ptr(), str)
+			NonNull::new(JS_DecompileFunction(cx.as_ptr(), self.handle().into()))
+				.map(|str| jsstr_to_string(cx.as_ptr(), str))
 		}
 	}
 
@@ -143,7 +144,7 @@ impl<'f> Function<'f> {
 	/// Returns the length of the source of the function.
 	pub fn length(&self, cx: &Context) -> Option<u16> {
 		let mut length = 0;
-		unsafe { JS_GetFunctionLength(cx.as_ptr(), self.handle().into(), &mut length) }.then_some(length)
+		unsafe { JS_GetFunctionLength(cx.as_ptr(), self.handle().into(), &raw mut length) }.then_some(length)
 	}
 
 	/// Calls the [Function] with the given `this` [Object] and arguments.
@@ -169,7 +170,7 @@ impl<'f> Function<'f> {
 				cx.as_ptr(),
 				this.handle().into(),
 				self.handle().into(),
-				&args,
+				&raw const args,
 				rval.handle_mut().into(),
 			)
 		} {

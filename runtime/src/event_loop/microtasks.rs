@@ -9,9 +9,7 @@ use std::ffi::c_void;
 
 use ion::{Context, ErrorReport, Function, Object};
 use mozjs::glue::JobQueueTraps;
-use mozjs::jsapi::{
-	CurrentGlobalOrNull, Handle, JSContext, JSFunction, JSObject, JobQueueIsEmpty, JobQueueMayNotBeEmpty,
-};
+use mozjs::jsapi::{Handle, JSContext, JSFunction, JSObject, JobQueueIsEmpty, JobQueueMayNotBeEmpty, MutableHandle};
 
 use crate::ContextExt as _;
 
@@ -72,8 +70,10 @@ impl MicrotaskQueue {
 	}
 }
 
-unsafe extern "C" fn get_incumbent_global(_: *const c_void, cx: *mut JSContext) -> *mut JSObject {
-	unsafe { CurrentGlobalOrNull(cx) }
+unsafe extern "C" fn get_host_defined_data(
+	_: *const c_void, _: *mut JSContext, _: MutableHandle<*mut JSObject>,
+) -> bool {
+	true
 }
 
 unsafe extern "C" fn enqueue_promise_job(
@@ -89,13 +89,24 @@ unsafe extern "C" fn enqueue_promise_job(
 	true
 }
 
+unsafe extern "C" fn run_jobs(_: *const c_void, cx: *mut JSContext) {
+	let cx = unsafe { &Context::new_unchecked(cx) };
+	let event_loop = unsafe { &mut cx.get_private().event_loop };
+	let microtasks = event_loop.microtasks.as_mut().unwrap();
+	let _ = microtasks.run_jobs(cx);
+}
+
 unsafe extern "C" fn empty(extra: *const c_void) -> bool {
 	let queue = unsafe { &*extra.cast::<MicrotaskQueue>() };
 	queue.queue.is_empty()
 }
 
 pub(crate) static JOB_QUEUE_TRAPS: JobQueueTraps = JobQueueTraps {
-	getIncumbentGlobal: Some(get_incumbent_global),
+	getHostDefinedData: Some(get_host_defined_data),
 	enqueuePromiseJob: Some(enqueue_promise_job),
+	runJobs: Some(run_jobs),
 	empty: Some(empty),
+	pushNewInterruptQueue: None,
+	popInterruptQueue: None,
+	dropInterruptQueues: None,
 };

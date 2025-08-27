@@ -91,10 +91,10 @@ impl FetchBody {
 	}
 
 	pub(crate) fn add_content_type_header(&self, headers: &mut HeaderMap) {
-		if let Some(kind) = &self.kind {
-			if !headers.contains_key(CONTENT_TYPE) {
-				headers.append(CONTENT_TYPE, HeaderValue::from_str(&kind.to_string()).unwrap());
-			}
+		if let Some(kind) = &self.kind
+			&& !headers.contains_key(CONTENT_TYPE)
+		{
+			headers.append(CONTENT_TYPE, HeaderValue::from_str(&kind.to_string()).unwrap());
 		}
 	}
 }

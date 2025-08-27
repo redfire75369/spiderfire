@@ -91,7 +91,7 @@ impl<'bv, T: TypedArrayElementCreator> TypedArray<'bv, T> {
 	}
 
 	/// Creates a new [TypedArray] with the given length.
-	pub fn new(cx: &Context, len: usize) -> Option<TypedArray<T>> {
+	pub fn new(cx: &Context, len: usize) -> Option<TypedArray<'_, T>> {
 		TypedArray::create_with(cx, CreateWith::Length(len))
 	}
 
@@ -101,12 +101,12 @@ impl<'bv, T: TypedArrayElementCreator> TypedArray<'bv, T> {
 	}
 
 	/// Creates a new [TypedArray] by transferring ownership of the values to the JS runtime.
-	pub fn from_vec(cx: &Context, bytes: Vec<T::Element>) -> Option<TypedArray<T>> {
+	pub fn from_vec(cx: &Context, bytes: Vec<T::Element>) -> Option<TypedArray<'_, T>> {
 		TypedArray::from_boxed_slice(cx, bytes.into_boxed_slice())
 	}
 
 	/// Creates a new [TypedArray] by transferring ownership of the bytes to the JS runtime.
-	pub fn from_boxed_slice(cx: &Context, bytes: Box<[T::Element]>) -> Option<TypedArray<T>> {
+	pub fn from_boxed_slice(cx: &Context, bytes: Box<[T::Element]>) -> Option<TypedArray<'_, T>> {
 		unsafe extern "C" fn free_external_array_buffer<T: TypedArrayElementCreator>(
 			contents: *mut c_void, data: *mut c_void,
 		) {
@@ -170,7 +170,7 @@ impl<'bv, T: TypedArrayElement> TypedArray<'bv, T> {
 		let mut len = 0;
 		let mut shared = false;
 		let mut data = ptr::null_mut();
-		unsafe { GetArrayBufferViewLengthAndData(self.get(), &mut len, &mut shared, &mut data) };
+		unsafe { GetArrayBufferViewLengthAndData(self.get(), &raw mut len, &raw mut shared, &raw mut data) };
 		(data.cast::<T::Element>(), len / size_of::<T::Element>())
 	}
 
@@ -223,7 +223,7 @@ impl<'bv, T: TypedArrayElement> TypedArray<'bv, T> {
 	pub fn buffer<'ab>(&self, cx: &'ab Context) -> ArrayBuffer<'ab> {
 		let mut shared = false;
 		ArrayBuffer::from(
-			cx.root(unsafe { JS_GetArrayBufferViewBuffer(cx.as_ptr(), self.handle().into(), &mut shared) }),
+			cx.root(unsafe { JS_GetArrayBufferViewBuffer(cx.as_ptr(), self.handle().into(), &raw mut shared) }),
 		)
 		.unwrap()
 	}

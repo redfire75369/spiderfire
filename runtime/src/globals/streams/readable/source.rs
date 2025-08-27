@@ -33,7 +33,7 @@ pub enum StreamSource {
 }
 
 impl StreamSource {
-	pub fn source_object(&self) -> Object {
+	pub fn source_object(&self) -> Object<'_> {
 		match self {
 			StreamSource::Script { object, .. } => Object::from(unsafe { Local::from_heap(object) }),
 			_ => Object::from(Local::from_handle(HandleObject::null())),

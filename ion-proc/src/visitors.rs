@@ -14,14 +14,14 @@ pub(crate) struct LifetimeRemover;
 
 impl VisitMut for LifetimeRemover {
 	fn visit_type_path_mut(&mut self, ty: &mut TypePath) {
-		if let Some(segment) = ty.path.segments.last_mut() {
-			if let PathArguments::AngleBracketed(arguments) = &mut segment.arguments {
-				let args = arguments.args.clone().into_iter().filter(|argument| match argument {
-					GenericArgument::Lifetime(lt) => *lt == parse_quote!('static),
-					_ => true,
-				});
-				arguments.args = Punctuated::from_iter(args);
-			}
+		if let Some(segment) = ty.path.segments.last_mut()
+			&& let PathArguments::AngleBracketed(arguments) = &mut segment.arguments
+		{
+			let args = arguments.args.clone().into_iter().filter(|argument| match argument {
+				GenericArgument::Lifetime(lt) => *lt == parse_quote!('static),
+				_ => true,
+			});
+			arguments.args = Punctuated::from_iter(args);
 		}
 		visit_type_path_mut(self, ty);
 	}
@@ -40,10 +40,10 @@ pub(crate) struct SelfRenamer<'t> {
 
 impl VisitMut for SelfRenamer<'_> {
 	fn visit_type_mut(&mut self, ty: &mut Type) {
-		if let Type::Path(typ) = ty {
-			if path_ends_with(&typ.path, "Self") {
-				*ty = self.ty.clone();
-			}
+		if let Type::Path(typ) = ty
+			&& path_ends_with(&typ.path, "Self")
+		{
+			*ty = self.ty.clone();
 		}
 		visit_type_mut(self, ty);
 	}

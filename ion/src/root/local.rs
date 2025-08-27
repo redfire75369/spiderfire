@@ -27,7 +27,7 @@ impl<'local, T: Copy + RootKind> Local<'local, T> {
 	/// Forms a [Handle] to the [Local] which can be passed to SpiderMonkey APIs.
 	pub fn handle(&self) -> Handle<'local, T> {
 		match self {
-			Self::Rooted(root) => unsafe { Handle::from_marked_location(&root.data) },
+			Self::Rooted(root) => unsafe { Handle::from_marked_location(&raw const root.data) },
 			Self::Mutable(handle) => unsafe { Handle::from_marked_location(&handle.get()) },
 			Self::Handle(handle) => *handle,
 		}
@@ -39,7 +39,7 @@ impl<'local, T: Copy + RootKind> Local<'local, T> {
 	/// Panics when a [`Local::Handle`] is passed.
 	pub fn handle_mut(&mut self) -> MutableHandle<'local, T> {
 		match self {
-			Local::Rooted(root) => unsafe { MutableHandle::from_marked_location(&mut root.data) },
+			Local::Rooted(root) => unsafe { MutableHandle::from_marked_location(&raw mut root.data) },
 			Local::Mutable(handle) => unsafe { MutableHandle::from_marked_location(handle.as_mut()) },
 			Local::Handle(_) => panic!("&mut Local::Handle should never be constructed"),
 		}

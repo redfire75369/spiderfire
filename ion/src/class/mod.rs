@@ -49,7 +49,7 @@ pub trait ClassDefinition: NativeObject {
 		None
 	}
 
-	fn parent_prototype(_: &Context) -> Option<Local<*mut JSObject>> {
+	fn parent_prototype(_: &Context) -> Option<Local<'_, *mut JSObject>> {
 		None
 	}
 
@@ -77,7 +77,7 @@ pub trait ClassDefinition: NativeObject {
 		match infos.entry(TypeId::of::<Self>()) {
 			Entry::Occupied(o) => (false, o.into_mut()),
 			Entry::Vacant(entry) => {
-				let proto_class = Self::proto_class().map_or_else(ptr::null, |class| &class.base);
+				let proto_class = Self::proto_class().map_or_else(ptr::null, |class| &raw const class.base);
 				let parent_proto = Self::parent_prototype(cx).map_or_else(HandleObject::null, |proto| proto.handle());
 
 				let (constructor, nargs) = Self::constructor();
@@ -130,7 +130,7 @@ pub trait ClassDefinition: NativeObject {
 		unsafe {
 			JS_NewObjectWithGivenProto(
 				cx.as_ptr(),
-				&Self::class().base,
+				&raw const Self::class().base,
 				Local::from_heap(&info.prototype).handle().into(),
 			)
 		}
@@ -147,7 +147,7 @@ pub trait ClassDefinition: NativeObject {
 	unsafe fn get_private_unchecked<'a>(object: &Object<'a>) -> &'a Self {
 		unsafe {
 			let mut value = UndefinedValue();
-			JS_GetReservedSlot(object.handle().get(), 0, &mut value);
+			JS_GetReservedSlot(object.handle().get(), 0, &raw mut value);
 			&*(value.to_private().cast::<Self>())
 		}
 	}
@@ -160,7 +160,7 @@ pub trait ClassDefinition: NativeObject {
 	unsafe fn get_mut_private_unchecked<'a>(object: &Object<'a>) -> &'a mut Self {
 		unsafe {
 			let mut value = UndefinedValue();
-			JS_GetReservedSlot(object.handle().get(), 0, &mut value);
+			JS_GetReservedSlot(object.handle().get(), 0, &raw mut value);
 			&mut *(value.to_private().cast_mut().cast::<Self>())
 		}
 	}
@@ -182,7 +182,7 @@ pub trait ClassDefinition: NativeObject {
 			JS_InstanceOf(
 				cx.as_ptr(),
 				object.handle().into(),
-				&Self::class().base,
+				&raw const Self::class().base,
 				ptr::null_mut(),
 			)
 		}
@@ -200,7 +200,7 @@ pub trait ClassDefinition: NativeObject {
 				cx.as_ptr(),
 				constructor.handle().into(),
 				object.handle().into(),
-				&mut has_instance,
+				&raw mut has_instance,
 			)
 		};
 		if result { Ok(has_instance) } else { Err(Error::none()) }
@@ -277,9 +277,9 @@ where
 
 	let class_info = T::init_class(cx, &Object::global(cx)).1;
 
-	let mut this = Object::from(
-		cx.root(unsafe { JS_NewObjectWithGivenProto(cx.as_ptr(), &T::class().base, class_info.prototype.handle()) }),
-	);
+	let mut this = Object::from(cx.root(unsafe {
+		JS_NewObjectWithGivenProto(cx.as_ptr(), &raw const T::class().base, class_info.prototype.handle())
+	}));
 
 	let result = ::std::panic::catch_unwind(::std::panic::AssertUnwindSafe(|| constructor(cx, args, &mut this)));
 
@@ -290,7 +290,7 @@ where
 pub unsafe extern "C" fn finalise_native_object_operation<T>(_: *mut GCContext, this: *mut JSObject) {
 	let mut value = NullValue();
 	unsafe {
-		JS_GetReservedSlot(this, 0, &mut value);
+		JS_GetReservedSlot(this, 0, &raw mut value);
 	}
 	if value.is_double() && value.asBits_ & 0xFFFF000000000000 == 0 {
 		let private = value.to_private().cast_mut().cast::<T>();
@@ -302,7 +302,7 @@ pub unsafe extern "C" fn finalise_native_object_operation<T>(_: *mut GCContext, 
 pub unsafe extern "C" fn trace_native_object_operation<T: Traceable>(trc: *mut JSTracer, this: *mut JSObject) {
 	let mut value = NullValue();
 	unsafe {
-		JS_GetReservedSlot(this, 0, &mut value);
+		JS_GetReservedSlot(this, 0, &raw mut value);
 	}
 	if value.is_double() && value.asBits_ & 0xFFFF000000000000 == 0 {
 		unsafe {

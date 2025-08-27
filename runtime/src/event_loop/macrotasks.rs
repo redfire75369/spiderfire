@@ -159,10 +159,10 @@ impl MacrotaskQueue {
 
 			// The previous reference may be invalidated by running the macrotask.
 			let macrotask = self.map.get_mut(&next);
-			if let Some(macrotask) = macrotask {
-				if macrotask.remove() {
-					self.map.remove(&next);
-				}
+			if let Some(macrotask) = macrotask
+				&& macrotask.remove()
+			{
+				self.map.remove(&next);
 			}
 		}
 
@@ -193,12 +193,11 @@ impl MacrotaskQueue {
 	}
 
 	pub fn remove(&mut self, id: u32) {
-		if self.map.remove(&id).is_some() {
-			if let Some(next) = self.next {
-				if next == id {
-					self.next = None;
-				}
-			}
+		if self.map.remove(&id).is_some()
+			&& let Some(next) = self.next
+			&& next == id
+		{
+			self.next = None;
 		}
 	}
 

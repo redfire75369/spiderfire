@@ -27,9 +27,9 @@ pub type Closure = dyn for<'cx> FnMut(&mut Arguments<'cx>) -> ResultExc<Value<'c
 type ClosurePrivate = Box<Closure>;
 type ClosureOncePrivate = Option<Box<ClosureOnce>>;
 
-pub(crate) fn create_closure_once_object(cx: &Context, closure: Box<ClosureOnce>) -> Object {
+pub(crate) fn create_closure_once_object(cx: &Context, closure: Box<ClosureOnce>) -> Object<'_> {
 	unsafe {
-		let object = Object::from(cx.root(JS_NewObject(cx.as_ptr(), &CLOSURE_ONCE_CLASS)));
+		let object = Object::from(cx.root(JS_NewObject(cx.as_ptr(), &raw const CLOSURE_ONCE_CLASS)));
 		JS_SetReservedSlot(
 			object.handle().get(),
 			CLOSURE_SLOT,
@@ -39,9 +39,9 @@ pub(crate) fn create_closure_once_object(cx: &Context, closure: Box<ClosureOnce>
 	}
 }
 
-pub(crate) fn create_closure_object(cx: &Context, closure: Box<Closure>) -> Object {
+pub(crate) fn create_closure_object(cx: &Context, closure: Box<Closure>) -> Object<'_> {
 	unsafe {
-		let object = Object::from(cx.root(JS_NewObject(cx.as_ptr(), &CLOSURE_CLASS)));
+		let object = Object::from(cx.root(JS_NewObject(cx.as_ptr(), &raw const CLOSURE_CLASS)));
 		JS_SetReservedSlot(
 			object.handle().get(),
 			CLOSURE_SLOT,
@@ -58,7 +58,7 @@ fn get_function_reserved<'cx>(cx: &'cx Context, args: &Arguments) -> Value<'cx> 
 
 fn get_reserved(object: *mut JSObject, slot: u32) -> JSVal {
 	let mut value = UndefinedValue();
-	unsafe { JS_GetReservedSlot(object, slot, &mut value) };
+	unsafe { JS_GetReservedSlot(object, slot, &raw mut value) };
 	value
 }
 
@@ -98,7 +98,7 @@ pub(crate) unsafe extern "C" fn call_closure(cx: *mut JSContext, argc: u32, vp: 
 unsafe extern "C" fn finalise_closure<T>(_: *mut GCContext, object: *mut JSObject) {
 	let mut value = UndefinedValue();
 	unsafe {
-		JS_GetReservedSlot(object, CLOSURE_SLOT, &mut value);
+		JS_GetReservedSlot(object, CLOSURE_SLOT, &raw mut value);
 		let _ = Box::from_raw(value.to_private().cast::<T>().cast_mut());
 	}
 }
@@ -119,7 +119,7 @@ static CLOSURE_ONCE_OPS: JSClassOps = JSClassOps {
 static CLOSURE_ONCE_CLASS: JSClass = JSClass {
 	name: c"ClosureOnce".as_ptr(),
 	flags: JSCLASS_BACKGROUND_FINALIZE | class_reserved_slots(1),
-	cOps: &CLOSURE_ONCE_OPS,
+	cOps: &raw const CLOSURE_ONCE_OPS,
 	spec: ptr::null_mut(),
 	ext: ptr::null_mut(),
 	oOps: ptr::null_mut(),
@@ -141,7 +141,7 @@ static CLOSURE_OPS: JSClassOps = JSClassOps {
 static CLOSURE_CLASS: JSClass = JSClass {
 	name: c"Closure".as_ptr(),
 	flags: JSCLASS_BACKGROUND_FINALIZE | class_reserved_slots(1),
-	cOps: &CLOSURE_OPS,
+	cOps: &raw const CLOSURE_OPS,
 	spec: ptr::null_mut(),
 	ext: ptr::null_mut(),
 	oOps: ptr::null_mut(),

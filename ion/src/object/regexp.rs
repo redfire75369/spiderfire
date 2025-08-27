@@ -51,7 +51,7 @@ impl<'r> RegExp<'r> {
 	pub fn flags(&self, cx: &Context) -> RegExpFlags {
 		let mut flags = REFlags { flags_: 0 };
 		unsafe {
-			JS_GetRegExpFlags(cx.as_ptr(), self.handle().into(), &mut flags);
+			JS_GetRegExpFlags(cx.as_ptr(), self.handle().into(), &raw mut flags);
 		}
 		flags.into()
 	}
@@ -142,13 +142,13 @@ impl<'r> RegExp<'r> {
 	pub fn is_regexp_raw(cx: &Context, object: *mut JSObject) -> bool {
 		rooted!(in(cx.as_ptr()) let object = object);
 		let mut is_regexp = false;
-		(unsafe { ObjectIsRegExp(cx.as_ptr(), object.handle().into(), &mut is_regexp) }) && is_regexp
+		(unsafe { ObjectIsRegExp(cx.as_ptr(), object.handle().into(), &raw mut is_regexp) }) && is_regexp
 	}
 
 	/// Checks if an object is a regexp.
 	pub fn is_regexp(cx: &Context, object: &Local<*mut JSObject>) -> bool {
 		let mut is_regexp = false;
-		(unsafe { ObjectIsRegExp(cx.as_ptr(), object.handle().into(), &mut is_regexp) }) && is_regexp
+		(unsafe { ObjectIsRegExp(cx.as_ptr(), object.handle().into(), &raw mut is_regexp) }) && is_regexp
 	}
 }
 

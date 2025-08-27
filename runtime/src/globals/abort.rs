@@ -68,10 +68,10 @@ impl Future for SignalFuture {
 
 impl Drop for SignalFuture {
 	fn drop(&mut self) {
-		if let Signal::Timeout(receiver, terminate) = &self.inner {
-			if receiver.borrow().is_none() {
-				terminate.store(true, Ordering::SeqCst);
-			}
+		if let Signal::Timeout(receiver, terminate) = &self.inner
+			&& receiver.borrow().is_none()
+		{
+			terminate.store(true, Ordering::SeqCst);
 		}
 	}
 }

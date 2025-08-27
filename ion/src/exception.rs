@@ -112,11 +112,11 @@ impl Exception {
 	/// If the [Exception] is an [Error], the error location is mapped according to the given [SourceMap].
 	#[cfg(feature = "sourcemap")]
 	pub fn transform_with_sourcemap(&mut self, sourcemap: &SourceMap) {
-		if let Exception::Error(Error { location: Some(location), .. }) = self {
-			if let Some(token) = sourcemap.lookup_token(location.lineno - 1, location.column - 1) {
-				location.lineno = token.get_src_line() + 1;
-				location.column = token.get_src_col() + 1;
-			}
+		if let Exception::Error(Error { location: Some(location), .. }) = self
+			&& let Some(token) = sourcemap.lookup_token(location.lineno - 1, location.column - 1)
+		{
+			location.lineno = token.get_src_line() + 1;
+			location.column = token.get_src_col() + 1;
 		}
 	}
 
@@ -204,7 +204,7 @@ impl ErrorReport {
 					stack_: Rooted::new_unrooted(ptr::null_mut()),
 				};
 
-				if GetPendingExceptionStack(cx.as_ptr(), &mut exception_stack) {
+				if GetPendingExceptionStack(cx.as_ptr(), &raw mut exception_stack) {
 					let exception = Value::from(cx.root(exception_stack.exception_.data));
 					let exception = Exception::from_value(cx, &exception)?;
 					let stack = Stack::from_object(cx, exception_stack.stack_.data);
@@ -249,11 +249,11 @@ impl ErrorReport {
 	/// Formats the [ErrorReport] as a string for printing.
 	pub fn format(&self, cx: &Context) -> String {
 		let mut string = self.exception.format(cx);
-		if let Some(stack) = &self.stack {
-			if !stack.is_empty() {
-				string.push_str(NEWLINE);
-				string.push_str(&stack.format());
-			}
+		if let Some(stack) = &self.stack
+			&& !stack.is_empty()
+		{
+			string.push_str(NEWLINE);
+			string.push_str(&stack.format());
 		}
 		string
 	}

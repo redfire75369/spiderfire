@@ -34,28 +34,28 @@ fn get_constructor_name(cx: &Context, object: &Object, proto: &mut Object) -> Op
 			cx.as_ptr(),
 			constructor.handle().into(),
 			value.handle().into(),
-			&mut has_instance,
+			&raw mut has_instance,
 		)
 	} && has_instance)
 		.then_some(name)
 }
 
 fn get_tag(cx: &Context, object: &Object) -> crate::Result<Option<String>> {
-	if object.has_own(cx, WellKnownSymbolCode::ToStringTag) {
-		if let Some(tag) = object.get_as::<_, String>(cx, WellKnownSymbolCode::ToStringTag, true, ())? {
-			return Ok((!tag.is_empty()).then_some(tag));
-		}
+	if object.has_own(cx, WellKnownSymbolCode::ToStringTag)
+		&& let Some(tag) = object.get_as::<_, String>(cx, WellKnownSymbolCode::ToStringTag, true, ())?
+	{
+		return Ok((!tag.is_empty()).then_some(tag));
 	}
 	Ok(None)
 }
 
 fn write_tag(f: &mut Formatter, colour: Color, tag: Option<&str>, fallback: &str) -> fmt::Result {
-	if let Some(tag) = tag {
-		if tag != fallback {
-			"[".color(colour).fmt(f)?;
-			tag.color(colour).fmt(f)?;
-			"] ".color(colour).fmt(f)?;
-		}
+	if let Some(tag) = tag
+		&& tag != fallback
+	{
+		"[".color(colour).fmt(f)?;
+		tag.color(colour).fmt(f)?;
+		"] ".color(colour).fmt(f)?;
 	}
 	Ok(())
 }

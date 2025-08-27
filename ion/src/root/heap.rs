@@ -48,7 +48,7 @@ impl<T: GCMethods + RootKind + Copy + 'static> TracedHeap<T>
 where
 	Heap<T>: Traceable,
 {
-	pub fn to_local(&self) -> Local<T> {
+	pub fn to_local(&self) -> Local<'_, T> {
 		unsafe { Local::from_heap(&self.heap) }
 	}
 }

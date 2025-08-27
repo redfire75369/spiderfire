@@ -33,7 +33,7 @@ impl Display for StringDisplay<'_> {
 				write!(f, "{0}{1}{0}", r#"""#.color(colour), str.color(colour))
 			} else {
 				let value = StringValue(unsafe { &*self.string.get() });
-				let value = Value::from(unsafe { Local::from_marked(&value) });
+				let value = Value::from(unsafe { Local::from_marked(&raw const value) });
 				let str = value.to_source(self.cx).to_owned(self.cx).unwrap();
 				str.color(colour).fmt(f)
 			}

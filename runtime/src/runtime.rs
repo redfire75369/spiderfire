@@ -120,7 +120,7 @@ impl<ML: ModuleLoader + 'static, Std: StandardModules + 'static> RuntimeBuilder<
 		self
 	}
 
-	pub fn build(self, cx: &mut Context) -> Runtime {
+	pub fn build(self, cx: &mut Context) -> Runtime<'_> {
 		let global = default_new_global(cx);
 		let realm = JSAutoRealm::new(cx.as_ptr(), global.handle().get());
 
@@ -139,8 +139,9 @@ impl<ML: ModuleLoader + 'static, Std: StandardModules + 'static> RuntimeBuilder<
 				SetJobQueue(
 					cx.as_ptr(),
 					CreateJobQueue(
-						&JOB_QUEUE_TRAPS,
+						&raw const JOB_QUEUE_TRAPS,
 						ptr::from_ref(private.event_loop.microtasks.as_ref().unwrap()).cast(),
+						ptr::null_mut(),
 					),
 				);
 				SetPromiseRejectionTrackerCallback(

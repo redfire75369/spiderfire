@@ -40,22 +40,22 @@ impl EventLoop {
 	fn poll_event_loop(
 		&mut self, cx: &Context, wcx: &mut task::Context, complete: &mut bool,
 	) -> Poll<Result<(), Option<ErrorReport>>> {
-		if let Some(futures) = &mut self.futures {
-			if !futures.is_empty() {
-				futures.run_futures(cx, wcx)?;
-			}
+		if let Some(futures) = &mut self.futures
+			&& !futures.is_empty()
+		{
+			futures.run_futures(cx, wcx)?;
 		}
 
-		if let Some(microtasks) = &mut self.microtasks {
-			if !microtasks.is_empty() {
-				microtasks.run_jobs(cx)?;
-			}
+		if let Some(microtasks) = &mut self.microtasks
+			&& !microtasks.is_empty()
+		{
+			microtasks.run_jobs(cx)?;
 		}
 
-		if let Some(macrotasks) = &mut self.macrotasks {
-			if !macrotasks.is_empty() {
-				macrotasks.run_job(cx)?;
-			}
+		if let Some(macrotasks) = &mut self.macrotasks
+			&& !macrotasks.is_empty()
+		{
+			macrotasks.run_job(cx)?;
 		}
 
 		while let Some(promise) = self.unhandled_rejections.pop_front() {

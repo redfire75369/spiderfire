@@ -69,10 +69,10 @@ impl Display for ObjectDisplay<'_> {
 			},
 			ESC::Object => format_raw_object(cx, cfg, &self.object).fmt(f),
 			ESC::Other => {
-				if let Some(view) = ArrayBufferView::from(cx.root(object.handle().get())) {
-					if let Some(res) = format_array_buffer_view(f, view, cfg) {
-						return res;
-					}
+				if let Some(view) = ArrayBufferView::from(cx.root(object.handle().get()))
+					&& let Some(res) = format_array_buffer_view(f, view, cfg)
+				{
+					return res;
 				}
 
 				format_raw_object(cx, cfg, &self.object).fmt(f)

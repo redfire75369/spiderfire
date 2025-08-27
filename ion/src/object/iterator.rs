@@ -143,7 +143,7 @@ static ITERATOR_CLASS: NativeClass = NativeClass {
 	base: JSClass {
 		name: c"NativeIterator".as_ptr(),
 		flags: JSCLASS_BACKGROUND_FINALIZE | class_reserved_slots(1),
-		cOps: &ITERATOR_CLASS_OPS,
+		cOps: &raw const ITERATOR_CLASS_OPS,
 		spec: ptr::null_mut(),
 		ext: ptr::null_mut(),
 		oOps: ptr::null_mut(),
@@ -188,7 +188,7 @@ impl ClassDefinition for Iterator {
 		None
 	}
 
-	fn parent_prototype(cx: &Context) -> Option<Local<*mut JSObject>> {
+	fn parent_prototype(cx: &Context) -> Option<Local<'_, *mut JSObject>> {
 		Some(cx.root(unsafe { GetRealmIteratorPrototype(cx.as_ptr()) }))
 	}
 

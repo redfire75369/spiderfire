@@ -29,7 +29,7 @@ pub struct ArrayBufferWrapper {
 }
 
 impl ArrayBufferWrapper {
-	pub fn into_array_buffer(self, cx: &Context) -> Option<ArrayBuffer> {
+	pub fn into_array_buffer(self, cx: &Context) -> Option<ArrayBuffer<'_>> {
 		ArrayBuffer::from_boxed_slice(cx, self.buf)
 	}
 }
@@ -64,7 +64,7 @@ macro_rules! impl_typedarray_wrapper {
 			}
 
 			impl $typedarray {
-				pub fn into_typed_array(self, cx: &Context) -> Option<TypedArray<$element>> {
+				pub fn into_typed_array(self, cx: &Context) -> Option<TypedArray<'_, $element>> {
 					TypedArray::from_boxed_slice(cx, self.buf)
 				}
 			}

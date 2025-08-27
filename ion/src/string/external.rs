@@ -49,5 +49,5 @@ static EXTERNAL_STRING_CALLBACKS_TRAPS: JSExternalStringCallbacksTraps = JSExter
 };
 
 pub(super) fn create_callbacks(len: usize) -> *mut JSExternalStringCallbacks {
-	unsafe { CreateJSExternalStringCallbacks(&EXTERNAL_STRING_CALLBACKS_TRAPS, len as *mut c_void) }
+	unsafe { CreateJSExternalStringCallbacks(&raw const EXTERNAL_STRING_CALLBACKS_TRAPS, len as *mut c_void) }
 }

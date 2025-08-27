@@ -244,7 +244,7 @@ impl ReadableStream {
 	pub(crate) fn tee_internal<'cx>(&mut self, cx: &'cx Context, clone_branch_2: bool) -> [Object<'cx>; 2] {
 		match self.controller_kind {
 			ControllerKind::Default => {
-				fn create_branch(cx: &Context, state: Rc<TeeDefaultState>, second: bool) -> Object {
+				fn create_branch(cx: &Context, state: Rc<TeeDefaultState>, second: bool) -> Object<'_> {
 					let branch = Object::from(cx.root(ReadableStream::new_raw_object(cx)));
 					let source = StreamSource::TeeDefault(state, second);
 					let controller = DefaultController {
@@ -276,7 +276,7 @@ impl ReadableStream {
 				[branch1, branch2]
 			}
 			ControllerKind::ByteStream => {
-				fn create_branch(cx: &Context, state: Rc<TeeBytesState>, second: bool) -> Object {
+				fn create_branch(cx: &Context, state: Rc<TeeBytesState>, second: bool) -> Object<'_> {
 					let branch = Object::from(cx.root(ReadableStream::new_raw_object(cx)));
 					let source = StreamSource::TeeBytes(state, second);
 					let controller = ByteStreamController {
@@ -360,13 +360,13 @@ impl ReadableStream {
 		Ok(())
 	}
 
-	pub(crate) fn stored_error(&self) -> Value {
+	pub(crate) fn stored_error(&self) -> Value<'_> {
 		self.error.as_ref().map_or_else(Value::undefined_handle, |error| {
 			Value::from(unsafe { Local::from_heap(error) })
 		})
 	}
 
-	pub(crate) fn native_controller(&self, cx: &Context) -> Result<Controller> {
+	pub(crate) fn native_controller(&self, cx: &Context) -> Result<Controller<'_>> {
 		match self.controller_kind {
 			ControllerKind::Default => {
 				let controller = Object::from(unsafe { Local::from_heap(&self.controller) });
@@ -381,7 +381,7 @@ impl ReadableStream {
 		}
 	}
 
-	pub(crate) fn native_reader(&self, cx: &Context) -> Result<Option<Reader>> {
+	pub(crate) fn native_reader(&self, cx: &Context) -> Result<Option<Reader<'_>>> {
 		match self.reader_kind {
 			ReaderKind::None => Ok(None),
 			ReaderKind::Default => {

@@ -181,12 +181,13 @@ impl Parameters {
 					Ok(param) => param,
 					Err(e) => return Some(Err(e)),
 				};
-				if let Type::Path(ty) = &*param.pat_ty.ty {
-					if !path_ends_with(&ty.path, "Opt") && !path_ends_with(&ty.path, "Rest") {
-						nargs = match nargs.checked_add(1) {
-							Some(nargs) => nargs,
-							None => return Some(Err(Error::new(arg.span(), "Function has too many arguments"))),
-						}
+				if let Type::Path(ty) = &*param.pat_ty.ty
+					&& !path_ends_with(&ty.path, "Opt")
+					&& !path_ends_with(&ty.path, "Rest")
+				{
+					nargs = match nargs.checked_add(1) {
+						Some(nargs) => nargs,
+						None => return Some(Err(Error::new(arg.span(), "Function has too many arguments"))),
 					}
 				}
 				Some(Ok(param))
@@ -205,10 +206,10 @@ impl Parameters {
 			idents.push(ident);
 		}
 
-		if let Some((_, ident, index)) = &self.this {
-			if ident != "self" {
-				idents.insert(*index, ident.clone());
-			}
+		if let Some((_, ident, index)) = &self.this
+			&& ident != "self"
+		{
+			idents.insert(*index, ident.clone());
 		}
 
 		Ok((statements, idents))

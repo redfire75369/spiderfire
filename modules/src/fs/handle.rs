@@ -121,14 +121,14 @@ impl FileHandle {
 		async move {
 			let mut taken = false;
 			let mut handle = poll_fn(|wcx| {
-				if let Ok(mut handle) = handle_cell.try_borrow_mut() {
-					if let Some(file) = handle.as_mut() {
-						let file = file.try_clone().ok().unwrap_or_else(|| {
-							taken = true;
-							handle.take().unwrap()
-						});
-						return Poll::Ready(file);
-					}
+				if let Ok(mut handle) = handle_cell.try_borrow_mut()
+					&& let Some(file) = handle.as_mut()
+				{
+					let file = file.try_clone().ok().unwrap_or_else(|| {
+						taken = true;
+						handle.take().unwrap()
+					});
+					return Poll::Ready(file);
 				}
 
 				wcx.waker().wake_by_ref();

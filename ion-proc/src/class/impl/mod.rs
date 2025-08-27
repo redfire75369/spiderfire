@@ -197,7 +197,7 @@ fn class_definition(
 			__ION_NATIVE_CLASS
 		}
 
-		fn parent_prototype(cx: &#ion::Context) -> ::std::option::Option<#ion::Local<*mut ::mozjs::jsapi::JSObject>> {
+		fn parent_prototype(cx: &#ion::Context) -> ::std::option::Option<#ion::Local<'_, *mut ::mozjs::jsapi::JSObject>> {
 			#r#type::__ion_parent_prototype(cx)
 		}
 

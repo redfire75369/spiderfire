@@ -48,17 +48,19 @@ impl TeeCommonState {
 		}
 	}
 
+	#[expect(clippy::mut_from_ref)]
 	pub(crate) fn stream(&self, cx: &Context) -> ion::Result<&mut ReadableStream> {
 		let stream = Object::from(unsafe { Local::from_heap(&self.stream) });
 		ReadableStream::get_mut_private(cx, &stream)
 	}
 
+	#[expect(clippy::mut_from_ref)]
 	pub(crate) fn branch(&self, cx: &Context, second: bool) -> ion::Result<&mut ReadableStream> {
 		let stream = Object::from(unsafe { Local::from_heap(&self.branch[usize::from(second)]) });
 		ReadableStream::get_mut_private(cx, &stream)
 	}
 
-	pub(crate) fn cancel_promise(&self) -> Promise {
+	pub(crate) fn cancel_promise(&self) -> Promise<'_> {
 		Promise::from(unsafe { Local::from_heap(&self.cancel_promise) }).unwrap()
 	}
 

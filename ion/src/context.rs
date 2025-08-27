@@ -145,7 +145,7 @@ impl Context {
 
 	/// Roots a value and returns a `[Local]` to it.
 	/// The Local is only unrooted when the `[Context]` is dropped
-	pub fn root<T: Rootable>(&self, value: T) -> Local<T> {
+	pub fn root<T: Rootable>(&self, value: T) -> Local<'_, T> {
 		let root = T::alloc(&self.rooted, Rooted::new_unrooted(value));
 		self.order.borrow_mut().push(T::GC_TYPE);
 		Local::new(self, root)

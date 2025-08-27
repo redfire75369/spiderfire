@@ -48,7 +48,7 @@ impl<'s> Set<'s> {
 	/// Checks if the [Set] contains the given key.
 	pub fn has(&self, cx: &Context, key: &Value) -> bool {
 		let mut has = false;
-		unsafe { SetHas(cx.as_ptr(), self.handle().into(), key.handle().into(), &mut has) && has }
+		unsafe { SetHas(cx.as_ptr(), self.handle().into(), key.handle().into(), &raw mut has) && has }
 	}
 
 	/// Adds the key to the [Set].
@@ -59,7 +59,7 @@ impl<'s> Set<'s> {
 	/// Deletes the key from the [Set].
 	pub fn delete(&self, cx: &Context, key: &Value) -> bool {
 		let mut rval = false;
-		unsafe { SetDelete(cx.as_ptr(), self.handle().into(), key.handle().into(), &mut rval) && rval }
+		unsafe { SetDelete(cx.as_ptr(), self.handle().into(), key.handle().into(), &raw mut rval) && rval }
 	}
 
 	/// Clears the contents of the [Set].
@@ -101,7 +101,7 @@ impl<'s> Set<'s> {
 	/// Checks if the object is a set.
 	pub fn is_set(cx: &Context, object: &Local<*mut JSObject>) -> bool {
 		let mut set = false;
-		unsafe { IsSetObject(cx.as_ptr(), object.handle().into(), &mut set) && set }
+		unsafe { IsSetObject(cx.as_ptr(), object.handle().into(), &raw mut set) && set }
 	}
 }
 

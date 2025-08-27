@@ -213,10 +213,10 @@ async fn main_fetch(cx: &Context, request: &mut Request, client: Client, redirec
 		} else if SCHEMES.contains(&scheme) {
 			scheme::scheme_fetch(cx, scheme, request, request.url.clone()).await
 		} else if scheme == "https" || scheme == "http" {
-			if let Some(port) = request.url.port() {
-				if BAD_PORTS.contains(&port) {
-					return network_error();
-				}
+			if let Some(port) = request.url.port()
+				&& BAD_PORTS.contains(&port)
+			{
+				return network_error();
 			}
 			if request.mode == RequestMode::NoCors {
 				if request.redirect != RequestRedirect::Follow {

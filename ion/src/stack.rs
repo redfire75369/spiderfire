@@ -6,6 +6,7 @@
 
 use std::fmt::{Display, Formatter, Write as _};
 use std::mem::MaybeUninit;
+use std::ptr::NonNull;
 use std::{fmt, ptr};
 
 use mozjs::conversions::jsstr_to_string;
@@ -49,11 +50,12 @@ impl Location {
 	/// Transforms a [Location], according to the given [SourceMap].
 	#[cfg(feature = "sourcemap")]
 	pub fn transform_with_sourcemap(&mut self, sourcemap: &SourceMap) {
-		if self.lineno != 0 && self.column != 0 {
-			if let Some(token) = sourcemap.lookup_token(self.lineno - 1, self.column - 1) {
-				self.lineno = token.get_src_line() + 1;
-				self.column = token.get_src_col() + 1;
-			}
+		if self.lineno != 0
+			&& self.column != 0
+			&& let Some(token) = sourcemap.lookup_token(self.lineno - 1, self.column - 1)
+		{
+			self.lineno = token.get_src_line() + 1;
+			self.column = token.get_src_col() + 1;
 		}
 	}
 }
@@ -161,7 +163,14 @@ fn capture_stack(cx: &Context, max_frames: Option<u32>) -> Option<*mut JSObject>
 		let mut capture = capture.assume_init();
 
 		let mut stack = Object::null(cx);
-		CaptureCurrentStack(cx.as_ptr(), stack.handle_mut().into(), &mut capture).then(|| stack.handle().get())
+		let start_at = Object::null(cx);
+		CaptureCurrentStack(
+			cx.as_ptr(),
+			stack.handle_mut().into(),
+			&raw mut capture,
+			start_at.handle().into(),
+		)
+		.then(|| stack.handle().get())
 	}
 }
 
@@ -178,6 +187,7 @@ fn stack_to_string(cx: &Context, stack: *mut JSObject) -> Option<String> {
 			0,
 			StackFormat::SpiderMonkey,
 		)
-		.then(|| jsstr_to_string(cx.as_ptr(), string.get()))
+		.then(|| NonNull::new(string.get()).map(|str| jsstr_to_string(cx.as_ptr(), str)))
+		.flatten()
 	}
 }

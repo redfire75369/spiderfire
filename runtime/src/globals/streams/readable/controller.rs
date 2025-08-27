@@ -35,7 +35,7 @@ pub(crate) struct PullIntoDescriptor {
 }
 
 impl PullIntoDescriptor {
-	pub(crate) fn buffer(&self) -> ArrayBuffer {
+	pub(crate) fn buffer(&self) -> ArrayBuffer<'_> {
 		ArrayBuffer::from(unsafe { Local::from_heap(&self.buffer) }).unwrap()
 	}
 
@@ -270,6 +270,7 @@ impl CommonController {
 		CommonController::new(stream, source.to_native(source_object), high_water_mark)
 	}
 
+	#[expect(clippy::mut_from_ref)]
 	pub(crate) fn stream<'cx>(&self, cx: &'cx Context) -> Result<&'cx mut ReadableStream> {
 		let stream = Object::from(unsafe { Local::from_heap(&*ptr::from_ref(&self.stream)) });
 		ReadableStream::get_mut_private(cx, &stream)
@@ -318,10 +319,10 @@ impl CommonController {
 			return Ok(false);
 		}
 
-		if let Some(reader) = stream.native_reader(cx)? {
-			if !reader.is_empty() {
-				return Ok(true);
-			}
+		if let Some(reader) = stream.native_reader(cx)?
+			&& !reader.is_empty()
+		{
+			return Ok(true);
 		}
 		Ok(stream.state == State::Readable && self.high_water_mark > self.queue_size as f64)
 	}
@@ -456,12 +457,12 @@ impl DefaultController {
 	pub(crate) fn enqueue_internal(&mut self, cx: &Context, chunk: &Value) -> ResultExc<()> {
 		let stream = self.common.stream(cx)?;
 		if self.common.can_close_or_enqueue(stream) {
-			if let Some(Reader::Default(reader)) = stream.native_reader(cx)? {
-				if let Some(request) = reader.common.requests.pop_front() {
-					let promise = request.promise();
-					(request.chunk)(cx, &promise, chunk);
-					return Ok(());
-				}
+			if let Some(Reader::Default(reader)) = stream.native_reader(cx)?
+				&& let Some(request) = reader.common.requests.pop_front()
+			{
+				let promise = request.promise();
+				(request.chunk)(cx, &promise, chunk);
+				return Ok(());
 			}
 
 			match self.size.compute(cx, chunk) {
@@ -524,10 +525,10 @@ impl ByteStreamController {
 	pub(crate) fn initialise(
 		stream: &Object, source_object: &Object, source: &UnderlyingSource, high_water_mark: f64,
 	) -> Result<ByteStreamController> {
-		if let Some(auto_allocate_chunk_size) = source.auto_allocate_chunk_size {
-			if auto_allocate_chunk_size == 0 {
-				return Err(Error::new("autoAllocateChunkSize can not be zero.", ErrorKind::Type));
-			}
+		if let Some(auto_allocate_chunk_size) = source.auto_allocate_chunk_size
+			&& auto_allocate_chunk_size == 0
+		{
+			return Err(Error::new("autoAllocateChunkSize can not be zero.", ErrorKind::Type));
 		}
 
 		Ok(ByteStreamController {
@@ -811,12 +812,12 @@ impl ByteStreamController {
 				self.common.close_requested = true;
 			}
 
-			if let Some(descriptor) = self.pending_descriptors.front() {
-				if descriptor.filled % descriptor.element > 0 {
-					let error = Error::new("Pending Pull-Into Not Empty", ErrorKind::Type);
-					self.error_internal(cx, &error.as_value(cx))?;
-					return Err(error.into());
-				}
+			if let Some(descriptor) = self.pending_descriptors.front()
+				&& descriptor.filled % descriptor.element > 0
+			{
+				let error = Error::new("Pending Pull-Into Not Empty", ErrorKind::Type);
+				self.error_internal(cx, &error.as_value(cx))?;
+				return Err(error.into());
 			}
 
 			self.common.source.clear_algorithms();

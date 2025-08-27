@@ -128,7 +128,7 @@ impl Drop for StructuredCloneBuffer {
 pub unsafe fn read_uint64(r: *mut JSStructuredCloneReader) -> Option<u64> {
 	let mut high = 0;
 	let mut low = 0;
-	let res = unsafe { JS_ReadUint32Pair(r, &mut high, &mut low) };
+	let res = unsafe { JS_ReadUint32Pair(r, &raw mut high, &raw mut low) };
 	res.then_some((u64::from(high) << 32) | u64::from(low))
 }
 

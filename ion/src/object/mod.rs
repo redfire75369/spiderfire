@@ -56,13 +56,13 @@ pub fn new_global<'cx>(
 			class,
 			principals.unwrap_or_else(ptr::null_mut),
 			hook_option,
-			&*realm_options,
+			&raw const *realm_options,
 		)
 	};
 	Object::from(cx.root(global))
 }
 
-pub fn default_new_global(cx: &Context) -> Object {
+pub fn default_new_global(cx: &Context) -> Object<'_> {
 	let mut options = RealmOptions::default();
 	options.creationOptions_.sharedMemoryAndAtomics_ = true;
 	options.creationOptions_.defineSharedArrayBufferConstructor_ = true;

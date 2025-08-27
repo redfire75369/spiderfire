@@ -24,7 +24,7 @@ impl Script<'_> {
 		let mut source = transform_u16_to_source_text(script.as_slice());
 		let options = unsafe { CompileOptionsWrapper::new(cx.as_ptr(), path.to_str().unwrap(), 1) };
 
-		let script = unsafe { Compile(cx.as_ptr(), options.ptr, &mut source) };
+		let script = unsafe { Compile(cx.as_ptr(), options.ptr, &raw mut source) };
 
 		if !script.is_null() {
 			Ok(Script { script: cx.root(script) })

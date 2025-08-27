@@ -74,7 +74,7 @@ impl Default for OpenOptions {
 }
 
 #[js_fn]
-fn open(cx: &Context, path_str: String, Opt(options): Opt<OpenOptions>) -> Option<Promise> {
+fn open(cx: &Context, path_str: String, Opt(options): Opt<OpenOptions>) -> Option<Promise<'_>> {
 	future_to_promise(cx, move |_| async move {
 		let path = Path::new(&path_str);
 		let options = options.unwrap_or_default().into_tokio();
@@ -101,7 +101,7 @@ fn open_sync(cx: &Context, path_str: String, Opt(options): Opt<OpenOptions>) -> 
 }
 
 #[js_fn]
-fn create(cx: &Context, path_str: String) -> Option<Promise> {
+fn create(cx: &Context, path_str: String) -> Option<Promise<'_>> {
 	future_to_promise(cx, |_| async move {
 		let path = Path::new(&path_str);
 		let mut options = tokio::fs::OpenOptions::new();
@@ -130,7 +130,7 @@ fn create_sync(cx: &Context, path_str: String) -> Result<*mut JSObject> {
 }
 
 #[js_fn]
-fn metadata(cx: &Context, path_str: String) -> Option<Promise> {
+fn metadata(cx: &Context, path_str: String) -> Option<Promise<'_>> {
 	future_to_promise(cx, |_| async move {
 		let path = Path::new(&path_str);
 		match tokio::fs::metadata(path).await {
@@ -150,7 +150,7 @@ fn metadata_sync(path_str: String) -> Result<Metadata> {
 }
 
 #[js_fn]
-fn link_metadata(cx: &Context, path_str: String) -> Option<Promise> {
+fn link_metadata(cx: &Context, path_str: String) -> Option<Promise<'_>> {
 	future_to_promise(cx, |_| async move {
 		let path = Path::new(&path_str);
 		match tokio::fs::symlink_metadata(path).await {
@@ -170,7 +170,7 @@ fn link_metadata_sync(path_str: String) -> Result<Metadata> {
 }
 
 #[js_fn]
-fn read_dir(cx: &Context, path_str: String) -> Option<Promise> {
+fn read_dir(cx: &Context, path_str: String) -> Option<Promise<'_>> {
 	future_to_promise(cx, |_| async move {
 		let path = PathBuf::from(&path_str);
 
@@ -193,7 +193,7 @@ fn read_dir_sync(path_str: String) -> Result<Iterator> {
 }
 
 #[js_fn]
-fn create_dir(cx: &Context, path_str: String, Opt(recursive): Opt<bool>) -> Option<Promise> {
+fn create_dir(cx: &Context, path_str: String, Opt(recursive): Opt<bool>) -> Option<Promise<'_>> {
 	future_to_promise(cx, move |_| async move {
 		let path = Path::new(&path_str);
 		let recursive = recursive.unwrap_or_default();
@@ -227,7 +227,7 @@ fn create_dir_sync(path_str: String, Opt(recursive): Opt<bool>) -> Result<()> {
 }
 
 #[js_fn]
-fn remove(cx: &Context, path_str: String, Opt(recursive): Opt<bool>) -> Option<Promise> {
+fn remove(cx: &Context, path_str: String, Opt(recursive): Opt<bool>) -> Option<Promise<'_>> {
 	future_to_promise(cx, move |_| async move {
 		let path = Path::new(&path_str);
 		let recursive = recursive.unwrap_or_default();
@@ -295,7 +295,7 @@ fn remove_sync(path_str: String, Opt(recursive): Opt<bool>) -> Result<()> {
 }
 
 #[js_fn]
-fn copy(cx: &Context, from_str: String, to_str: String) -> Option<Promise> {
+fn copy(cx: &Context, from_str: String, to_str: String) -> Option<Promise<'_>> {
 	future_to_promise(cx, |_| async move {
 		let from = Path::new(&from_str);
 		let to = Path::new(&to_str);
@@ -315,7 +315,7 @@ fn copy_sync(from_str: String, to_str: String) -> Result<u64> {
 }
 
 #[js_fn]
-fn rename(cx: &Context, from_str: String, to_str: String) -> Option<Promise> {
+fn rename(cx: &Context, from_str: String, to_str: String) -> Option<Promise<'_>> {
 	future_to_promise(cx, |_| async move {
 		let from = Path::new(&from_str);
 		let to = Path::new(&to_str);
@@ -335,7 +335,7 @@ fn rename_sync(from_str: String, to_str: String) -> Result<()> {
 }
 
 #[js_fn]
-fn symlink(cx: &Context, original_str: String, link_str: String) -> Option<Promise> {
+fn symlink(cx: &Context, original_str: String, link_str: String) -> Option<Promise<'_>> {
 	future_to_promise(cx, |_| async move {
 		let original = Path::new(&original_str);
 		let link = Path::new(&link_str);
@@ -379,7 +379,7 @@ fn symlink_sync(original_str: String, link_str: String) -> Result<()> {
 }
 
 #[js_fn]
-fn link(cx: &Context, original_str: String, link_str: String) -> Option<Promise> {
+fn link(cx: &Context, original_str: String, link_str: String) -> Option<Promise<'_>> {
 	future_to_promise(cx, |_| async move {
 		let original = Path::new(&original_str);
 		let link = Path::new(&link_str);
@@ -399,7 +399,7 @@ fn link_sync(original_str: String, link_str: String) -> Result<()> {
 }
 
 #[js_fn]
-fn read_link(cx: &Context, path_str: String) -> Option<Promise> {
+fn read_link(cx: &Context, path_str: String) -> Option<Promise<'_>> {
 	future_to_promise(cx, |_| async move {
 		let path = Path::new(&path_str);
 
@@ -421,7 +421,7 @@ fn read_link_sync(path_str: String) -> Result<String> {
 }
 
 #[js_fn]
-fn canonical(cx: &Context, path_str: String) -> Option<Promise> {
+fn canonical(cx: &Context, path_str: String) -> Option<Promise<'_>> {
 	future_to_promise(cx, |_| async move {
 		let path = Path::new(&path_str);
 

@@ -100,7 +100,9 @@ fn properties_to_spec_function(
 	let function_ident = format_ident!("__ion_{}_specs", ident);
 
 	let mut specs: Vec<_> = properties.iter().flat_map(|property| property.to_specs(ion, class)).collect();
-	accessors.values().for_each(|accessor| specs.extend(accessor.to_specs(ion, class)));
+	for accessor in accessors.values() {
+		specs.extend(accessor.to_specs(ion, class));
+	}
 
 	let ty = parse_quote!(::mozjs::jsapi::JSPropertySpec);
 	Ok((

@@ -61,10 +61,10 @@ impl Property {
 				}
 			}
 			Type::Reference(re) => {
-				if let Type::Path(ty) = &*re.elem {
-					if path_ends_with(&ty.path, "str") {
-						return Ok(Some((Property { ty: PropertyType::String, ident, names }, r#static)));
-					}
+				if let Type::Path(ty) = &*re.elem
+					&& path_ends_with(&ty.path, "str")
+				{
+					return Ok(Some((Property { ty: PropertyType::String, ident, names }, r#static)));
 				}
 				Ok(None)
 			}

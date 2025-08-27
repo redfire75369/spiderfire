@@ -8,9 +8,9 @@ use std::path::Path;
 use std::ptr;
 
 use mozjs::jsapi::{
-	CompileJsonModule, CompileModule, CreateModuleRequest, GetModuleRequestSpecifier, Handle, JS_GetRuntime, JSContext,
-	JSObject, ModuleEvaluate, ModuleIsLinked, ModuleLink, SetModuleMetadataHook, SetModulePrivate,
-	SetModuleResolveHook,
+	CompileJsonModule, CompileModule, CreateModuleRequest, GetModuleRequestSpecifier, GetModuleRequestType, Handle,
+	JS_GetRuntime, JSContext, JSObject, ModuleEvaluate, ModuleIsLinked, ModuleLink, ModuleType as JSModuleType,
+	SetModuleMetadataHook, SetModulePrivate, SetModuleResolveHook,
 };
 use mozjs::jsval::JSVal;
 use mozjs::rust::{CompileOptionsWrapper, transform_u16_to_source_text};
@@ -49,15 +49,37 @@ pub enum ModuleType {
 	Json,
 }
 
+impl From<JSModuleType> for ModuleType {
+	fn from(ty: JSModuleType) -> ModuleType {
+		match ty {
+			JSModuleType::Unknown => panic!("Invalid Module Type"),
+			JSModuleType::JavaScript => ModuleType::JavaScript,
+			JSModuleType::JSON => ModuleType::Json,
+		}
+	}
+}
+
+impl From<ModuleType> for JSModuleType {
+	fn from(ty: ModuleType) -> JSModuleType {
+		match ty {
+			ModuleType::JavaScript => JSModuleType::JavaScript,
+			ModuleType::Json => JSModuleType::JSON,
+		}
+	}
+}
+
 /// Represents a request by the runtime for a module.
 #[derive(Debug)]
 pub struct ModuleRequest<'r>(Object<'r>);
 
 impl<'r> ModuleRequest<'r> {
 	/// Creates a new [ModuleRequest] with a given specifier.
-	pub fn new<S: AsRef<str>>(cx: &'r Context, specifier: S) -> ModuleRequest<'r> {
+	pub fn new<S: AsRef<str>>(cx: &'r Context, specifier: S, ty: ModuleType) -> ModuleRequest<'r> {
 		let specifier = crate::String::copy_from_str(cx, specifier.as_ref()).unwrap();
-		ModuleRequest(cx.root(unsafe { CreateModuleRequest(cx.as_ptr(), specifier.handle().into()) }).into())
+		ModuleRequest(
+			cx.root(unsafe { CreateModuleRequest(cx.as_ptr(), specifier.handle().into(), ty.into()) })
+				.into(),
+		)
 	}
 
 	/// Creates a new [ModuleRequest] from a raw handle.
@@ -73,9 +95,8 @@ impl<'r> ModuleRequest<'r> {
 		cx.root(unsafe { GetModuleRequestSpecifier(cx.as_ptr(), self.0.handle().into()) }).into()
 	}
 
-	pub fn kind(&self, _cx: &Context) -> ModuleType {
-		// TODO: Use `GetModuleRequestType`
-		ModuleType::JavaScript
+	pub fn kind(&self, cx: &Context) -> ModuleType {
+		unsafe { GetModuleRequestType(cx.as_ptr(), self.0.handle().into()) }.into()
 	}
 }
 
@@ -125,8 +146,8 @@ impl<'cx> Module<'cx> {
 		}
 
 		let module = match kind {
-			ModuleType::JavaScript => unsafe { CompileModule(cx.as_ptr(), options.ptr.cast_const(), &mut source) },
-			ModuleType::Json => unsafe { CompileJsonModule(cx.as_ptr(), options.ptr.cast_const(), &mut source) },
+			ModuleType::JavaScript => unsafe { CompileModule(cx.as_ptr(), options.ptr.cast_const(), &raw mut source) },
+			ModuleType::Json => unsafe { CompileJsonModule(cx.as_ptr(), options.ptr.cast_const(), &raw mut source) },
 		};
 
 		if !module.is_null() {
@@ -138,7 +159,7 @@ impl<'cx> Module<'cx> {
 
 			unsafe {
 				let private = data.to_object(cx).as_value(cx);
-				SetModulePrivate(module.0.handle().get(), &*private.handle());
+				SetModulePrivate(module.0.handle().get(), &raw const *private.handle());
 			}
 
 			Ok(module)

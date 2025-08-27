@@ -71,7 +71,7 @@ impl Request {
 		}
 	}
 
-	pub(crate) fn promise(&self) -> Promise {
+	pub(crate) fn promise(&self) -> Promise<'_> {
 		Promise::from(unsafe { Local::from_heap(&self.promise) }).unwrap()
 	}
 }
@@ -160,6 +160,7 @@ impl CommonReader {
 		}
 	}
 
+	#[expect(clippy::mut_from_ref)]
 	pub(crate) fn stream(&self, cx: &Context) -> Result<Option<&mut ReadableStream>> {
 		self.stream
 			.as_ref()
@@ -170,7 +171,7 @@ impl CommonReader {
 			.transpose()
 	}
 
-	pub(crate) fn closed(&self) -> Promise {
+	pub(crate) fn closed(&self) -> Promise<'_> {
 		Promise::from(unsafe { Local::from_heap(&self.closed) }).unwrap()
 	}
 

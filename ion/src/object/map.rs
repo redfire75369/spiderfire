@@ -49,7 +49,7 @@ impl<'m> Map<'m> {
 	/// Checks if the [Map] contains the given key.
 	pub fn has(&self, cx: &Context, key: &Value) -> bool {
 		let mut has = false;
-		unsafe { MapHas(cx.as_ptr(), self.handle().into(), key.handle().into(), &mut has) && has }
+		unsafe { MapHas(cx.as_ptr(), self.handle().into(), key.handle().into(), &raw mut has) && has }
 	}
 
 	/// Returns the value of the [Map] at the given key.
@@ -83,7 +83,7 @@ impl<'m> Map<'m> {
 	/// Deletes the value of the [Map] at the given key.
 	pub fn delete(&self, cx: &Context, key: &Value) -> bool {
 		let mut rval = false;
-		unsafe { MapDelete(cx.as_ptr(), self.handle().into(), key.handle().into(), &mut rval) && rval }
+		unsafe { MapDelete(cx.as_ptr(), self.handle().into(), key.handle().into(), &raw mut rval) && rval }
 	}
 
 	/// Clears the contents of the [Map].
@@ -133,7 +133,7 @@ impl<'m> Map<'m> {
 	/// Checks if the object is a map.
 	pub fn is_map(cx: &Context, object: &Local<*mut JSObject>) -> bool {
 		let mut map = false;
-		unsafe { IsMapObject(cx.as_ptr(), object.handle().into(), &mut map) && map }
+		unsafe { IsMapObject(cx.as_ptr(), object.handle().into(), &raw mut map) && map }
 	}
 }
 

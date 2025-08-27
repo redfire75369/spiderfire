@@ -66,7 +66,7 @@ impl Reflector {
 		self.0.get()
 	}
 
-	pub fn handle(&self) -> Handle<*mut JSObject> {
+	pub fn handle(&self) -> Handle<'_, *mut JSObject> {
 		unsafe { Handle::from_raw(self.0.handle()) }
 	}
 

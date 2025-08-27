@@ -34,11 +34,15 @@ pub struct FunctionDisplay<'cx> {
 
 impl Display for FunctionDisplay<'_> {
 	fn fmt(&self, f: &mut Formatter<'_>) -> fmt::Result {
-		let spaces = 2 * (self.cfg.indentation + self.cfg.depth);
-		write!(
-			f,
-			"{}",
-			indent_by(spaces as usize, self.function.to_string(self.cx)).color(self.cfg.colours.function)
-		)
+		if let Some(func) = self.function.to_string(self.cx) {
+			let spaces = 2 * (self.cfg.indentation + self.cfg.depth);
+			write!(
+				f,
+				"{}",
+				indent_by(spaces as usize, func).color(self.cfg.colours.function)
+			)
+		} else {
+			Ok(())
+		}
 	}
 }

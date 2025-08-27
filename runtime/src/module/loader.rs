@@ -84,7 +84,7 @@ impl ModuleLoader for Loader {
 
 		match module {
 			Ok(module) => {
-				let request = ModuleRequest::new(cx, name);
+				let request = ModuleRequest::new(cx, name, kind);
 				self.register(cx, module.0.handle().get(), &request)?;
 				Ok(module)
 			}
@@ -108,12 +108,12 @@ impl ModuleLoader for Loader {
 	fn metadata(&self, cx: &Context, private: &Value, meta: &Object) -> Result<()> {
 		let data = ModuleData::from_private(cx, private);
 
-		if let Some(data) = data {
-			if let Some(path) = data.path.as_ref() {
-				let url = Url::from_file_path(canonicalize(path)?).unwrap();
-				if !meta.set_as(cx, "url", url.as_str()) {
-					return Err(Error::none());
-				}
+		if let Some(data) = data
+			&& let Some(path) = data.path.as_ref()
+		{
+			let url = Url::from_file_path(canonicalize(path)?).unwrap();
+			if !meta.set_as(cx, "url", url.as_str()) {
+				return Err(Error::none());
 			}
 		}
 		Ok(())

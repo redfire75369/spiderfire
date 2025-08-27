@@ -31,7 +31,7 @@ impl<'ab> ArrayBuffer<'ab> {
 	}
 
 	/// Creates a new [ArrayBuffer] with the given length.
-	pub fn new(cx: &Context, len: usize) -> Option<ArrayBuffer> {
+	pub fn new(cx: &Context, len: usize) -> Option<ArrayBuffer<'_>> {
 		ArrayBuffer::create_with(cx, CreateWith::Length(len))
 	}
 
@@ -41,12 +41,12 @@ impl<'ab> ArrayBuffer<'ab> {
 	}
 
 	/// Creates a new [ArrayBuffer] by transferring ownership of the bytes to the JS runtime.
-	pub fn from_vec(cx: &Context, bytes: Vec<u8>) -> Option<ArrayBuffer> {
+	pub fn from_vec(cx: &Context, bytes: Vec<u8>) -> Option<ArrayBuffer<'_>> {
 		ArrayBuffer::from_boxed_slice(cx, bytes.into_boxed_slice())
 	}
 
 	/// Creates a new [ArrayBuffer] by transferring ownership of the bytes to the JS runtime.
-	pub fn from_boxed_slice(cx: &Context, bytes: Box<[u8]>) -> Option<ArrayBuffer> {
+	pub fn from_boxed_slice(cx: &Context, bytes: Box<[u8]>) -> Option<ArrayBuffer<'_>> {
 		unsafe extern "C" fn free_external_array_buffer(contents: *mut c_void, data: *mut c_void) {
 			let _ = unsafe { Box::from_raw_parts(contents.cast::<u8>(), data as usize) };
 		}
@@ -84,7 +84,7 @@ impl<'ab> ArrayBuffer<'ab> {
 		let mut len = 0;
 		let mut shared = false;
 		let mut data = ptr::null_mut();
-		unsafe { GetArrayBufferMaybeSharedLengthAndData(self.get(), &mut len, &mut shared, &mut data) };
+		unsafe { GetArrayBufferMaybeSharedLengthAndData(self.get(), &raw mut len, &raw mut shared, &raw mut data) };
 		(data, len, shared)
 	}
 

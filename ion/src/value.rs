@@ -25,22 +25,22 @@ pub struct Value<'v> {
 
 impl<'v> Value<'v> {
 	/// Creates a [Value] from a boolean.
-	pub fn bool(cx: &Context, b: bool) -> Value {
+	pub fn bool(cx: &Context, b: bool) -> Value<'_> {
 		Value::from(cx.root(BooleanValue(b)))
 	}
 
 	/// Creates a [Value] from a 32-bit signed integer.
-	pub fn i32(cx: &Context, i: i32) -> Value {
+	pub fn i32(cx: &Context, i: i32) -> Value<'_> {
 		Value::from(cx.root(Int32Value(i)))
 	}
 
 	/// Creates a [Value] from a 32-bit unsigned integer.
-	pub fn u32(cx: &Context, u: u32) -> Value {
+	pub fn u32(cx: &Context, u: u32) -> Value<'_> {
 		Value::from(cx.root(UInt32Value(u)))
 	}
 
 	/// Creates a [Value] from a 64-bit float.
-	pub fn f64(cx: &Context, f: f64) -> Value {
+	pub fn f64(cx: &Context, f: f64) -> Value<'_> {
 		Value::from(cx.root(DoubleValue(f)))
 	}
 
@@ -70,12 +70,12 @@ impl<'v> Value<'v> {
 	}
 
 	/// Creates an `undefined` [Value].
-	pub fn undefined(cx: &Context) -> Value {
+	pub fn undefined(cx: &Context) -> Value<'_> {
 		Value::from(cx.root(UndefinedValue()))
 	}
 
 	/// Creates a `null` [Value].
-	pub fn null(cx: &Context) -> Value {
+	pub fn null(cx: &Context) -> Value<'_> {
 		Value::from(cx.root(NullValue()))
 	}
 
@@ -99,7 +99,7 @@ impl<'v> Value<'v> {
 	/// This is identical to strict equality (===), except that NaN's are equal and 0 !== -0.
 	pub fn is_same(&self, cx: &Context, other: &Value) -> bool {
 		let mut same = false;
-		unsafe { SameValue(cx.as_ptr(), self.handle().into(), other.handle().into(), &mut same) && same }
+		unsafe { SameValue(cx.as_ptr(), self.handle().into(), other.handle().into(), &raw mut same) && same }
 	}
 
 	pub fn to_source<'cx>(&self, cx: &'cx Context) -> crate::String<'cx> {

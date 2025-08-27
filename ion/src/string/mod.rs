@@ -65,7 +65,7 @@ pub struct String<'s> {
 
 impl<'s> String<'s> {
 	/// Creates an empty [String].
-	pub fn new(cx: &Context) -> String {
+	pub fn new(cx: &Context) -> String<'_> {
 		String::from(cx.root(unsafe { JS_GetEmptyString(cx.as_ptr()) }))
 	}
 
@@ -82,7 +82,7 @@ impl<'s> String<'s> {
 
 	/// Creates a new string by moving ownership of the Latin-1 string to the JS Runtime temporarily.
 	/// Returns the bytes if the creation of the string in the runtime fails.
-	pub fn from_latin1(cx: &Context, string: ByteString<Latin1>) -> Result<String, ByteString<Latin1>> {
+	pub fn from_latin1(cx: &Context, string: ByteString<Latin1>) -> Result<String<'_>, ByteString<Latin1>> {
 		let bytes = string.into_vec().into_boxed_slice();
 		let (chars, len) = Box::into_raw_parts(bytes);
 
@@ -101,7 +101,7 @@ impl<'s> String<'s> {
 
 	/// Creates a new string by moving ownership of the UTF-16 string to the JS Runtime temporarily.
 	/// Returns the string if the creation of the string in the runtime fails.
-	pub fn from_wstring(cx: &Context, string: WString<NativeEndian>) -> Result<String, WString<NativeEndian>> {
+	pub fn from_wstring(cx: &Context, string: WString<NativeEndian>) -> Result<String<'_>, WString<NativeEndian>> {
 		let bytes = string.into_bytes().into_boxed_slice();
 		let (chars, len) = Box::into_raw_parts(bytes);
 
@@ -134,7 +134,7 @@ impl<'s> String<'s> {
 	/// Compares two [String]s.
 	pub fn compare(&self, cx: &Context, other: &String) -> i32 {
 		let mut result = 0;
-		unsafe { JS_CompareStrings(cx.as_ptr(), self.get(), other.get(), &mut result) };
+		unsafe { JS_CompareStrings(cx.as_ptr(), self.get(), other.get(), &raw mut result) };
 		result
 	}
 
@@ -158,7 +158,7 @@ impl<'s> String<'s> {
 	pub fn char_at(&self, cx: &Context, index: usize) -> u16 {
 		unsafe {
 			let mut char = 0;
-			JS_GetStringCharAt(cx.as_ptr(), self.get(), index, &mut char);
+			JS_GetStringCharAt(cx.as_ptr(), self.get(), index, &raw mut char);
 			char
 		}
 	}
@@ -168,7 +168,7 @@ impl<'s> String<'s> {
 	pub fn as_latin1(&self, cx: &Context) -> Option<&'s [u8]> {
 		self.is_latin1().then(|| unsafe {
 			let mut length = 0;
-			let chars = JS_GetLatin1StringCharsAndLength(cx.as_ptr(), ptr::null(), self.get(), &mut length);
+			let chars = JS_GetLatin1StringCharsAndLength(cx.as_ptr(), ptr::null(), self.get(), &raw mut length);
 			slice::from_raw_parts(chars, length)
 		})
 	}
@@ -187,7 +187,7 @@ impl<'s> String<'s> {
 	pub fn as_wtf16(&self, cx: &Context) -> Option<&'s [u16]> {
 		self.is_utf16().then(|| unsafe {
 			let mut length = 0;
-			let chars = JS_GetTwoByteStringCharsAndLength(cx.as_ptr(), ptr::null(), self.get(), &mut length);
+			let chars = JS_GetTwoByteStringCharsAndLength(cx.as_ptr(), ptr::null(), self.get(), &raw mut length);
 			slice::from_raw_parts(chars, length)
 		})
 	}
@@ -195,11 +195,13 @@ impl<'s> String<'s> {
 	pub fn as_ref(&self, cx: &Context) -> StringRef<'s> {
 		let mut length = 0;
 		if self.is_latin1() {
-			let chars = unsafe { JS_GetLatin1StringCharsAndLength(cx.as_ptr(), ptr::null(), self.get(), &mut length) };
+			let chars =
+				unsafe { JS_GetLatin1StringCharsAndLength(cx.as_ptr(), ptr::null(), self.get(), &raw mut length) };
 			StringRef::Latin1(unsafe { ByteStr::from_unchecked(slice::from_raw_parts(chars, length)) })
 		} else {
 			let mut length = 0;
-			let chars = unsafe { JS_GetTwoByteStringCharsAndLength(cx.as_ptr(), ptr::null(), self.get(), &mut length) };
+			let chars =
+				unsafe { JS_GetTwoByteStringCharsAndLength(cx.as_ptr(), ptr::null(), self.get(), &raw mut length) };
 			let slice = unsafe { slice::from_raw_parts(chars, length) };
 			StringRef::Utf16(WStr::from_utf16(cast_slice(slice)).unwrap())
 		}

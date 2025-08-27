@@ -16,7 +16,7 @@ use ion::format::key::{KeyDisplay, format_key};
 use ion::format::{Config, format_value};
 use ion::{Context, Object, OwnedKey, Result};
 
-fn combine_keys(_: &Context, indexes: IndexSet<i32>, headers: IndexSet<String>) -> IndexSet<OwnedKey> {
+fn combine_keys(_: &Context, indexes: IndexSet<i32>, headers: IndexSet<String>) -> IndexSet<OwnedKey<'_>> {
 	let mut indexes: Vec<i32> = indexes.into_iter().collect();
 	indexes.sort_unstable();
 

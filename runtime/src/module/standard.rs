@@ -47,18 +47,18 @@ impl<M: for<'cx> NativeModule<'cx> + 'static> StandardModules for M {
 pub fn init_module<'cx, M: NativeModule<'cx>>(cx: &'cx Context, global: &Object, module: &M) -> Option<Object<'cx>> {
 	let internal = format!("______{}Internal______", M::VARIABLE_NAME);
 
-	if let Some(module) = module.module(cx) {
-		if global.define_as(cx, internal, &module, PropertyFlags::CONSTANT) {
-			let loader = unsafe { &mut (*cx.get_inner_data().as_ptr()).module_loader };
-			return loader
-				.as_mut()
-				.is_some_and(|loader| {
-					let module = Module::compile(cx, M::NAME, None, M::SOURCE, ModuleType::JavaScript).unwrap();
-					let request = ModuleRequest::new(cx, M::NAME);
-					loader.register(cx, module.0.handle().get(), &request).is_ok()
-				})
-				.then_some(module);
-		}
+	if let Some(module) = module.module(cx)
+		&& global.define_as(cx, internal, &module, PropertyFlags::CONSTANT)
+	{
+		let loader = unsafe { &mut (*cx.get_inner_data().as_ptr()).module_loader };
+		return loader
+			.as_mut()
+			.is_some_and(|loader| {
+				let module = Module::compile(cx, M::NAME, None, M::SOURCE, ModuleType::JavaScript).unwrap();
+				let request = ModuleRequest::new(cx, M::NAME, ModuleType::JavaScript);
+				loader.register(cx, module.0.handle().get(), &request).is_ok()
+			})
+			.then_some(module);
 	}
 	None
 }

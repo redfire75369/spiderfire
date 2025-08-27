@@ -32,10 +32,10 @@ pub(super) fn impl_js_class_struct(r#struct: &mut ItemStruct) -> Result<[ItemImp
 	}
 
 	let traceable = r#struct.attrs.iter().any(|attr| {
-		if attr.path().is_ident("derive") {
-			if let Ok(paths) = attr.parse_args_with(Punctuated::<Path, Token![,]>::parse_terminated) {
-				return paths.iter().any(|path| path_ends_with(path, "Traceable"));
-			}
+		if attr.path().is_ident("derive")
+			&& let Ok(paths) = attr.parse_args_with(Punctuated::<Path, Token![,]>::parse_terminated)
+		{
+			return paths.iter().any(|path| path_ends_with(path, "Traceable"));
 		}
 		false
 	});
@@ -151,7 +151,7 @@ fn class_impls(
 	};
 	let mut parent_impl: ItemImpl = parse2(quote_spanned!(super_type.span() => impl #r#type {
 		#[allow(unused_variables)]
-		pub fn __ion_parent_prototype(cx: &#ion::Context) -> ::std::option::Option<#ion::Local<*mut ::mozjs::jsapi::JSObject>> {
+		pub fn __ion_parent_prototype(cx: &#ion::Context) -> ::std::option::Option<#ion::Local<'_, *mut ::mozjs::jsapi::JSObject>> {
 			#parent_proto
 		}
 	}))?;

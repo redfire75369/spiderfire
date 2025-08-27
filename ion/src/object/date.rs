@@ -49,13 +49,13 @@ impl<'d> Date<'d> {
 	/// Checks if the [Date] is a valid date.
 	pub fn is_valid(&self, cx: &Context) -> bool {
 		let mut is_valid = true;
-		(unsafe { DateIsValid(cx.as_ptr(), self.date.handle().into(), &mut is_valid) }) && is_valid
+		(unsafe { DateIsValid(cx.as_ptr(), self.date.handle().into(), &raw mut is_valid) }) && is_valid
 	}
 
 	/// Converts the [Date] to a [DateTime].
 	pub fn to_date(&self, cx: &Context) -> Option<DateTime<Utc>> {
 		let mut milliseconds = f64::MAX;
-		if !unsafe { DateGetMsecSinceEpoch(cx.as_ptr(), self.date.handle().into(), &mut milliseconds) }
+		if !unsafe { DateGetMsecSinceEpoch(cx.as_ptr(), self.date.handle().into(), &raw mut milliseconds) }
 			|| milliseconds == f64::MAX
 		{
 			None
@@ -68,13 +68,13 @@ impl<'d> Date<'d> {
 	pub fn is_date_raw(cx: &Context, object: *mut JSObject) -> bool {
 		rooted!(in(cx.as_ptr()) let object = object);
 		let mut is_date = false;
-		(unsafe { ObjectIsDate(cx.as_ptr(), object.handle().into(), &mut is_date) }) && is_date
+		(unsafe { ObjectIsDate(cx.as_ptr(), object.handle().into(), &raw mut is_date) }) && is_date
 	}
 
 	/// Checks if an object is a date.
 	pub fn is_date(cx: &Context, object: &Local<*mut JSObject>) -> bool {
 		let mut is_date = false;
-		(unsafe { ObjectIsDate(cx.as_ptr(), object.handle().into(), &mut is_date) }) && is_date
+		(unsafe { ObjectIsDate(cx.as_ptr(), object.handle().into(), &raw mut is_date) }) && is_date
 	}
 }
 

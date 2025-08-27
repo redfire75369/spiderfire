@@ -19,10 +19,10 @@ pub(crate) async fn handle_command(cli: Cli) {
 		Some(Command::Cache { clear }) => {
 			if !clear {
 				cache::cache_statistics();
-			} else if let Some(cache) = Cache::new() {
-				if let Err(err) = cache.clear() {
-					eprintln!("{err}");
-				}
+			} else if let Some(cache) = Cache::new()
+				&& let Err(err) = cache.clear()
+			{
+				eprintln!("{err}");
 			}
 		}
 

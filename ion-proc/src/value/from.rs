@@ -136,12 +136,10 @@ fn impl_body(
 
 			let mut if_unit = None;
 
-			if requires_discriminant {
-				if let Some(repr) = repr {
-					if_unit = Some(quote_spanned!(repr.span() =>
-						let discriminant: #repr = #ion::conversions::FromValue::from_value(__ion_cx, __ion_value, true, #ion::conversions::ConversionBehavior::EnforceRange)?;
-					));
-				}
+			if requires_discriminant && let Some(repr) = repr {
+				if_unit = Some(quote_spanned!(repr.span() =>
+					let discriminant: #repr = #ion::conversions::FromValue::from_value(__ion_cx, __ion_value, true, #ion::conversions::ConversionBehavior::EnforceRange)?;
+				));
 			}
 
 			parse2(quote_spanned!(span => {
@@ -205,10 +203,10 @@ fn map_fields(
 		let ty = &field.ty;
 
 		let mut optional = false;
-		if let Type::Path(ty) = ty {
-			if path_ends_with(&ty.path, "Option") {
-				optional = true;
-			}
+		if let Type::Path(ty) = ty
+			&& path_ends_with(&ty.path, "Option")
+		{
+			optional = true;
 		}
 
 		let attribute = FieldFromAttribute::from_attributes("ion", &mut field.attrs, attribute)?;
